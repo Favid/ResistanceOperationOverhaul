@@ -18,6 +18,7 @@ enum EUIScreenState
 	eUIScreenState_GrenadePocket,
 	eUIScreenState_AmmoPocket,
 	eUIScreenState_HeavyWeapon,
+	eUIScreenState_CustomSlot,
 	eUIScreenState_Abilities
 };
 
@@ -32,6 +33,7 @@ var array<bool> IsNew; // Index is the soldier's index in the squad
 var int SelectedAbilityIndex;
 var int SelectedAttachmentIndex;
 var EUpgradeCategory SelectedUpgradeCategory;
+var EInventorySlot SelectedInventorySlot;
 
 var UIText CreditsText;
 var UIPanel CreditsPanel;
@@ -825,13 +827,16 @@ simulated function UpdateData()
 		UpdateDataGrenadePocket();
 		break;
 	case eUIScreenState_AmmoPocket:
-		//UpdateDataAmmoPocket();
+		UpdateDataAmmoPocket();
 		break;
 	case eUIScreenState_HeavyWeapon:
 		UpdateDataHeavyWeapon();
 		break;
 	case eUIScreenState_WeaponAttachment:
 		UpdateDataWeaponAttachment();
+		break;
+	case eUIScreenState_CustomSlot:
+		UpdateDataCustomSlot();
 		break;
 	};
 
@@ -900,7 +905,8 @@ simulated function OnClickEditSoldier(UIMechaListItem MechaItem)
 		// Selecting the Research menu
 		UIScreenState = eUIScreenState_Research;
 	}
-
+	
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
 	UpdateData();
 }
 
@@ -908,6 +914,7 @@ simulated function UpdateDataSoldierOptions()
 {
 	local XComGameState_Unit Soldier;
 	local int Index;
+	local int ModIndex;
 	local array<XComGameState_Item> EquippedPCSs;
 	local string PcsText;
 	local array<XComGameState_Item> EquippedUtilityItems;
@@ -920,6 +927,8 @@ simulated function UpdateDataSoldierOptions()
 	local array<name> Attachments;
 	local X2WeaponUpgradeTemplate AttachmentTemplate;
 	local X2ItemTemplateManager ItemTemplateManager;
+	local array<CHItemSlot> ModSlots;
+	local string LockedReason;
 
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
@@ -1075,6 +1084,20 @@ simulated function UpdateDataSoldierOptions()
 		Index++;
 	}
 
+	// Custom slots
+	ModSlots = class'CHItemSlot'.static.GetAllSlotTemplates();
+	for (ModIndex = 0; ModIndex < ModSlots.Length; ModIndex++)
+	{
+		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState))
+		{
+			EquippedItem = Soldier.GetItemInSlot(ModSlots[ModIndex].InvSlot, NewGameState, false);
+			GetListItem(Index).EnableNavigation();
+			GetListItem(Index).UpdateDataValue(ToPascalCase(class'UIArmory_Loadout'.default.m_strInventoryLabels[ModSlots[ModIndex].InvSlot]), GetInventoryDisplayText(EquippedItem), , , OnClickCustomSlot);
+			GetListItem(Index).metadataInt = ModSlots[ModIndex].InvSlot;
+			Index++;
+		}
+	}
+
 	// The abilities/promotion button
 	GetListItem(Index).EnableNavigation();
 
@@ -1168,6 +1191,14 @@ simulated function OnClickAmmoPocket()
 simulated function OnClickHeavyWeapon()
 {
 	UIScreenState = eUIScreenState_HeavyWeapon;
+	UpdateData();
+}
+
+simulated function OnClickCustomSlot(UIMechaListItem MechaItem)
+{
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+	SelectedInventorySlot = EInventorySlot(MechaItem.metadataInt);
+	UIScreenState = eUIScreenState_CustomSlot;
 	UpdateData();
 }
 
@@ -1626,6 +1657,52 @@ simulated function OnClickUpgradeGrenadePocket(UIMechaListItem MechaItem)
 	UpdateData();
 }
 
+simulated function UpdateDataAmmoPocket()
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local int Index;
+	local X2AmmoTemplate AmmoTemplate;
+	local array<X2AmmoTemplate> AmmoTemplates;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local array<name> PurchasedTemplateNames;
+	local name PurchasedTemplateName;
+	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
+	local InventoryUpgrade ItemUpgrade;
+	local XComGameState_Unit Soldier;
+	
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	Soldier = Squad[SelectedSoldierIndex];
+	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
+
+	Index = 0;
+	foreach PurchasedTemplateNames(PurchasedTemplateName)
+	{
+		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
+		if (UpgradeTemplate != none)
+		{
+			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
+			{
+				AmmoTemplate = X2AmmoTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+				if (AmmoTemplate != none 
+					&& !(ItemUpgrade.bSingle && ItemAlreadyInUse(AmmoTemplate.DataName, SelectedSoldierIndex)))
+				{
+					AmmoTemplates.AddItem(AmmoTemplate);
+				}
+			}
+		}
+	}
+
+	UpdateDataItems(AmmoTemplates, OnClickUpgradeAmmoPocket, true);
+}
+
+simulated function OnClickUpgradeAmmoPocket(UIMechaListItem MechaItem)
+{
+	EquipItem(name(MechaItem.metadataString), eInvSlot_AmmoPocket, -1);
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
 simulated function UpdateDataHeavyWeapon()
 {
 	local X2ItemTemplateManager ItemTemplateManager;
@@ -1667,6 +1744,53 @@ simulated function UpdateDataHeavyWeapon()
 simulated function OnClickUpgradeHeavyWeapon(UIMechaListItem MechaItem)
 {
 	EquipItem(name(MechaItem.metadataString), eInvSlot_HeavyWeapon, -1);
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
+simulated function UpdateDataCustomSlot()
+{
+	local CHItemSlot CustomSlot;
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2EquipmentTemplate EquipmentTemplate;
+	local array<X2EquipmentTemplate> EquipmentTemplates;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local array<name> PurchasedTemplateNames;
+	local name PurchasedTemplateName;
+	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
+	local InventoryUpgrade ItemUpgrade;
+	local XComGameState_Unit Soldier;
+	
+	CustomSlot = class'CHItemSlotStore'.static.GetStore().GetSlot(SelectedInventorySlot);
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	Soldier = Squad[SelectedSoldierIndex];
+	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
+
+	foreach PurchasedTemplateNames(PurchasedTemplateName)
+	{
+		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
+		if (UpgradeTemplate != none)
+		{
+			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
+			{
+				EquipmentTemplate = X2EquipmentTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+				if (EquipmentTemplate != none 
+					&& CustomSlot.ShowItemInLockerList(Soldier, none, EquipmentTemplate, NewGameState)
+					&& !(ItemUpgrade.bSingle && ItemAlreadyInUse(EquipmentTemplate.DataName, SelectedSoldierIndex)))
+				{
+					EquipmentTemplates.AddItem(EquipmentTemplate);
+				}
+			}
+		}
+	}
+
+	UpdateDataItems(EquipmentTemplates, OnClickUpgradeCustomSlot, true);
+}
+
+simulated function OnClickUpgradeCustomSlot(UIMechaListItem MechaItem)
+{
+	EquipItem(name(MechaItem.metadataString), SelectedInventorySlot, -1);
 	UIScreenState = eUIScreenState_Soldier;
 	UpdateData();
 }
@@ -1909,7 +2033,7 @@ simulated function UpdateDataResearch()
 	// Add a button to view completed projects
 	Index = 0;
 	Icon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_GearIcon, 20, 20, 0) $ " ";
-	GetListItem(Index).UpdateDataValue(Icon $ "View Completed Projects", "", , , OnClickCompletedProjects);
+	GetListItem(Index).UpdateDataValue(Icon $ "View Completed Projects", "", OnClickCompletedProjects);
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
@@ -1956,6 +2080,7 @@ simulated function UpdateDataResearch()
 
 simulated function OnClickResearchCategory(UIMechaListItem MechaItem)
 {
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
 	SelectedUpgradeCategory = EUpgradeCategory(MechaItem.metadataInt);
 	UIScreenState = eUIScreenState_ResearchCategory;
 	UpdateData();
@@ -2041,7 +2166,7 @@ simulated function PurchaseTechUpgrade(X2ResistanceTechUpgradeTemplate Template)
 	UpdateData();
 }
 
-simulated function OnClickCompletedProjects(UIMechaListItem MechaItem)
+simulated function OnClickCompletedProjects()
 {
 	UIScreenState = eUIScreenState_CompletedProjects;
 	UpdateData();
@@ -2103,6 +2228,7 @@ simulated function OnCancel()
 	case eUIScreenState_GrenadePocket:
 	case eUIScreenState_AmmoPocket:
 	case eUIScreenState_HeavyWeapon:
+	case eUIScreenState_CustomSlot:
 		UIScreenState = eUIScreenState_Soldier;
 		break;
 	};
@@ -2235,7 +2361,29 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 
 	// always give base class a chance to handle the input so key input is propogated to the panel's navigator
 	return (bHandled || super.OnUnrealCommand(cmd, arg));
+}
 
+simulated function string ToPascalCase(string Str)
+{
+	local string Result;
+	local int Index;
+	local string LastChar;
+
+	for (Index = 0; Index < Len(Str); Index++)
+	{
+		if (Index == 0 || LastChar == " " || LastChar == "-")
+		{
+			Result = Result $ Caps(Mid(Str,Index,1));
+		}
+		else
+		{
+			Result = Result $ Locs(Mid(Str,Index,1));
+		}
+
+		LastChar = Mid(Str,Index,1);
+	}
+
+	return Result;
 }
 
 defaultproperties
