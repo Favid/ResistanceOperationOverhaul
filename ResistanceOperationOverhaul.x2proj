@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>337a166c-af14-4e35-92ad-4e0928ab4ad3</Guid>
+    <Name>ResistanceOperationOverhaul</Name>
+    <Description>Description of My XCOM 2 Mod.</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>ResistanceOperationOverhaul</AssemblyName>
+    <RootNamespace>ResistanceOperationOverhaul</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\ResistanceOperationOverhaul\" />
+    <Folder Include="Src\ResistanceOperationOverhaul\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\XComLadderOptions.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComSoldierUpgrades.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\ResistanceOperationOverhaul.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\ResistanceHistorySavePairs.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\ResistanceOverhaulHelpers.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\UILadderUpgradeScreen_Override.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\UITactical_PromotionHero.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\UITactical_PromotionHeroColumn.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\UITLE_LadderModeMenu_Override.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\X2DataSet_ResistanceTechUpgrades.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\X2DownloadableContentInfo_ResistanceOperationOverhaul.uc" />
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\X2ResistanceTechUpgradeTemplate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\X2ResistanceTechUpgradeTemplateManager.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\XComGameState_LadderProgress_Override.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
