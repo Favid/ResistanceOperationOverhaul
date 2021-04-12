@@ -481,6 +481,138 @@ Description="Grants one of each epic PCS."
 DisplayName="Battlefield Medicine"
 Description="Improves the recovery strength of our Medikits and Nanomedikits."
 
+; LW2 Secondary Weapons
+
+[TU_InitialLW2SecondaryWeapons X2ResistanceTechUpgradeTemplate]
+DisplayName="LW2 Secondary Weapons"
+Description="Grants access to conventional LW2 secondary weapons for all soldiers."
+
+[TU_Arcthrower_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Arc Throwers"
+Description="Grants access to Advanced Arc Throwers for all soldiers who can use them."
+
+[TU_Arcthrower_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Arc Blasters"
+Description="Grants access to Arc Blasters for all soldiers who can use them."
+
+[TU_Holotargeter_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Holotargeter Mark II"
+Description="Grants access to the Holotargeter Mark II for all soldiers who can use it."
+
+[TU_Holotargeter_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Holotargeter Mark III"
+Description="Grants access to the Holotargeter Mark III for all soldiers who can use it."
+
+[TU_SawedOffShotgun_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Mag Shorties"
+Description="Grants access to Mag Shorties for all soldiers who can use them."
+
+[TU_SawedOffShotgun_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Plasma Shorties"
+Description="Grants access to Plasma Shorties for all soldiers who can use them."
+
+[TU_CombatKnife_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Vibroblades"
+Description="Grants access to Vibroblades for all soldiers who can use them."
+
+[TU_CombatKnife_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Vibroblades"
+Description="Grants access to Advanced Vibroblades for all soldiers who can use them."
+
+[TU_LWGauntlet_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Gauntlet Mark II"
+Description="Grants access to the Gauntlet Mark II for all soldiers who can use it."
+
+[TU_LWGauntlet_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Blaster Gauntlets"
+Description="Grants access to Blaster Gauntlet for all soldiers who can use them."
+
+; Ballistic Shields
+
+[TU_BallisticShield_CV X2ResistanceTechUpgradeTemplate]
+DisplayName="Ballistic Shield MK1"
+Description="Grants access to the Ballistic Shield MK1 for all soldiers who can use it."
+
+[TU_BallisticShield_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Ballistic Shield MK2"
+Description="Grants access to the Ballistic Shield MK2 for all soldiers who can use it."
+
+[TU_BallisticShield_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Ballistic Shield MK3"
+Description="Grants access to the Ballistic Shield MK3 for all soldiers who can use it."
+
+; Stim Guns
+
+[TU_StimGun_CV X2ResistanceTechUpgradeTemplate]
+DisplayName="Stim Guns"
+Description="Grants access to Stim Guns for all soldiers who can use them."
+
+[TU_StimGun_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Stim Blasters"
+Description="Grants access to Stim Blasters for all soldiers who can use them."
+
+[TU_StimGun_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Stim Rays"
+Description="Grants access to Stim Rays for all soldiers who can use them."
+
+; Blaster Launcher
+
+[TU_GrenadeLauncher_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Blaster Launchers"
+Description="Grants access to Blaster Launchers for all soldiers who can use them."
+
+; Tier 3 Grenades
+
+[TU_SmokeGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Smoke Warheads"
+Description="Grants access to Smoke Warheads for all soldiers who can use them."
+
+[TU_AlienGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Plasma Warheads"
+Description="Grants access to Plasma Warheads for all soldiers who can use them."
+
+[TU_FireGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Incendiary Warheads"
+Description="Grants access to Incendiary Warheads for all soldiers who can use them."
+
+[TU_GasGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Gas Warheads"
+Description="Grants access to Gas Warheads for all soldiers who can use them."
+
+[TU_AcidGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Acid Warheads"
+Description="Grants access to Acid Warheads for all soldiers who can use them."
+
+[TU_EMPGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="EMP Warheads"
+Description="Grants access to EMP Warheads for all soldiers who can use them."
+
+; Primary Secondaries
+
+[TU_InitialPrimarySecondaryWeapons X2ResistanceTechUpgradeTemplate]
+DisplayName="Conventional Secondary Weapons"
+Description="Grants access to conventional secondary weapons that can be used as primary weapons for all soldiers."
+
+[TU_InitialLW2PrimarySecondaryWeapons X2ResistanceTechUpgradeTemplate]
+DisplayName="LW2 Secondary Weapons"
+Description="Grants access to conventional LW2 secondary weapons that can be used as primary weapons for all soldiers."
+
+; Rocket Launchers 2.0
+
+[TU_InitialRocketLaunchers X2ResistanceTechUpgradeTemplate]
+DisplayName="Conventional Rocket Launcers"
+Description="Grants access to conventional Rocket Launcher secondary weapons for all soldiers who can use them."
+
+[TU_IRI_RocketLauncher_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Rocket Launcers"
+Description="Grants access to Advanced Rocket Launcher secondary weapons for all soldiers who can use them."
+
+[TU_IRI_RocketLauncher_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Elerium Rocket Launcers"
+Description="Grants access to Elerium Rocket Launcher secondary weapons for all soldiers who can use them."
+
+
+
 ; Strings
 
 [UITLE_LadderModeMenu_Override]
