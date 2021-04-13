@@ -1,5 +1,11 @@
 class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress;
 
+struct EndState
+{
+	var XComGameState_Unit UnitState;
+	var array<XComGameState_Item> Inventory;
+};
+
 var array<name> PurchasedTechUpgrades;
 var array<XComGameState_Unit> SoldierStatesBeforeUpgrades;
 var LadderSettings Settings;
@@ -63,8 +69,11 @@ static function ProceedToNextRung( )
 	local array<string> PossibleMissionTypes;
 
 	local XComGameState_CampaignSettings CurrentCampaign, NextCampaign;
+	
+	local EndState EndingState;
+	local array<EndState> EndingStates;
+	local int EndingIndex;
 
-	local array<XComGameState_Unit> EndingUnitStates;
 	local int MedalLevel;
 
 	local array<Actor> Visualizers;
@@ -96,7 +105,16 @@ static function ProceedToNextRung( )
 	// The squad after upgrades
 	foreach XComHQ.Squad(UnitStateRef)
 	{
-		EndingUnitStates.AddItem( XComGameState_Unit( History.GetGameStateForObjectID( UnitStateRef.ObjectID ) ) );
+		`LOG("=== Adding stuff to EndingStates");
+		EndingState.UnitState = XComGameState_Unit(History.GetGameStateForObjectID( UnitStateRef.ObjectID));
+		
+		EndingState.Inventory.Length = 0;
+		for (EndingIndex = 0; EndingIndex < EndingState.UnitState.InventoryItems.length; EndingIndex++)
+		{
+			EndingState.Inventory.AddItem(XComGameState_Item(History.GetGameStateForObjectID(EndingState.UnitState.InventoryItems[EndingIndex].ObjectID)));
+		}
+		
+		EndingStates.AddItem(EndingState);
 	}
 
 	if (LadderData.LadderIndex < 10)
@@ -194,6 +212,7 @@ static function ProceedToNextRung( )
 
 		if (!History.ReadHistoryFromFile( "Ladders/", "Mission_" $ LadderData.LadderIndex $ "_" $ (LadderData.LadderRung + 1) $ "_" $ CurrentCampaign.DifficultySetting ))
 		{
+			`LOG("===== Failed to find save file");
 			if (!LadderData.bRandomLadder)
 			{
 				LadderData.ProgressCommand = "disconnect";
@@ -204,7 +223,7 @@ static function ProceedToNextRung( )
 		}
 		else
 		{
-			`LOG("===== Failed to find history");
+			`LOG("===== Save file found");
 			foreach Visualizers( Visualizer ) // gotta get rid of all these since we'll be wiping out the history objects they may be referring to (but only if we loaded a history)
 			{
 				if (Visualizer.bNoDelete)
@@ -248,11 +267,12 @@ static function ProceedToNextRung( )
 			{
 				// pull the unit from the archives, and add it to the start state
 				UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitStateRef.ObjectID));
+				RefreshUnit(History, NextMissionLadder, UnitStateRef, EndingStates[SoldierIndex]);
 
-				if (SoldierIndex < EndingUnitStates.Length)
-					UpdateUnitCustomization(UnitState, EndingUnitStates[SoldierIndex]);
-				else if(LadderData.LadderIndex <= 4)
-					LocalizeUnitName(UnitState, SoldierIndex, LadderData.LadderIndex);
+				if (SoldierIndex < EndingStates.Length)
+				{
+					UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
+				}
 
 				++SoldierIndex;
 			}
@@ -457,7 +477,7 @@ static function ProceedToNextRung( )
 
 		UnitState.ClearRemovedFromPlayFlag();
 		
-		UpdateUnitCustomization( UnitState, EndingUnitStates[ SoldierIndex ] );
+		UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
 
 		UnitState.SetCurrentStat( eStat_HP, UnitState.GetMaxStat( eStat_HP ) );
 
@@ -710,6 +730,74 @@ static function string GetUnitName(int unitNameIndex, int ladderMissionIndex)
 	}
 
 	return nameArray[unitNameIndex].sFirstName @ nameArray[unitNameIndex].sLastName;
+}
+
+private static function RefreshUnit( XComGameStateHistory History, XComGameState_LadderProgress LadderData, StateObjectReference NewUnitStateRef, EndState EndingState )
+{
+	local XComGameState StartState;
+	local XComGameState_HeadquartersXCom XComHQ;
+	local int SoldierIndex, Index;
+	local StateObjectReference UnitStateRef;
+	local ConfigurableSoldier SoldierConfigData;
+	local name ConfigName;
+	local XComGameState_Unit NewUnitState;
+	local XComGameState_Item ItemState;
+	local XComGameState_Item NewItemState;
+
+	`LOG("==== RefreshUnit");
+
+	StartState = History.GetStartState( );
+	`assert( StartState != none );
+
+	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+	NewUnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', NewUnitStateRef.ObjectID));
+
+	// remove all their items
+	`LOG("==== RefreshUnit: NewUnitState.InventoryItems.Length: " $ string(NewUnitState.InventoryItems.Length));
+	for (Index = NewUnitState.InventoryItems.Length - 1; Index >= 0; --Index)
+	{
+		ItemState = XComGameState_Item( StartState.ModifyStateObject(class'XComGameState_Item', NewUnitState.InventoryItems[Index].ObjectID) );
+		if (ItemState != none && NewUnitState.CanRemoveItemFromInventory( ItemState, StartState ))
+		{
+			`LOG("==== RefreshUnit: Can remove: " $ string(ItemState.GetMyTemplateName()));
+			NewUnitState.RemoveItemFromInventory( ItemState, StartState );
+			History.PurgeObjectIDFromStartState( ItemState.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
+
+			if (ItemState.CosmeticUnitRef.ObjectID > 0) // we also need to destroy any associated units that may exist
+			{
+				History.PurgeObjectIDFromStartState( ItemState.CosmeticUnitRef.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
+			}
+		}
+	}
+
+	// add all items from the old state
+	`LOG("==== RefreshUnit: EndingState.Inventory.Length: " $ string(EndingState.Inventory.Length));
+	NewUnitState.bIgnoreItemEquipRestrictions = true;
+	for (Index = 0; Index < EndingState.Inventory.Length; Index++)
+	{
+		ItemState = EndingState.Inventory[Index];
+		if (ItemState != none)
+		{
+			NewItemState = ItemState.GetMyTemplate().CreateInstanceFromTemplate(StartState);
+			if (ItemState.GetMyTemplate().iItemSize > 0 && NewUnitState.CanAddItemToInventory(NewItemState.GetMyTemplate(), ItemState.InventorySlot, StartState, ItemState.Quantity, NewItemState))
+			{
+				`LOG("==== RefreshUnit: Can add: " $ string(NewItemState.GetMyTemplateName()));
+				if (NewUnitState.AddItemToInventory(NewItemState, ItemState.InventorySlot, StartState))
+				{
+					`LOG("==== RefreshUnit: added item to inventory: " $ string(NewItemState.GetMyTemplateName()));
+				}
+			}
+		}
+	}
+	NewUnitState.bIgnoreItemEquipRestrictions = false;
+
+	// add all abilities from the old state
+	NewUnitState.SetSoldierProgression(EndingState.UnitState.m_SoldierProgressionAbilties);
+	
+	// refill hp
+	NewUnitState.SetCurrentStat( eStat_HP, NewUnitState.GetMaxStat( eStat_HP ) );
+
+	History.UpdateStateObjectCache( );
 }
 
 private static function HandlePreExistingSoliderEquipment( XComGameStateHistory History, XComGameState_LadderProgress LadderData )
@@ -1843,47 +1931,48 @@ function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
 
 	`LOG("=== PurchaseTechUpgrade DataName: " $ string(DataName));
 
-	if (Template.AssociatedTech != '')
-	{
-		`LOG("=== PurchaseTechUpgrade Template.AssociatedTech: " $ string(Template.AssociatedTech));
-		TechMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
-		TechTemplate = X2TechTemplate(TechMgr.FindStrategyElementTemplate(Template.AssociatedTech));
-		RequiredTechTemplate = X2TechTemplate(TechMgr.FindStrategyElementTemplate('AutopsyViper'));
-		
-		// Try to get requirement
-		RequiredTechState = XComGameState_Tech(NewGameState.CreateNewStateObject(class'XComGameState_Tech', RequiredTechTemplate));
-		RequiredTechState.bForceInstant = true;
-		RequiredTechState.bBlocked = false;
-			
-		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
-		XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
-		XComHQ.TechsResearched.AddItem(RequiredTechState.GetReference());
-			
-		RequiredTechState = XComGameState_Tech(NewGameState.ModifyStateObject(class'XComGameState_Tech', RequiredTechState.ObjectID));
-		RequiredTechState.TimesResearched++;
-		RequiredTechState.TimeReductionScalar = 0;
-		RequiredTechState.OnResearchCompleted(NewGameState);
-
-
-		if (TechTemplate != none)
-		{
-			`LOG("=== PurchaseTechUpgrade TechTemplate found");
-			TechState = XComGameState_Tech(NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate));
-			TechState.bForceInstant = true;
-			TechState.bBlocked = false;
-
-			XComHQ.TechsResearched.AddItem(TechState.GetReference());
-			
-			TechState = XComGameState_Tech(NewGameState.ModifyStateObject(class'XComGameState_Tech', TechState.ObjectID));
-			TechState.TimesResearched++;
-			TechState.TimeReductionScalar = 0;
-			TechState.OnResearchCompleted(NewGameState);
-			`LOG("=== PurchaseTechUpgrade Research completed");
-
-			Credits -= Template.Cost;
-		}
-	}
-
+	//if (Template.AssociatedTech != '')
+	//{
+		//`LOG("=== PurchaseTechUpgrade Template.AssociatedTech: " $ string(Template.AssociatedTech));
+		//TechMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+		//TechTemplate = X2TechTemplate(TechMgr.FindStrategyElementTemplate(Template.AssociatedTech));
+		//RequiredTechTemplate = X2TechTemplate(TechMgr.FindStrategyElementTemplate('AutopsyViper'));
+		//
+		//// Try to get requirement
+		//RequiredTechState = XComGameState_Tech(NewGameState.CreateNewStateObject(class'XComGameState_Tech', RequiredTechTemplate));
+		//RequiredTechState.bForceInstant = true;
+		//RequiredTechState.bBlocked = false;
+			//
+		//XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+		//XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+		//XComHQ.TechsResearched.AddItem(RequiredTechState.GetReference());
+			//
+		//RequiredTechState = XComGameState_Tech(NewGameState.ModifyStateObject(class'XComGameState_Tech', RequiredTechState.ObjectID));
+		//RequiredTechState.TimesResearched++;
+		//RequiredTechState.TimeReductionScalar = 0;
+		//RequiredTechState.OnResearchCompleted(NewGameState);
+//
+//
+		//if (TechTemplate != none)
+		//{
+			//`LOG("=== PurchaseTechUpgrade TechTemplate found");
+			//TechState = XComGameState_Tech(NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate));
+			//TechState.bForceInstant = true;
+			//TechState.bBlocked = false;
+//
+			//XComHQ.TechsResearched.AddItem(TechState.GetReference());
+			//
+			//TechState = XComGameState_Tech(NewGameState.ModifyStateObject(class'XComGameState_Tech', TechState.ObjectID));
+			//TechState.TimesResearched++;
+			//TechState.TimeReductionScalar = 0;
+			//TechState.OnResearchCompleted(NewGameState);
+			//`LOG("=== PurchaseTechUpgrade Research completed");
+//
+			//Credits -= Template.Cost;
+		//}
+	//}
+	
+	Credits -= Template.Cost;
 	PurchasedTechUpgrades.AddItem(DataName);
 }
 

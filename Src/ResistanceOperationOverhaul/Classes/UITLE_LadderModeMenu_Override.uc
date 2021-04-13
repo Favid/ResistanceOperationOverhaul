@@ -996,25 +996,25 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 	LadderData.LadderSize = class'XComGameState_LadderProgress_Override'.default.DefaultSize;
 	LadderData.LadderRung = 1;
 	LadderData.LadderIndex = Profile.Data.m_Ladders;
+	LadderData.LadderName = class'XGMission'.static.GenerateOpName( false ) @ "-" @ TimeStamp;
+	class'UITacticalQuickLaunch'.static.ResetLastUsedSquad();
 	
 	// This block has been modified
 	if (Settings.UseCustomSettings)
 	{
+		LadderData.LadderSize = Settings.LadderLength;
 		LadderData.Settings = Settings;
 		LadderData.CustomRungConfigurations = CalculateRungConfiguration();
-		LadderData.LadderSize = Settings.LadderLength;
 		InitSquad(TacticalStartState, XComPlayerState, LadderData);
 	}
 	else
 	{
-		LadderData.SquadProgressionName = class'XComGameState_LadderProgress'.default.SquadProgressions[ `SYNC_RAND_STATIC( class'XComGameState_LadderProgress'.default.SquadProgressions.Length ) ].SquadName;
 		LadderData.LadderSize = class'XComGameState_LadderProgress'.default.DefaultSize;
+		LadderData.SquadProgressionName = class'XComGameState_LadderProgress'.default.SquadProgressions[ `SYNC_RAND_STATIC( class'XComGameState_LadderProgress'.default.SquadProgressions.Length ) ].SquadName;
 		SquadMembers = class'XComGameState_LadderProgress'.static.GetSquadProgressionMembers( LadderData.SquadProgressionName, 1 );
 		class'UITacticalQuickLaunch_MapData'.static.ApplySquad( SquadMembers );
 	}
 
-	class'UITacticalQuickLaunch'.static.ResetLastUsedSquad( );
-	LadderData.LadderName = class'XGMission'.static.GenerateOpName( false ) @ "-" @ TimeStamp;
 	LadderData.PopulateStartingUpgradeTemplates();
 	LadderData.PopulateUpgradeProgression( );
 
@@ -1169,12 +1169,10 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 	local array<string> UsedCharacters;
 
 	`LOG("InitSquad");
-
-	// Somehow, the squad progression soldiers are being added
-	// Need to figure out how, but for now we can just remove them here before adding ours
-	HeadquartersStateObject = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
-	HeadquartersStateObject.Squad.length = 0;
-
+	
+	// Obliterate any previously added Units / Items
+	class'UITacticalQuickLaunch_MapData'.static.PurgeGameState();
+	
 	// First, fill UsedClasses and UsedCharacters with user selected classes and characters
 	foreach Settings.SoldierOptions (Option)
 	{
@@ -1212,7 +1210,81 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 		else
 		{
 			// Add these soldiers to the ladder data, and create them when we get to their starting missions
+			// However, to maintain a consistent ladder every playthough (gameplay wise) we need to choose their classes now
+			if (Option.bRandomClass)
+			{
+				Option.ClassName = class'ResistanceOverhaulHelpers'.static.RandomlyChooseClass(Settings.AllowedClasses, UsedClasses);
+				Option.bRandomClass = false;
+			}
+
+			if (UsedClasses.Find(Option.ClassName) == INDEX_NONE)
+			{
+				UsedClasses.AddItem(Option.ClassName);
+			}
+
 			LadderData.FutureSoldierOptions.AddItem(Option);
 		}
 	}
+}
+
+simulated function OnLadderAbandoned( UIList ContainerList, int ItemIndex )
+{
+	local int LadderIndex;
+	local XComGameStateHistory History;
+	local XComGameState_LadderProgress_Override LadderData;
+	local XComGameState_LadderProgress LadderData2;
+	local XComGameState_CampaignSettings CurrentCampaign;
+	local LadderSaveData SaveData;
+
+	LadderIndex = GetCurrentLadderIndex();
+
+	// selected a ladder with an in progress savegame
+	foreach m_LadderSaveData( SaveData )
+	{
+		if (SaveData.LadderIndex == LadderIndex)
+		{
+			History = class'XComGameStateHistory'.static.GetGameStateHistory();
+
+			History.ReadHistoryFromFile( "Ladders/", "Ladder_" $ LadderIndex );
+			
+			CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
+			LadderData = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
+			if (LadderData == none)
+			{
+				LadderData2 = XComGameState_LadderProgress(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress'));
+				if (LadderData2 == none)
+				{
+					return;
+				}
+			}
+
+			`FXSLIVE.BizAnalyticsLadderEnd( CurrentCampaign.BizAnalyticsCampaignID, LadderIndex, 0, 0, LadderData.SquadProgressionName, CurrentCampaign.DifficultySetting );
+
+			`ONLINEEVENTMGR.DeleteSaveGame( SaveData.SaveID );
+			`ONLINEEVENTMGR.UpdateSaveGameList();
+
+			if (LadderData == none)
+			{
+				XComCheatManager(GetALocalPlayerController().CheatManager).CreateLadder( LadderIndex, LadderData2.LadderSize, CurrentCampaign.DifficultySetting );
+			}
+			else if (!LadderData.Settings.UseCustomSettings)
+			{
+				XComCheatManager(GetALocalPlayerController().CheatManager).CreateLadder( LadderIndex, LadderData.LadderSize, CurrentCampaign.DifficultySetting );
+			}
+			else
+			{
+				// TODO need to modify the saved ladder data such that it displays the first mission
+				// RecreateAbandonedLadder(LadderData);
+			}
+
+			if(ContainerList == NarrativeList)
+				UpdateData(ItemIndex);
+			else
+				UpdateData(ItemIndex + 4);
+
+			return;
+		}
+	}
+
+	// shouldn't be able to get here as we should only be able to abandon an in progress ladder which means there's a matching save
 }

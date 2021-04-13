@@ -2187,7 +2187,7 @@ simulated function UpdateDataCompletedProjects()
 	foreach TemplateNames(TemplateName)
 	{
 		Template = TemplateManager.FindTemplate(TemplateName);
-		if (Template != none)
+		if (Template != none && Template.AtleastOneInventoryUpgradeExists())
 		{
 			GetListItem(Index).UpdateDataValue(Template.DisplayName, string(Template.Cost), , , );
 			GetListItem(Index).metadataString = string(Template.DataName);

@@ -77,7 +77,7 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 }
 
 
-private static function name RandomlyChooseClass(array<name> AllowedClasses, array<name> DisallowedClasses)
+public static function name RandomlyChooseClass(array<name> AllowedClasses, array<name> DisallowedClasses)
 {
 	local name ChosenClass;
 	local name AllowedClass;
