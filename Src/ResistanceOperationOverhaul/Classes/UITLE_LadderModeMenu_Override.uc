@@ -3,6 +3,7 @@ class UITLE_LadderModeMenu_Override extends UITLE_LadderModeMenu config (LadderO
 enum EUILadderScreenState
 {
 	eUILadderScreenState_Base,
+	eUILadderScreenState_CustomVisible,
 	eUILadderScreenState_CustomSettings,
 	eUILadderScreenState_AllowedClasses,
 	eUILadderScreenState_AdvancedOptions,
@@ -163,14 +164,14 @@ simulated function OnSelectedChange(UIList ContainerList, int ItemIndex)
 {
 	if (ContainerList == List && ItemIndex == 0)
 	{
-		UIScreenState = eUILadderScreenState_CustomSettings;
+		UIScreenState = eUILadderScreenState_CustomVisible;
+		UpdateCustomListData();
 	}
 	else
 	{
 		UIScreenState = eUILadderScreenState_Base;
+		UpdateCustomListData();
 	}
-	
-	UpdateCustomListData();
 
 	super.OnSelectedChange(ContainerList, ItemIndex);
 }
@@ -182,10 +183,15 @@ simulated function UpdateCustomListData()
 	switch (UIScreenState)
 	{
 	case eUILadderScreenState_Base:
-		// The vanilla screen
+		// The vanilla screen behavior
 		UpdateCustomListDataBase();
 		break;
+	case eUILadderScreenState_CustomVisible:
+		// Showing new list, but still navigating on left column
+		UpdateCustomListDataCustomVisible();
+		break;
 	case eUILadderScreenState_CustomSettings:
+		// Showing new list, and navigating on it
 		UpdateCustomListDataCustomSettings();
 		break;
 	case eUILadderScreenState_AllowedClasses:
@@ -245,13 +251,41 @@ simulated function HideListItems()
 
 simulated function UpdateCustomListDataBase()
 {
+	if (CustomList.IsSelectedNavigation())
+	{
+		SelectLeftColumn();
+	}
 	CustomList.SetVisible(false);
+}
+
+simulated function UpdateCustomListDataCustomVisible()
+{
+	if (CustomList.IsSelectedNavigation())
+	{
+		SelectLeftColumn();
+	}
+	PopulateCustomSettings();
+}
+
+simulated function SelectLeftColumn()
+{
+	CustomList.Navigator.SetSelected(none);
+	Navigator.SetSelected(LeftColumn);
+	LeftColumn.Navigator.SetSelected(List);
+	List.Navigator.SelectFirstAvailable();
 }
 
 simulated function UpdateCustomListDataCustomSettings()
 {
-	local int Index;
+	PopulateCustomSettings();
+	LeftColumn.Navigator.SetSelected(none);
+	Navigator.SetSelected(CustomList);
+}
 
+simulated function PopulateCustomSettings()
+{
+	local int Index;
+	
 	Index = 0;
 	
 	GetListItem(Index).EnableNavigation();
@@ -333,6 +367,7 @@ simulated function UpdateCustomListDataCustomSettings()
 	Index++;
 	
 	CustomList.SetVisible(true);
+	UpdateMissionProgressLabel();
 }
 
 simulated function OnEnableCustomSettingsToggled(UICheckbox checkboxControl)
@@ -372,22 +407,35 @@ simulated function LadderLengthSpinnerSpinned(UIListItemSpinner SpinnerPanel, in
 	{
 		SpinnerPanel.SetValue(string(NewValue));
 		Settings.LadderLength = NewValue;
-
-		for (MissionIndex = 0; MissionIndex < Settings.LadderLength; MissionIndex++)
-		{
-			mc.BeginFunctionOp("SetMissionNode");
-			mc.QueueNumber(MissionIndex);
-			if (MissionIndex == 0)
-			{
-				mc.QueueNumber(1);
-			}
-			else
-			{
-				mc.QueueNumber(0);
-			}
-			mc.EndOp();
-		}
+	
+		UpdateMissionProgressLabel();
 	}
+}
+
+simulated function UpdateMissionProgressLabel()
+{
+	local int MissionIndex;
+
+	for (MissionIndex = 0; MissionIndex < Settings.LadderLength; MissionIndex++)
+	{
+		mc.BeginFunctionOp("SetMissionNode");
+		mc.QueueNumber(MissionIndex);
+		if (MissionIndex == 0)
+		{
+			mc.QueueNumber(1);
+		}
+		else
+		{
+			mc.QueueNumber(0);
+		}
+		mc.EndOp();
+	}
+
+	mc.BeginFunctionOp("SetMissionProgressText");
+	MC.QueueString(m_ProgressLabel);
+	MC.QueueString(m_MissionLabel);
+	MC.QueueString(1 @ "/" @ Settings.LadderLength);
+	mc.EndOp();
 }
 
 simulated function ForceLevelStartSpinnerSpinned( UIListItemSpinner SpinnerPanel, int Direction )
@@ -855,7 +903,86 @@ simulated function OnClickLoadFile(UIMechaListItem MechaItem)
 simulated function bool OnUnrealCommand(int cmd, int arg)
 {
 	local bool bHandled;
-	// TODO
+	local UIList TargetList;
+
+	// Only pay attention to presses or repeats; ignoring other input types
+	// NOTE: Ensure repeats only occur with arrow keys
+	if( !CheckInputIsReleaseOrDirectionRepeat(cmd, arg) )
+		return false;
+
+	switch( cmd )
+	{
+	case class'UIUtilities_Input'.const.FXS_BUTTON_A :
+	case class'UIUtilities_Input'.const.FXS_KEY_ENTER:
+	case class'UIUtilities_Input'.const.FXS_KEY_SPACEBAR:
+		if(Navigator.GetSelected() == CustomList)
+		{
+			// Selecting item from new list
+			bHandled = Navigator.OnUnrealCommand(class'UIUtilities_Input'.const.FXS_KEY_ENTER, arg);
+		}
+		else
+		{
+			TargetList = UIList(LeftColumn.Navigator.GetSelected());
+			if( TargetList == List && TargetList.SelectedIndex == 0 )
+			{
+				// Selecting new resistance operation, so show options
+				UIScreenState = eUILadderScreenState_CustomSettings;
+				UpdateCustomListData();
+				bHandled = true;
+			}
+			else if (LeftColumn.Navigator.GetSelected() == List || LeftColumn.Navigator.GetSelected() == NarrativeList)
+			{
+				// Selected existing resistance operation, so do nothing (because we start them with Start now)
+				bHandled = true;
+			}
+		}
+
+		break;
+	case class'UIUtilities_Input'.const.FXS_DPAD_UP :
+	case class'UIUtilities_Input'.const.FXS_ARROW_UP :
+	case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_UP :
+	case class'UIUtilities_Input'.const.FXS_KEY_W :
+		if(Navigator.GetSelected() == CustomList)
+		{
+			// Navigate settings list
+			bHandled = CustomList.GetSelectedItem().OnUnrealCommand(class'UIUtilities_Input'.const.FXS_ARROW_UP, arg);
+		}
+		break;
+	case class'UIUtilities_Input'.const.FXS_DPAD_DOWN :
+	case class'UIUtilities_Input'.const.FXS_ARROW_DOWN :
+	case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_DOWN :
+	case class'UIUtilities_Input'.const.FXS_KEY_S :
+		if(Navigator.GetSelected() == CustomList)
+		{
+			// Navigate settings list
+			bHandled = CustomList.GetSelectedItem().OnUnrealCommand(class'UIUtilities_Input'.const.FXS_ARROW_DOWN, arg);
+		}
+		break;
+	case class'UIUtilities_Input'.const.FXS_BUTTON_START:
+			TargetList = UIList(LeftColumn.Navigator.GetSelected());
+			if( TargetList != none )
+			{
+				// Start the selected resistance operation
+				OnLadderClicked(TargetList, TargetList.SelectedIndex);
+			}
+			else
+			{
+				// In the new list, so start a new resistance operation
+				OnLadderClicked(List, 0);
+			}
+			bHandled = true;
+			break;
+	case class'UIUtilities_Input'.const.FXS_BUTTON_X:
+	case class'UIUtilities_Input'.const.FXS_BUTTON_Y:
+	case class'UIUtilities_Input'.const.FXS_BUTTON_R3:
+			TargetList = UIList(LeftColumn.Navigator.GetSelected());
+			if (TargetList == none || (TargetList == List && TargetList.SelectedIndex == 0))
+			{
+				// Either our custom list is selected, or new operation is selected, so these should do nothing
+				bHandled = true;
+			}
+			break;
+	}
 
 	// always give base class a chance to handle the input so key input is propogated to the panel's navigator
 	return (bHandled || super.OnUnrealCommand(cmd, arg));
@@ -866,8 +993,12 @@ simulated public function OnCancel()
 	switch (UIScreenState)
 	{
 	case eUILadderScreenState_Base:
-	case eUILadderScreenState_CustomSettings:
+	case eUILadderScreenState_CustomVisible:
 		super.OnCancel();
+		break;
+	case eUILadderScreenState_CustomSettings:
+		UIScreenState = eUILadderScreenState_CustomVisible;
+		UpdateCustomListData();
 		break;
 	case eUILadderScreenState_AllowedClasses:
 	case eUILadderScreenState_AdvancedOptions:
@@ -893,14 +1024,14 @@ simulated function RefreshButtonHelpLabels(int LadderIndex)
 	{
 		if( `ISCONTROLLERACTIVE )
 		{
-			mc.FunctionString("SetContinueButton", class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -10) @ m_strContinueLadder);
+			mc.FunctionString("SetContinueButton", class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -5) @ m_strContinueLadder);
 		}
 	}
 	else // Starting a fresh ladder 
 	{
 		if( `ISCONTROLLERACTIVE )
 		{
-			mc.FunctionString("SetContinueButton", class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -10) @ m_strBeginLadder);
+			mc.FunctionString("SetContinueButton", class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -5) @ m_strBeginLadder);
 		}
 	}
 }
@@ -1146,10 +1277,6 @@ function array<RungConfig> CalculateRungConfiguration()
 		RungConfiguration.ForceLevel = int(Settings.ForceLevelStart + (ForceInterval * Index));
 		RungConfiguration.AlertLevel = int(Settings.AlertLevelStart + (AlertInterval * Index));;
 		RungConfigurations.AddItem(RungConfiguration);
-
-		//`LOG("=== Rung: " $ string(i));
-		//`LOG("=== FL: " $ string(RungConfiguration.ForceLevel));
-		//`LOG("=== AL: " $ string(RungConfiguration.AlertLevel));
 	}
 	
 	RungConfiguration.ForceLevel = Settings.ForceLevelEnd;
@@ -1167,8 +1294,6 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 	local XComGameState_Unit Soldier;
 	local array<name> UsedClasses;
 	local array<string> UsedCharacters;
-
-	`LOG("InitSquad");
 	
 	// Obliterate any previously added Units / Items
 	class'UITacticalQuickLaunch_MapData'.static.PurgeGameState();
@@ -1178,13 +1303,11 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 	{
 		if (!Option.bRandomClass)
 		{
-			`LOG("Adding to UsedClasses: " $ string(Option.ClassName));
 			UsedClasses.AddItem(Option.ClassName);
 		}
 		
 		if (!Option.bRandomlyGeneratedCharacter && !Option.bRandomCharacter)
 		{
-			`LOG("Adding to UsedCharacters: " $ Option.CharacterPoolName);
 			UsedCharacters.AddItem(Option.CharacterPoolName);
 		}
 	}
