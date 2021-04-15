@@ -40,12 +40,6 @@
     <Content Include="Src\ResistanceOperationOverhaul\Classes\UILadderUpgradeScreen_Override.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\ResistanceOperationOverhaul\Classes\UITactical_PromotionHero.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\ResistanceOperationOverhaul\Classes\UITactical_PromotionHeroColumn.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\ResistanceOperationOverhaul\Classes\UITLE_LadderModeMenu_Override.uc">
       <SubType>Content</SubType>
     </Content>
