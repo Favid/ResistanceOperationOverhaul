@@ -81,7 +81,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	local int RankIndex;
 	local array<name> UsedClasses;
 	local array<string> UsedCharacters;
-	local int X, Y;
+	local int CreditsX, CreditsY;
 	
 	`LOG("==== InitScreen");
 
@@ -185,15 +185,15 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	mc.FunctionString("SetScreenTitle", ScreenTitle);
 
 	// Credits text
-	X = 740;
-	Y = -500;
+	CreditsX = 740;
+	CreditsY = -500;
 
 	Background = Spawn(class'UIBGBox', self);
 	Background.bAnimateOnInit = false;
 	Background.bCascadeFocus = false;
 	Background.InitBG('SelectChoice_Background');
 	Background.AnchorCenter();
-	Background.SetPosition(X,Y);
+	Background.SetPosition(CreditsX,CreditsY);
 	Background.SetSize(200,40);
 	Background.SetBGColor("cyan");
 	Background.SetAlpha(0.9f);	
@@ -202,7 +202,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	PanelDecoration.bAnimateOnInit = false;
 	PanelDecoration.InitBG('SelectChoice_TitleBackground');
 	PanelDecoration.AnchorCenter();
-	PanelDecoration.setPosition(X,Y);
+	PanelDecoration.setPosition(CreditsX,CreditsY);
 	PanelDecoration.setSize(200,40);
 	PanelDecoration.SetBGColor("cyan");
 	PanelDecoration.SetAlpha(0.9f);
@@ -211,7 +211,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	CreditsText.bAnimateOnInit = false;
 	CreditsText.InitText('CreditsText',"Credits: " @ string(LadderData.Credits),false);
 	CreditsText.AnchorCenter();
-	CreditsText.SetPosition(X + 15, Y + 5);
+	CreditsText.SetPosition(CreditsX + 15, CreditsY + 5);
 	CreditsText.SetSize(200,40);
 	CreditsText.SetText("Credits: " @ string(LadderData.Credits));
 
@@ -849,7 +849,6 @@ simulated function UpdateData()
 	case eUIScreenState_Soldier:
 		UpdateDataSoldierData();
 		UpdateDataSoldierOptions();
-		// OpenPromotionScreen();
 		break;
 	case eUIScreenState_Abilities:
 		UpdateDataSoldierAbilities();
@@ -902,7 +901,8 @@ simulated function UpdateDataSquad()
 	local string PromoteIcon;
 	local string NewIcon;
 
-	GetListItem(0).EnableNavigation();
+	Index = 0;
+	GetListItem(Index).EnableNavigation();
 	GetListItem(Index).UpdateDataValue("Research", "", , , OnClickEditSoldier);
 
 	for( Index = 1; Index < Squad.Length + 1; Index++ )
@@ -929,9 +929,6 @@ simulated function UpdateDataSquad()
 
 		GetListItem(Index).UpdateDataValue(NewIcon $ PromoteIcon $ Squad[Index - 1].GetFullName(), "", , , OnClickEditSoldier);
 	}
-
-	//mc.FunctionVoid("HideAllScreens");
-	//RefreshSquadDetailsPanel();
 }
 
 simulated function OnClickEditSoldier(UIMechaListItem MechaItem)
@@ -974,7 +971,6 @@ simulated function UpdateDataSoldierOptions()
 	local int NumUtilitySlots;
 	local string PromoteIcon;
 	local int NumAttachmentSlots;
-	local int NumAttachmentsEquipped;
 	local int AttachmentIndex;
 	local array<name> Attachments;
 	local X2WeaponUpgradeTemplate AttachmentTemplate;
@@ -1351,7 +1347,6 @@ simulated function OnClickUpgradePrimaryWeapon(UIMechaListItem MechaItem)
 simulated function UpdateDataWeaponAttachment()
 {
 	local X2ItemTemplateManager ItemTemplateManager;
-	local int Index;
 	local X2WeaponUpgradeTemplate AttachmentTemplate;
 	local array<X2WeaponUpgradeTemplate> AttachmentTemplates;
 	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
@@ -1368,7 +1363,6 @@ simulated function UpdateDataWeaponAttachment()
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 	EquippedWeapon = Soldier.GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
 
-	Index = 0;
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
 	{
 		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
@@ -1515,11 +1509,9 @@ simulated function UpdateDataPCS()
 	local name PurchasedTemplateName;
 	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
 	local InventoryUpgrade ItemUpgrade;
-	local XComGameState_Unit Soldier;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Soldier = Squad[SelectedSoldierIndex];
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
@@ -1596,11 +1588,9 @@ simulated function UpdateDataUtilItem(int UtilityItemIndex, delegate<OnSelectorC
 	local name PurchasedTemplateName;
 	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
 	local InventoryUpgrade ItemUpgrade;
-	local XComGameState_Unit Soldier;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Soldier = Squad[SelectedSoldierIndex];
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
@@ -1666,7 +1656,6 @@ simulated function bool IsUtilityItemAllowed(X2EquipmentTemplate EquipmentTempla
 simulated function UpdateDataGrenadePocket()
 {
 	local X2ItemTemplateManager ItemTemplateManager;
-	local int Index;
 	local X2GrenadeTemplate GrenadeTemplate;
 	local array<X2GrenadeTemplate> GrenadeTemplates;
 	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
@@ -1674,14 +1663,11 @@ simulated function UpdateDataGrenadePocket()
 	local name PurchasedTemplateName;
 	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
 	local InventoryUpgrade ItemUpgrade;
-	local XComGameState_Unit Soldier;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Soldier = Squad[SelectedSoldierIndex];
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 
-	Index = 0;
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
 	{
 		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
@@ -1712,7 +1698,6 @@ simulated function OnClickUpgradeGrenadePocket(UIMechaListItem MechaItem)
 simulated function UpdateDataAmmoPocket()
 {
 	local X2ItemTemplateManager ItemTemplateManager;
-	local int Index;
 	local X2AmmoTemplate AmmoTemplate;
 	local array<X2AmmoTemplate> AmmoTemplates;
 	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
@@ -1720,14 +1705,11 @@ simulated function UpdateDataAmmoPocket()
 	local name PurchasedTemplateName;
 	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
 	local InventoryUpgrade ItemUpgrade;
-	local XComGameState_Unit Soldier;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Soldier = Squad[SelectedSoldierIndex];
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 
-	Index = 0;
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
 	{
 		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
@@ -1765,11 +1747,9 @@ simulated function UpdateDataHeavyWeapon()
 	local name PurchasedTemplateName;
 	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
 	local InventoryUpgrade ItemUpgrade;
-	local XComGameState_Unit Soldier;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Soldier = Squad[SelectedSoldierIndex];
 	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
 
 	foreach PurchasedTemplateNames(PurchasedTemplateName)
@@ -1929,7 +1909,6 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 
 simulated function int SortItemListByTier(X2ItemTemplate A, X2ItemTemplate B)
 {
-	local X2ItemTemplateManager ItemTemplateManager;
 	local int TierA, TierB;
 
 	TierA = A.Tier;
@@ -1949,7 +1928,6 @@ simulated function UpdateDataSoldierAbilities()
 	local array<SoldierClassAbilityType> RankAbilities;
 	local SoldierClassAbilityType RankAbility;
 	local int Index;
-	local SCATProgression Progression;
 	local bool Earned;
 	local X2AbilityTemplate AbilityTemplate;
 	local UIMechaListItem ListItem;
@@ -2142,12 +2120,11 @@ simulated function UpdateDataResearchCategory()
 {
 	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
 	local int Index;
-	local array<X2ResistanceTechUpgradeTemplate> Templates;
 	local X2ResistanceTechUpgradeTemplate Template;
-	local X2ArmorTemplate ArmorTemplate;
 	local array<name> TemplateNames;
 	local name TemplateName;
 
+	Index = 0;
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
 	TemplateManager.GetTemplateNames(TemplateNames);
 
@@ -2194,7 +2171,6 @@ simulated function OnClickUpgradeTech(UIMechaListItem MechaItem)
 	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
 	local X2ResistanceTechUpgradeTemplate Template;
 	local int SelectedIndex;
-	local int UpgradeIndex;
 
 	for (SelectedIndex = 0; SelectedIndex < List.ItemContainer.ChildPanels.Length; SelectedIndex++)
 	{
@@ -2308,21 +2284,20 @@ simulated function HideListItems()
 simulated function OnContinueButtonClicked(UIButton button)
 {
 	local XComGameState_CampaignSettings CampaignSettings;
-	local XComGameState_HeadquartersXCom XComHQ;
 
 	`GAMERULES.SubmitGameState(NewGameState);
 
 	// See if our tech was researched
-	`LOG("=== OnContinueButtonClicked");
-	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
-	if (XComHQ != None)
-	{
-		`LOG("=== OnContinueButtonClicked XComHQ found");
-		if (XComHQ.IsTechResearched('BattlefieldMedicine'))
-		{
-			`LOG("=== OnContinueButtonClicked BattlefieldMedicine researched");
-		}
-	}
+	//`LOG("=== OnContinueButtonClicked");
+	//XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
+	//if (XComHQ != None)
+	//{
+		//`LOG("=== OnContinueButtonClicked XComHQ found");
+		//if (XComHQ.IsTechResearched('BattlefieldMedicine'))
+		//{
+			//`LOG("=== OnContinueButtonClicked BattlefieldMedicine researched");
+		//}
+	//}
 
 	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
 
@@ -2352,24 +2327,9 @@ private function bool IsOverhaulLadder(XComGameState_LadderProgress_Override Loc
 	return true;
 }
 
-simulated function OpenPromotionScreen()
-{
-	local UITactical_PromotionHero PromotionScreen;
-
-	PromotionScreen = Spawn(class'UITactical_PromotionHero',self);
-	PromotionScreen.InitPromotion(Squad[SelectedSoldierIndex], NewGameState);
-	Movie.Stack.Push(PromotionScreen);
-	PromotionScreen.Show();
-}
-
 simulated function bool OnUnrealCommand(int cmd, int arg)
 {
 	local bool bHandled;
-
-	if (!IsOverhaulLadder(LadderData))
-	{
-		return super.OnUnrealCommand(cmd, arg);
-	}
 
 	if (!CheckInputIsReleaseOrDirectionRepeat(cmd, arg))
 		return true;
@@ -2456,5 +2416,4 @@ defaultproperties
 
 	InputState = eInputState_Consume;
 	bHideOnLoseFocus = false;
-	SelectedColumn = 0; 
 }

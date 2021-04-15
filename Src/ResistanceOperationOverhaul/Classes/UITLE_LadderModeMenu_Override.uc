@@ -418,7 +418,6 @@ simulated function LadderLengthSpinnerSpinned(UIListItemSpinner SpinnerPanel, in
 {
 	local int CurrentValue;
 	local int NewValue;
-	local int MissionIndex;
 
 	CurrentValue = int(SpinnerPanel.value);
 	NewValue = CurrentValue + Direction;
@@ -632,9 +631,10 @@ simulated function UpdateCustomListDataSquad()
 	local int Index;
 	local int SoldierIndex;
 	local SoldierOption Option;
-	local X2SoldierClassTemplate ClassTemplate;
 	local string CharacterText;
 	local string ClassText;
+
+	Index = 0;
 	
 	GetListItem(Index).EnableNavigation();
 	GetListItem(Index).UpdateDataValue(m_NewSoldierText, "", OnClickAddSoldier);
@@ -711,7 +711,8 @@ simulated function UpdateCustomListDataSoldier()
 	local int CharacterIndex;
 	local int SelectedCharacterIndex;
 	local XComGameState_Unit Character;
-
+	
+	Index = 0;
 	Option = Settings.SoldierOptions[SelectedSoldierIndex];
 
 	GetListItem(Index).EnableNavigation();
@@ -850,6 +851,8 @@ simulated function UpdateCustomListDataSave()
 	local int SaveIndex;
 	local array<string> SaveDisplays;
 	local array<name> SaveFileNames;
+
+	Index = 0;
 
 	GetListItem(Index).EnableNavigation();
 	GetListItem(Index).UpdateDataValue(m_NewSaveText, "", OnClickNewSave);
@@ -1315,8 +1318,6 @@ function array<RungConfig> CalculateRungConfiguration()
 
 private function InitSquad(XComGameState TacticalStartState, XComGameState_Player XComPlayerState, XComGameState_LadderProgress_Override LadderData)
 {
-	local XComGameState_HeadquartersXCom HeadquartersStateObject;
-	local array<XComGameState_Unit> SquadMembers;
 	local SoldierOption Option;
 	local XComGameState_Unit Soldier;
 	local array<name> UsedClasses;
@@ -1355,7 +1356,6 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 			{
 				UsedCharacters.AddItem(Soldier.GetFullName());
 			}
-			SquadMembers.AddItem(Soldier);
 		}
 		else
 		{
