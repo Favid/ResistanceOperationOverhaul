@@ -655,7 +655,7 @@ m_SoldierRandomlyGeneratedCharacter="Randomly Generated Character"
 m_SoldierRandomCharacter="Random Character"
 m_SoldierRandomClass="Random Class"
 
-[UILadderUpgradeScreen_Override]
+[UILadderSquadUpgradeScreen]
 ScreenTitle="UPGRADE SQUAD"
 ScreenSubtitles[eUIScreenState_Squad]=""
 ScreenSubtitles[eUIScreenState_Research]="SELECT RESEARCH CATEGORY"

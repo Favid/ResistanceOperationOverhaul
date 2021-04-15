@@ -37,7 +37,7 @@
     <Content Include="Src\ResistanceOperationOverhaul\Classes\ResistanceOverhaulHelpers.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\ResistanceOperationOverhaul\Classes\UILadderUpgradeScreen_Override.uc">
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\UILadderSquadUpgradeScreen.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\ResistanceOperationOverhaul\Classes\UITLE_LadderModeMenu_Override.uc">

@@ -13,7 +13,7 @@ var array<RungConfig> CustomRungConfigurations;
 var array<SoldierOption> FutureSoldierOptions;
 var int Credits;
 
-var UILadderUpgradeScreen_Override UpgradeScreen;
+var UILadderSquadUpgradeScreen UpgradeScreen;
 
 static function ProceedToNextRung( )
 {
@@ -1072,7 +1072,7 @@ static function bool MaybeDoLadderProgressionChoice( )
 		return false;
 
 	Pres = `PRES;
-	LadderData.UpgradeScreen = Pres.Spawn(class'UILadderUpgradeScreen_Override');
+	LadderData.UpgradeScreen = Pres.Spawn(class'UILadderSquadUpgradeScreen');
 	Pres.Screenstack.Push(LadderData.UpgradeScreen);
 
 	return true;
