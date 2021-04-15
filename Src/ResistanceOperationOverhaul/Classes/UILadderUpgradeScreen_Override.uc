@@ -1,4 +1,4 @@
-class UILadderUpgradeScreen_Override extends UILadderUpgradeScreen dependson(X2DataSet_ResistanceTechUpgrades) config(SoldierUpgrades);
+class UILadderUpgradeScreen_Override extends UIScreen dependson(X2DataSet_ResistanceTechUpgrades) config(SoldierUpgrades);
 
 enum EUIScreenState
 {
@@ -35,6 +35,8 @@ var int SelectedAttachmentIndex;
 var EUpgradeCategory SelectedUpgradeCategory;
 var EInventorySlot SelectedInventorySlot;
 
+var int LastSelectedIndexes[EUIScreenState] <BoundEnum = EUIScreenState>;
+
 var UIText CreditsText;
 var UIPanel CreditsPanel;
 var UIBGBox Background, PanelDecoration;
@@ -42,6 +44,7 @@ var UILargeButton ContinueButton;
 
 var UIList List;
 
+var XComGameState_HeadquartersXCom XComHQ;
 var XComGameState NewGameState;
 var XComGameStateHistory History;
 var XComGameState_LadderProgress_Override LadderData;
@@ -226,7 +229,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	List = Spawn(class'UIList', LeftColumn);
 	List.InitList('MyList', , , , 825);
 	List.Navigator.LoopOnReceiveFocus = true;
-	List.Navigator.LoopSelection = false;
+	List.Navigator.LoopSelection = true;
 	List.bPermitNavigatorToDefocus = true;
 	List.Navigator.SelectFirstAvailable();
 	List.SetWidth(445);
@@ -237,9 +240,10 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	ContinueButton = Spawn(class'UILargeButton', LeftColumn);
 	ContinueButton.InitLargeButton('ContinueButton', , , OnContinueButtonClicked);
 	ContinueButton.SetPosition(500, 965);
+	ContinueButton.DisableNavigation();
 
 	// Not sure about this...
-	LeftColumn.Navigator.SetSelected(ContinueButton);
+	LeftColumn.Navigator.SetSelected(List);
 	
 	mc.FunctionVoid("HideAllScreens");
 	mc.BeginFunctionOp("SetMissionInfo");
@@ -254,7 +258,16 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	mc.QueueString("Objective");
 	mc.QueueString("Mission Template");
-	mc.QueueString("Continue");
+	
+	if( `ISCONTROLLERACTIVE )
+	{
+		mc.QueueString(class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -5) @ "Continue");
+	}
+	else
+	{
+		mc.QueueString("Continue");
+	}
+
 	mc.EndOp();
 	UpdateDetailsGeneric();
 
@@ -315,6 +328,8 @@ simulated function UpdateNavHelp()
 simulated function OnSetSelectedIndex(UIList ContainerList, int ItemIndex)
 {
 	local UIMechaListItem Item;
+
+	LastSelectedIndexes[UIScreenState] = ItemIndex;
 
 	if (UIScreenState == eUIScreenState_Squad)
 	{
@@ -786,9 +801,36 @@ function UIMechaListItem GetListItem(int ItemIndex, optional bool bDisableItem, 
 simulated function UpdateData()
 {
 	HideListItems();
-	
+
 	mc.FunctionString("SetScreenTitle", ScreenTitle);
 	mc.FunctionString("SetScreenSubtitle", ScreenSubtitles[UIScreenState]);
+	
+	switch (UIScreenState)
+	{
+	case eUIScreenState_Squad:
+		LastSelectedIndexes[eUIScreenState_Research] = 0;
+		LastSelectedIndexes[eUIScreenState_Soldier] = 0;
+		break;
+	case eUIScreenState_Research:
+		LastSelectedIndexes[eUIScreenState_ResearchCategory] = 0;
+		LastSelectedIndexes[eUIScreenState_CompletedProjects] = 0;
+		break;
+	case eUIScreenState_Soldier:
+		LastSelectedIndexes[eUIScreenState_Abilities] = 0;
+		LastSelectedIndexes[eUIScreenState_PrimaryWeapon] = 0;
+		LastSelectedIndexes[eUIScreenState_SecondaryWeapon] = 0;
+		LastSelectedIndexes[eUIScreenState_Armor] = 0;
+		LastSelectedIndexes[eUIScreenState_PCS] = 0;
+		LastSelectedIndexes[eUIScreenState_UtilItem1] = 0;
+		LastSelectedIndexes[eUIScreenState_UtilItem2] = 0;
+		LastSelectedIndexes[eUIScreenState_UtilItem3] = 0;
+		LastSelectedIndexes[eUIScreenState_GrenadePocket] = 0;
+		LastSelectedIndexes[eUIScreenState_AmmoPocket] = 0;
+		LastSelectedIndexes[eUIScreenState_HeavyWeapon] = 0;
+		LastSelectedIndexes[eUIScreenState_WeaponAttachment] = 0;
+		LastSelectedIndexes[eUIScreenState_CustomSlot] = 0;
+		break;
+	};
 	
 	switch (UIScreenState)
 	{
@@ -851,7 +893,7 @@ simulated function UpdateData()
 	};
 
 	if( List.IsSelectedNavigation() )
-		List.Navigator.SelectFirstAvailable();
+		List.SetSelectedIndex(LastSelectedIndexes[UIScreenState]);
 }
 
 simulated function UpdateDataSquad()

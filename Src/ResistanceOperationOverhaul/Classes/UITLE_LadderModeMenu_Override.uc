@@ -72,12 +72,13 @@ var localized string m_SoldierRandomlyGeneratedCharacter;
 var localized string m_SoldierRandomCharacter;
 var localized string m_SoldierRandomClass;
 
-var int CustomListLastSelectedIndex;
 var UIList CustomList;
 var EUILadderScreenState UIScreenState;
 var LadderSettings Settings;
 var array<X2SoldierClassTemplate> MasterClassList;
 var int SelectedSoldierIndex;
+
+var int LastSelectedIndexes[EUILadderScreenState] <BoundEnum = EUILadderScreenState>;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -145,6 +146,8 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 simulated function OnSetSelectedIndex(UIList ContainerList, int ItemIndex)
 {
+	LastSelectedIndexes[UIScreenState] = ItemIndex;
+
 	if (UIScreenState == eUILadderScreenState_Squad)
 	{
 		if (ItemIndex == 0)
@@ -183,6 +186,23 @@ simulated function UpdateCustomListData()
 	switch (UIScreenState)
 	{
 	case eUILadderScreenState_Base:
+	case eUILadderScreenState_CustomVisible:
+		LastSelectedIndexes[eUILadderScreenState_CustomSettings] = 0;
+	case eUILadderScreenState_CustomSettings:
+		LastSelectedIndexes[eUILadderScreenState_AllowedClasses] = 0;
+		LastSelectedIndexes[eUILadderScreenState_AdvancedOptions] = 0;
+		LastSelectedIndexes[eUILadderScreenState_Squad] = 0;
+		LastSelectedIndexes[eUILadderScreenState_Save] = 0;
+		LastSelectedIndexes[eUILadderScreenState_Load] = 0;
+		break;
+	case eUILadderScreenState_Squad:
+		LastSelectedIndexes[eUILadderScreenState_Soldier] = 0;
+		break;
+	};
+	
+	switch (UIScreenState)
+	{
+	case eUILadderScreenState_Base:
 		// The vanilla screen behavior
 		UpdateCustomListDataBase();
 		break;
@@ -215,7 +235,7 @@ simulated function UpdateCustomListData()
 	};
 
 	if( CustomList.IsSelectedNavigation() )
-		CustomList.Navigator.SelectFirstAvailable();
+		CustomList.SetSelectedIndex(LastSelectedIndexes[UIScreenState]);
 }
 
 function UIMechaListItem GetListItem(int ItemIndex, optional bool bDisableItem, optional string DisabledReason)
@@ -616,12 +636,13 @@ simulated function UpdateCustomListDataSquad()
 	local string CharacterText;
 	local string ClassText;
 	
-	if (Settings.SoldierOptions.Length < default.SQUAD_SIZE_MAX)
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(m_NewSoldierText, "", OnClickAddSoldier);
+	if (Settings.SoldierOptions.Length >= default.SQUAD_SIZE_MAX)
 	{
-		GetListItem(0).EnableNavigation();
-		GetListItem(0).UpdateDataValue(m_NewSoldierText, "", OnClickAddSoldier);
-		Index++;
+		GetListItem(Index).SetDisabled(true);
 	}
+	Index++;
 
 	for (SoldierIndex = 0; SoldierIndex < Settings.SoldierOptions.Length; SoldierIndex++)
 	{
@@ -665,7 +686,8 @@ simulated function OnClickAddSoldier()
 	Option.bRandomClass = true;
 	Option.StartingMission = 1;
 	Settings.SoldierOptions.AddItem(Option);
-
+	
+	LastSelectedIndexes[eUILadderScreenState_Squad] = CustomList.ItemCount;
 	UIScreenState = eUILadderScreenState_Soldier;
 	UpdateCustomListData();
 }
@@ -694,6 +716,10 @@ simulated function UpdateCustomListDataSoldier()
 
 	GetListItem(Index).EnableNavigation();
 	GetListItem(Index).UpdateDataValue(m_RemoveSoldierText, "", OnClickRemoveSoldier);
+	if (Settings.SoldierOptions.Length <= 1)
+	{
+		GetListItem(Index).SetDisabled(true);
+	}
 	Index++;
 	
 	GetListItem(Index).EnableNavigation();
@@ -752,6 +778,7 @@ simulated function UpdateCustomListDataSoldier()
 simulated function OnClickRemoveSoldier()
 {
 	Settings.SoldierOptions.Remove(SelectedSoldierIndex, 1);
+	LastSelectedIndexes[eUILadderScreenState_Squad] = 0;
 
 	UIScreenState = eUILadderScreenState_Squad;
 	UpdateCustomListData();

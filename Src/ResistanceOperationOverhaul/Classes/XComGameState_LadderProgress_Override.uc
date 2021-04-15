@@ -97,6 +97,7 @@ static function ProceedToNextRung( )
 	{
 		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
 		super.ProceedToNextRung();
+		return;
 	}
 	
 	`LOG("==== Overhaul ladder");
@@ -1036,9 +1037,15 @@ function OnComplete( Name ActionName )
 	local XComPresentationLayer Pres;
 
 	`LOG("==== OnComplete");
-	`TACTICALRULES.bWaitingForMissionSummary = false;
+	
+	if (!bRandomLadder || !Settings.UseCustomSettings)
+	{
+		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		super.OnComplete(ActionName);
+		return;
+	}
 
-	//`PRES.UICloseLadderUpgradeScreen();
+	`TACTICALRULES.bWaitingForMissionSummary = false;
 	Pres = `PRES;
 	Pres.Screenstack.Pop(UpgradeScreen);
 	UpgradeScreen.Destroy();
@@ -1053,16 +1060,17 @@ static function bool MaybeDoLadderProgressionChoice( )
 	`LOG("==== MaybeDoLadderProgressionChoice");
 
 	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress', true));
-
-	// not playing a ladder, skip this UI
-	if (LadderData == none)
-		return false;
+	
+	if (LadderData == none || !LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
+	{
+		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		return super.MaybeDoLadderProgressionChoice();
+	}
 
 	// don't do an upgrade choice for completing the last mission
 	if (LadderData.LadderRung == LadderData.LadderSize)
 		return false;
 
-	//`PRES.UIRaiseLadderUpgradeScreen();
 	Pres = `PRES;
 	LadderData.UpgradeScreen = Pres.Spawn(class'UILadderUpgradeScreen_Override');
 	Pres.Screenstack.Push(LadderData.UpgradeScreen);
