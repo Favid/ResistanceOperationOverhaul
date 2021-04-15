@@ -35,6 +35,10 @@ var int SelectedAttachmentIndex;
 var EUpgradeCategory SelectedUpgradeCategory;
 var EInventorySlot SelectedInventorySlot;
 
+var int PendingAbilityRank;
+var int PendingAbilityBranch;
+var name PendingUpgradeName;
+
 var int LastSelectedIndexes[EUIScreenState] <BoundEnum = EUIScreenState>;
 
 var UIText CreditsText;
@@ -1969,8 +1973,6 @@ simulated function OnAbilityCheckboxChanged(UICheckbox CheckboxControl)
 	local UIMechaListItem ListItem;
 	local int RankIter;
 	local int BranchIter;
-	local int AbilityRank;
-	local int AbilityBranch;
 
 	Soldier = Squad[SelectedSoldierIndex];
 	ListItem = UIMechaListItem(List.GetItem(SelectedAbilityIndex));
@@ -1980,14 +1982,59 @@ simulated function OnAbilityCheckboxChanged(UICheckbox CheckboxControl)
 		{
 			if (Soldier.AbilityTree[RankIter].Abilities[BranchIter].AbilityName == name(ListItem.metadataString))
 			{
-				AbilityRank = RankIter;
-				AbilityBranch = BranchIter;
+				PendingAbilityRank = RankIter;
+				PendingAbilityBranch = BranchIter;
 			}
 		}
 	}
+
+	ConfirmAbilitySelection();
+}
+
+simulated function ConfirmAbilitySelection()
+{
+	local XGParamTag LocTag;
+	local TDialogueBoxData DialogData;
+	local UIMechaListItem ListItem;
+	local X2AbilityTemplate AbilityTemplate;
+	local X2AbilityTemplateManager AbilityTemplateManager;
 	
-	Soldier.BuySoldierProgressionAbility(NewGameState, AbilityRank, AbilityBranch, 0);
-	HasEarnedNewAbility[SelectedSoldierIndex] = true;
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+
+	DialogData.eType = eDialog_Alert;
+	DialogData.bMuteAcceptSound = true;
+	DialogData.strTitle = class'UIArmory_Promotion'.default.m_strConfirmAbilityTitle;
+	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
+	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
+	DialogData.fnCallback = ComfirmAbilityCallback;
+
+	ListItem = UIMechaListItem(List.GetItem(SelectedAbilityIndex));
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(name(ListItem.metadataString));
+
+	LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+	LocTag.StrValue0 = AbilityTemplate.LocFriendlyName;
+	DialogData.strText = `XEXPAND.ExpandString(class'UIArmory_Promotion'.default.m_strConfirmAbilityText);
+	Movie.Pres.UIRaiseDialog(DialogData);
+	UpdateNavHelp();
+}
+
+simulated function ComfirmAbilityCallback(Name Action)
+{
+	local XComGameState_Unit Soldier;
+
+	if(Action == 'eUIAction_Accept')
+	{
+		Soldier = Squad[SelectedSoldierIndex];
+		Soldier.BuySoldierProgressionAbility(NewGameState, PendingAbilityRank, PendingAbilityBranch, 0);
+		HasEarnedNewAbility[SelectedSoldierIndex] = true;
+	}
+	else
+	{
+		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+		List.SetSelectedIndex(SelectedAbilityIndex, true);
+	}
+	
 	UpdateData();
 }
 
@@ -2168,22 +2215,63 @@ simulated function UpdateDataResearchCategory()
 
 simulated function OnClickUpgradeTech(UIMechaListItem MechaItem)
 {
-	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
-	local X2ResistanceTechUpgradeTemplate Template;
 	local int SelectedIndex;
 
 	for (SelectedIndex = 0; SelectedIndex < List.ItemContainer.ChildPanels.Length; SelectedIndex++)
 	{
 		if (GetListItem(SelectedIndex) == MechaItem)
 		{
+			PendingUpgradeName = name(GetListItem(SelectedIndex).metadataString);
 			break;
 		}
 	}
+
+	ConfirmUpgradeSelection();
+}
+
+simulated function ConfirmUpgradeSelection()
+{
+	local XGParamTag LocTag;
+	local TDialogueBoxData DialogData;
+	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
+	local X2ResistanceTechUpgradeTemplate Template;
+	
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+
+	DialogData.eType = eDialog_Alert;
+	DialogData.bMuteAcceptSound = true;
+	DialogData.strTitle = "CONFIRM RESEARCH";
+	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
+	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
+	DialogData.fnCallback = ComfirmUpgradeCallback;
 	
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	Template = TemplateManager.FindTemplate(name(GetListItem(SelectedIndex).metadataString));
+	Template = TemplateManager.FindTemplate(PendingUpgradeName);
 
-	PurchaseTechUpgrade(Template);
+	LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+	LocTag.StrValue0 = Template.DisplayName;
+	LocTag.IntValue0 = Template.Cost;
+	DialogData.strText = `XEXPAND.ExpandString("Are you sure you want to research <XGParam:StrValue0/!DisplayName/> for <XGParam:IntValue0/!Cost/> Credits?");
+	Movie.Pres.UIRaiseDialog(DialogData);
+	UpdateNavHelp();
+}
+
+simulated function ComfirmUpgradeCallback(Name Action)
+{
+	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
+	local X2ResistanceTechUpgradeTemplate Template;
+
+	if(Action == 'eUIAction_Accept')
+	{
+		TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+		Template = TemplateManager.FindTemplate(PendingUpgradeName);
+		PurchaseTechUpgrade(Template);
+	}
+	else
+	{
+		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+	}
+	
 	UpdateData();
 }
 
@@ -2282,6 +2370,62 @@ simulated function HideListItems()
 }
 
 simulated function OnContinueButtonClicked(UIButton button)
+{
+	local int Index;
+	local bool bShowConfirmation;
+
+	bShowConfirmation = false;
+	for (Index = 0; Index < HasEarnedNewAbility.Length; Index++)
+	{
+		if (!HasEarnedNewAbility[Index])
+		{
+			bShowConfirmation = true;
+			break;
+		}
+	}
+
+	if (bShowConfirmation)
+	{
+		ConfirmContinue();
+	}
+	else
+	{
+		ContinueToNextScreen();
+	}
+}
+
+simulated function ConfirmContinue()
+{
+	local TDialogueBoxData DialogData;
+	
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+
+	DialogData.eType = eDialog_Alert;
+	DialogData.bMuteAcceptSound = true;
+	DialogData.strTitle = "CONFIRM CONTINUE";
+	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
+	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
+	DialogData.fnCallback = ConfirmContinueCallback;
+
+	DialogData.strText = `XEXPAND.ExpandString("Not all soldiers have learned a new ability. Are you sure you want to continue?");
+	Movie.Pres.UIRaiseDialog(DialogData);
+	UpdateNavHelp();
+}
+
+simulated function ConfirmContinueCallback(Name Action)
+{
+	if(Action == 'eUIAction_Accept')
+	{
+		ContinueToNextScreen();
+	}
+	else
+	{
+		Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
+		UpdateData();
+	}
+}
+
+simulated function ContinueToNextScreen()
 {
 	local XComGameState_CampaignSettings CampaignSettings;
 
