@@ -53,7 +53,12 @@ delegate OnSelectorClickDelegate(UIMechaListItem MechaItem);
 
 simulated function OnInit()
 {
-	if (IsNarrativeLadder())
+	local XComGameState_LadderProgress_Override LocalLadderData;
+
+	`LOG("==== OnInit");
+
+	LocalLadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
+	if (!IsOverhaulLadder(LocalLadderData))
 	{
 		super.OnInit();
 		return;
@@ -75,8 +80,10 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	local array<string> UsedCharacters;
 	local int X, Y;
 	
+	`LOG("==== InitScreen");
+
 	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
-	if (IsNarrativeLadder())
+	if (!IsOverhaulLadder(LadderData))
 	{
 		super.InitScreen(InitController, InitMovie, InitName);
 		return;
@@ -101,17 +108,20 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	foreach XComHQ.Squad(UnitStateRef)
 	{
 		Soldier = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
-		Squad.AddItem(Soldier);
-		IsNew.AddItem(false);
-
-		if (UsedClasses.Find(Soldier.GetSoldierClassTemplateName()) == INDEX_NONE)
+		if (!Soldier.bMissionProvided)
 		{
-			UsedClasses.AddItem(Soldier.GetSoldierClassTemplateName());
-		}
+			Squad.AddItem(Soldier);
+			IsNew.AddItem(false);
 
-		if (UsedCharacters.Find(Soldier.GetFullName()) == INDEX_NONE)
-		{
-			UsedCharacters.AddItem(Soldier.GetFullName());
+			if (UsedClasses.Find(Soldier.GetSoldierClassTemplateName()) == INDEX_NONE)
+			{
+				UsedClasses.AddItem(Soldier.GetSoldierClassTemplateName());
+			}
+
+			if (UsedCharacters.Find(Soldier.GetFullName()) == INDEX_NONE)
+			{
+				UsedCharacters.AddItem(Soldier.GetFullName());
+			}
 		}
 	}
 
@@ -2284,17 +2294,20 @@ simulated function OnContinueButtonClicked(UIButton button)
 											1 );
 }
 
-private function bool IsNarrativeLadder()
+private function bool IsOverhaulLadder(XComGameState_LadderProgress_Override LocalLadderData)
 {
-	if (LadderData != none)
+	`LOG("==== IsOverhaulLadder");
+	`LOG("==== IsOverhaulLadder LocalLadderData == none: " $ string(LocalLadderData == none));
+	`LOG("==== IsOverhaulLadder LocalLadderData.bRandomLadder: " $ string(LocalLadderData.bRandomLadder));
+	`LOG("==== IsOverhaulLadder LocalLadderData.Settings.UseCustomSettings: " $ string(LocalLadderData.Settings.UseCustomSettings));
+	if (LocalLadderData == none || !LocalLadderData.bRandomLadder || !LocalLadderData.Settings.UseCustomSettings)
 	{
-		if (!LadderData.bRandomLadder)
-		{
-			return true;
-		}
+		`LOG("==== IsOverhaulLadder Not an overhaul ladder");
+		return false;
 	}
-
-	return false;
+	
+	`LOG("==== IsOverhaulLadder Yes an overhaul ladder");
+	return true;
 }
 
 simulated function OpenPromotionScreen()
@@ -2311,7 +2324,7 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 {
 	local bool bHandled;
 
-	if (IsNarrativeLadder())
+	if (!IsOverhaulLadder(LadderData))
 	{
 		return super.OnUnrealCommand(cmd, arg);
 	}
@@ -2346,6 +2359,11 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 	case class'UIUtilities_Input'.const.FXS_VIRTUAL_LSTICK_DOWN :
 	case class'UIUtilities_Input'.const.FXS_KEY_S :
 		bHandled = Navigator.OnUnrealCommand(class'UIUtilities_Input'.const.FXS_ARROW_DOWN, arg);
+		break;
+
+	case class'UIUtilities_Input'.const.FXS_BUTTON_START:
+		OnContinueButtonClicked(ContinueButton);
+		bHandled = true;
 		break;
 
 	default:

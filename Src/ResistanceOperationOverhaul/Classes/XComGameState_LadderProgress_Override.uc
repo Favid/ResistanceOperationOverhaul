@@ -13,15 +13,7 @@ var array<RungConfig> CustomRungConfigurations;
 var array<SoldierOption> FutureSoldierOptions;
 var int Credits;
 
-static function AppendNames( out array<name> Destination, const out array<name> Source )
-{
-	local name Entry;
-
-	`LOG("==== AppendNames");
-
-	foreach Source( Entry )
-		Destination.AddItem( Entry );
-}
+var UILadderUpgradeScreen_Override UpgradeScreen;
 
 static function ProceedToNextRung( )
 {
@@ -96,7 +88,18 @@ static function ProceedToNextRung( )
 
 	LadderData = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override', true));
 	if (LadderData == none)
+	{
+		`LOG("==== LadderData not found, returning");
 		return;
+	}
+	
+	if (!LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
+	{
+		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		super.ProceedToNextRung();
+	}
+	
+	`LOG("==== Overhaul ladder");
 
 	CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
@@ -106,15 +109,20 @@ static function ProceedToNextRung( )
 	foreach XComHQ.Squad(UnitStateRef)
 	{
 		`LOG("=== Adding stuff to EndingStates");
-		EndingState.UnitState = XComGameState_Unit(History.GetGameStateForObjectID( UnitStateRef.ObjectID));
-		
-		EndingState.Inventory.Length = 0;
-		for (EndingIndex = 0; EndingIndex < EndingState.UnitState.InventoryItems.length; EndingIndex++)
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID( UnitStateRef.ObjectID));
+		if (!UnitState.bMissionProvided)
 		{
-			EndingState.Inventory.AddItem(XComGameState_Item(History.GetGameStateForObjectID(EndingState.UnitState.InventoryItems[EndingIndex].ObjectID)));
-		}
+			`LOG("=== Adding one to EndingStates");
+			EndingState.UnitState = UnitState;
 		
-		EndingStates.AddItem(EndingState);
+			EndingState.Inventory.Length = 0;
+			for (EndingIndex = 0; EndingIndex < EndingState.UnitState.InventoryItems.length; EndingIndex++)
+			{
+				EndingState.Inventory.AddItem(XComGameState_Item(History.GetGameStateForObjectID(EndingState.UnitState.InventoryItems[EndingIndex].ObjectID)));
+			}
+		
+			EndingStates.AddItem(EndingState);
+		}
 	}
 
 	if (LadderData.LadderIndex < 10)
@@ -267,14 +275,18 @@ static function ProceedToNextRung( )
 			{
 				// pull the unit from the archives, and add it to the start state
 				UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitStateRef.ObjectID));
-				RefreshUnit(History, NextMissionLadder, UnitStateRef, EndingStates[SoldierIndex]);
 
-				if (SoldierIndex < EndingStates.Length)
+				if (!UnitState.bMissionProvided)
 				{
-					UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
-				}
+					RefreshUnit(History, NextMissionLadder, UnitStateRef, EndingStates[SoldierIndex]);
 
-				++SoldierIndex;
+					if (SoldierIndex < EndingStates.Length)
+					{
+						UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
+					}
+
+					++SoldierIndex;
+				}
 			}
 
 			// Don't want to do this anymore, it will make the squad use a squad progression
@@ -473,15 +485,19 @@ static function ProceedToNextRung( )
 	{
 		// pull the unit from the archives, and add it to the start state
 		UnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
-		UnitState.SetHQLocation(eSoldierLoc_Dropship);
-
-		UnitState.ClearRemovedFromPlayFlag();
 		
-		UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
+		if (!UnitState.bMissionProvided)
+		{
+			UnitState.SetHQLocation(eSoldierLoc_Dropship);
 
-		UnitState.SetCurrentStat( eStat_HP, UnitState.GetMaxStat( eStat_HP ) );
+			UnitState.ClearRemovedFromPlayFlag();
+		
+			UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
 
-		++SoldierIndex;
+			UnitState.SetCurrentStat( eStat_HP, UnitState.GetMaxStat( eStat_HP ) );
+
+			++SoldierIndex;
+		}
 	}
 
 	//SquadProgressionNames = GetSquadProgressionMembers( LadderData.SquadProgressionName, LadderData.LadderRung + 1 );
@@ -564,89 +580,7 @@ static function ProceedToNextRung( )
 	History.AddGameStateToHistory(StartState);
 }
 
-static function XComGameState_MissionSite SetupMissionSite(XComGameState LocalStartState, XComGameState_BattleData OldBattleData)
-{
-	local XComGameState_MissionSite ChallengeMissionSite;
-	local XComGameState_Continent Continent;
-	local XComGameState_WorldRegion Region;
-
-	local X2StrategyElementTemplateManager StratMgr;
-	local array<X2StrategyElementTemplate> ContinentDefinitions;
-	local X2ContinentTemplate RandContinentTemplate;
-	local X2WorldRegionTemplate RandRegionTemplate;
-
-	local int RandContinent, RandRegion;
-	local Vector CenterLoc, RegionExtents;
-
-	`LOG("==== SetupMissionSite");
-
-	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
-	ContinentDefinitions = StratMgr.GetAllTemplatesOfClass(class'X2ContinentTemplate');
-
-	RandContinent = `SYNC_RAND_STATIC(ContinentDefinitions.Length);
-	RandContinentTemplate = X2ContinentTemplate(ContinentDefinitions[RandContinent]);
-
-	RandRegion = `SYNC_RAND_STATIC( RandContinentTemplate.Regions.Length );
-	RandRegionTemplate = X2WorldRegionTemplate(StratMgr.FindStrategyElementTemplate(RandContinentTemplate.Regions[RandRegion]));
-
-	Continent = XComGameState_Continent(LocalStartState.CreateNewStateObject(class'XComGameState_Continent', RandContinentTemplate));
-
-	Region = XComGameState_WorldRegion(LocalStartState.CreateNewStateObject(class'XComGameState_WorldRegion', RandRegionTemplate));
-
-	Continent.AssignRegions(LocalStartState);
-
-	// Choose random location from the region
-	RegionExtents.X = (RandRegionTemplate.Bounds[0].fRight - RandRegionTemplate.Bounds[0].fLeft) / 2.0f;
-	RegionExtents.Y = (RandRegionTemplate.Bounds[0].fBottom - RandRegionTemplate.Bounds[0].fTop) / 2.0f;
-	CenterLoc.x = RandRegionTemplate.Bounds[0].fLeft + RegionExtents.X;
-	CenterLoc.y = RandRegionTemplate.Bounds[0].fTop + RegionExtents.Y;
-
-	ChallengeMissionSite = XComGameState_MissionSite(LocalStartState.CreateNewStateObject(class'XComGameState_MissionSite'));
-	ChallengeMissionSite.Location = CenterLoc + (`SYNC_VRAND_STATIC() * RegionExtents);
-	ChallengeMissionSite.Continent.ObjectID = Continent.ObjectID;
-	ChallengeMissionSite.Region.ObjectID = Region.ObjectID;
-
-	ChallengeMissionSite.GeneratedMission.MissionID = ChallengeMissionSite.ObjectID;
-	ChallengeMissionSite.GeneratedMission.Mission = `TACTICALMISSIONMGR.arrMissions[OldBattleData.m_iMissionType];
-	ChallengeMissionSite.GeneratedMission.LevelSeed = OldBattleData.iLevelSeed;
-	ChallengeMissionSite.GeneratedMission.BattleOpName = OldBattleData.m_strOpName;
-	ChallengeMissionSite.GeneratedMission.BattleDesc = "Ladder Mode";
-	ChallengeMissionSite.GeneratedMission.MissionQuestItemTemplate = OldBattleData.m_nQuestItem;
-	ChallengeMissionSite.GeneratedMission.SitReps = OldBattleData.ActiveSitReps;
-
-	OldBattleData.m_iMissionID = ChallengeMissionSite.ObjectID;
-
-	return ChallengeMissionSite;
-}
-
-static function RefreshAbilities( XComGameStateHistory History )
-{
-	local XComGameState StartState;
-	local XComGameState_Ability AbilityState;
-	local XComGameState_Item IterateItemState;
-
-	`LOG("==== RefreshAbilities");
-
-	StartState = History.GetStartState( );
-	`assert( StartState != none );
-
-	// recreate any cosmetic units that we destroyed the original of
-	foreach StartState.IterateByClassType(class'XComGameState_Item', IterateItemState)
-	{
-		IterateItemState.CreateCosmeticItemUnit(StartState);
-	}
-
-	// remove all the abilities that are already in the start state
-	foreach History.IterateByClassType( class'XComGameState_Ability', AbilityState )
-	{
-		History.PurgeObjectIDFromStartState( AbilityState.ObjectID, false );
-	}
-	History.UpdateStateObjectCache( );
-
-	// rebuild them based on various updates to loadout and other patchup work we've done
-	class'X2TacticalGameRuleset'.static.StartStateInitializeUnitAbilities( StartState );
-}
-
+// Same as XComGameState_LadderProgress.UpdateUnitCustomization(), but since it's private and we use it we need to reimplement it
 private static function UpdateUnitCustomization( XComGameState_Unit NextMissionUnit, XComGameState_Unit PrevMissionUnit )
 {
 	local XGCharacterGenerator CharacterGenerator;
@@ -676,60 +610,6 @@ private static function UpdateUnitCustomization( XComGameState_Unit NextMissionU
 	NextMissionUnit.SetTAppearance(Soldier.kAppearance);
 	NextMissionUnit.SetCharacterName(Soldier.strFirstName, Soldier.strLastName, Soldier.strNickName);
 	NextMissionUnit.SetCountry(Soldier.nmCountry);
-}
-
-static function LocalizeUnitName(XComGameState_Unit NextMissionUnit, int unitNameIndex, int ladderMissionIndex)
-{
-	local array<SoldierFullNames> nameArray;
-
-	`LOG("==== LocalizeUnitName");
-
-	switch (ladderMissionIndex)
-	{
-	case 1:
-		nameArray = default.Ladder1Names;
-		break;
-	case 2:
-		nameArray = default.Ladder2Names;
-		break;
-	case 3:
-		nameArray = default.Ladder3Names;
-		break;
-	case 4:
-		nameArray = default.Ladder4Names;
-		break;
-	default:
-		nameArray = default.Ladder1Names;
-	}
-
-	NextMissionUnit.SetCharacterName(nameArray[unitNameIndex].sFirstName, nameArray[unitNameIndex].sLastName, nameArray[unitNameIndex].sNickName);
-}
-
-static function string GetUnitName(int unitNameIndex, int ladderMissionIndex)
-{
-	local array<SoldierFullNames> nameArray;
-
-	`LOG("==== GetUnitName");
-
-	switch (ladderMissionIndex)
-	{
-	case 1:
-		nameArray = default.Ladder1Names;
-		break;
-	case 2:
-		nameArray = default.Ladder2Names;
-		break;
-	case 3:
-		nameArray = default.Ladder3Names;
-		break;
-	case 4:
-		nameArray = default.Ladder4Names;
-		break;
-	default:
-		nameArray = default.Ladder1Names;
-	}
-
-	return nameArray[unitNameIndex].sFirstName @ nameArray[unitNameIndex].sLastName;
 }
 
 private static function RefreshUnit( XComGameStateHistory History, XComGameState_LadderProgress LadderData, StateObjectReference NewUnitStateRef, EndState EndingState )
@@ -800,70 +680,7 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 	History.UpdateStateObjectCache( );
 }
 
-private static function HandlePreExistingSoliderEquipment( XComGameStateHistory History, XComGameState_LadderProgress LadderData )
-{
-	local XComGameState StartState;
-	local XComGameState_HeadquartersXCom XComHQ;
-	local array<name> SquadProgressionNames;
-	local int SoldierIndex, Index;
-	local StateObjectReference UnitStateRef;
-	local ConfigurableSoldier SoldierConfigData;
-	local name ConfigName;
-	local XComGameState_Unit UnitState;
-	local XComGameState_Item ItemState;
-
-	// This function is narrative ladder only - so ignore it
-	`LOG("==== HandlePreExistingSoliderEquipment");
-
-	StartState = History.GetStartState( );
-	`assert( StartState != none );
-
-	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
-
-	if (LadderData.SquadProgressionName != "")
-		SquadProgressionNames = GetSquadProgressionMembers( LadderData.SquadProgressionName, LadderData.LadderRung );
-	if (LadderData.LadderSquadName != '')
-		class'UITacticalQuickLaunch_MapData'.static.GetSqaudMemberNames( LadderData.LadderSquadName, SquadProgressionNames );
-
-	// make sure every unit on this leg of the mission is ready to go
-	SoldierIndex = 0;
-	foreach XComHQ.Squad(UnitStateRef)
-	{
-		UnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
-
-		// remove all their items
-		for (Index = UnitState.InventoryItems.Length - 1; Index >= 0; --Index)
-		{
-			ItemState = XComGameState_Item( StartState.ModifyStateObject(class'XComGameState_Item', UnitState.InventoryItems[Index].ObjectID) );
-			if (UnitState.CanRemoveItemFromInventory( ItemState, StartState ))
-			{
-				UnitState.RemoveItemFromInventory( ItemState, StartState );
-				History.PurgeObjectIDFromStartState( ItemState.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
-
-				if (ItemState.CosmeticUnitRef.ObjectID > 0) // we also need to destroy any associated units that may exist
-				{
-					History.PurgeObjectIDFromStartState( ItemState.CosmeticUnitRef.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
-				}
-			}
-		}
-
-		ConfigName = SquadProgressionNames[ SoldierIndex ];
-
-		if (class'UITacticalQuickLaunch_MapData'.static.GetConfigurableSoldierSpec( ConfigName, SoldierConfigData ))
-		{
-			UnitState.bIgnoreItemEquipRestrictions = true;
-			UpdateUnitState( StartState, UnitState, SoldierConfigData, LadderData.ProgressionUpgrades );
-		}
-		else
-		{
-			`warn("LadderMode Progression unable to find '" $ ConfigName $ "' soldier data.");
-		}
-
-		++SoldierIndex;
-	}
-	History.UpdateStateObjectCache( );
-}
-
+// Same as XComGameState_LadderProgress.TransferUnitToNewMission(), but since it's private and we use it we need to reimplement it
 private static function TransferUnitToNewMission(XComGameState_Unit UnitState, 
 													XComGameState NewStartState,
 													XComGameState_HeadquartersXCom XComHQ, 
@@ -938,331 +755,6 @@ private static function TransferUnitToNewMission(XComGameState_Unit UnitState,
 	{
 		XComHQ.Squad.Remove( SquadIdx, 1 );
 	}
-}
-
-private static function SwapItem( XComGameState StartState, XComGameState_Unit UnitState, name EquipmentTemplateName, optional EInventorySlot OverrideSlot = eInvSlot_Unknown )
-{
-	local X2ItemTemplateManager ItemTemplateManager;
-	local X2EquipmentTemplate EquipmentTemplate;
-	local XComGameState_Item ItemInstance, ExistingItem;
-	local EInventorySlot WorkingSlot;
-
-	`LOG("==== SwapItem");
-
-	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	EquipmentTemplate = X2EquipmentTemplate( ItemTemplateManager.FindItemTemplate( EquipmentTemplateName ) );
-
-	if (EquipmentTemplate != none)
-	{
-		WorkingSlot = OverrideSlot == eInvSlot_Unknown ? EquipmentTemplate.InventorySlot : OverrideSlot;
-
-		ExistingItem = UnitState.GetItemInSlot( WorkingSlot );
-
-		if (ExistingItem.GetMyTemplate() != EquipmentTemplate)
-		{
-			if (ExistingItem != none)
-			{
-				`assert( UnitState.CanRemoveItemFromInventory( ExistingItem, StartState ) );
-
-				UnitState.RemoveItemFromInventory( ExistingItem, StartState );
-				`XCOMHISTORY.PurgeObjectIDFromStartState( ExistingItem.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
-			}
-
-			ItemInstance = EquipmentTemplate.CreateInstanceFromTemplate( StartState );
-			UnitState.AddItemToInventory( ItemInstance, WorkingSlot, StartState );
-		}
-		else
-		{
-			// propagate this item through to the next start state
-			ExistingItem = XComGameState_Item( StartState.ModifyStateObject( class'XComGameState_Item', ExistingItem.ObjectID ) );
-
-			// reset the reference to the cosmetic unit: A) that unit won't be coming along in the transfers, B) and we'll create new ones at the start of the map anyway
-			if (ExistingItem.CosmeticUnitRef.ObjectID > 0)
-				ExistingItem.CosmeticUnitRef.ObjectID = -1;
-		}
-	}
-}
-
-private static function SwapUtilityItem( XComGameState StartState, XComGameState_Unit UnitState, name EquipmentTemplateName, int UtilityIndex )
-{
-	local X2ItemTemplateManager ItemTemplateManager;
-	local X2EquipmentTemplate EquipmentTemplate, SlotTemplate;
-	local XComGameState_Item ItemInstance;
-	local array<XComGameState_Item> AllUtilities;
-	local int Index;
-	local bool GrenadeItem;
-
-	`LOG("==== SwapUtilityItem");
-
-	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	EquipmentTemplate = X2EquipmentTemplate( ItemTemplateManager.FindItemTemplate( EquipmentTemplateName ) );
-
-	if (EquipmentTemplate != none)
-	{
-		AllUtilities = UnitState.GetAllItemsInSlot( eInvSlot_Utility );
-
-		for (Index = 0; Index < AllUtilities.Length; ++Index)
-		{
-			SlotTemplate = X2EquipmentTemplate( AllUtilities[ Index ].GetMyTemplate( ) );
-
-			if (SlotTemplate.DataName == 'XPad')
-				continue;
-
-			// treat grenades and medkits as a slot 1 item, everything else is slot 2.
-			GrenadeItem = ((SlotTemplate.ItemCat == 'grenade') || (SlotTemplate.ItemCat == 'heal'));
-
-			if (GrenadeItem && (UtilityIndex != 0))
-				continue;
-			if (!GrenadeItem && (UtilityIndex == 0))
-				continue;
-
-			`assert( UnitState.CanRemoveItemFromInventory( AllUtilities[ Index ], StartState ) );
-
-			UnitState.RemoveItemFromInventory( AllUtilities[ Index ], StartState );
-			`XCOMHISTORY.PurgeObjectIDFromStartState( AllUtilities[ Index ].ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
-
-			break;
-		}
-
-		ItemInstance = EquipmentTemplate.CreateInstanceFromTemplate( StartState );
-		UnitState.AddItemToInventory( ItemInstance, eInvSlot_Utility, StartState );
-	}
-}
-
-private static function UpdateUnitState( XComGameState StartState, XComGameState_Unit UnitState, const out ConfigurableSoldier SoldierConfigData, const array<name> Upgrades )
-{
-	local SCATProgression Progression;
-	local array<SoldierClassAbilityType> AbilityTree;
-	local array<SCATProgression> SoldierProgression;
-
-	local X2LadderUpgradeTemplateManager TemplateManager;
-	local name UpgradeName;
-	local X2LadderUpgradeTemplate UpgradeTemplate;
-	local Upgrade Entry;
-
-	local X2ItemTemplateManager ItemManager;
-	local X2EquipmentTemplate EquipmentTemplate;
-	local X2WeaponUpgradeTemplate WeaponUpgradeTemplate;
-	local name ItemName;
-	local XComGameState_Item PrimaryWeapon;
-	local X2WeaponTemplate WeaponTemplate;
-	local array<name> WeaponUpgrades;
-	local int index;
-	local array<XComGameState_Item> BackpackItems;
-	// Variables for issue #307
-	local X2SoldierClassTemplate ClassTemplate;
-	local int i, j;
-	local array<name> AbilitiestoFind;
-
-	`LOG("==== UpdateUnitState");
-
-	// Single line change for Issue #307 - We are allowing SoldierClass to be changed, but not CharacterTemplate (yet)
-	`assert( UnitState.GetMyTemplateName() == SoldierConfigData.CharacterTemplate );
-	// Single line addition for Issue #307
-	UnitState.ResetRankToRookie();
-	while (UnitState.GetRank() < SoldierConfigData.SoldierRank)
-	{
-		// Single line change for Issue #307
-		UnitState.RankUpSoldier( StartState, SoldierConfigData.SoldierClassTemplate);
-	}
-
-	// Start Issue #307 - No purpose in limiting progression abilities by rank, or even by class if AWC eligible abilities
-	AbilitiestoFind = SoldierConfigData.EarnedClassAbilities;
-	for (Progression.iRank = 0; Progression.iRank < UnitState.AbilityTree.Length; ++Progression.iRank)
-	{
-		AbilityTree = UnitState.GetRankAbilities( Progression.iRank );
-		for (Progression.iBranch = 0; Progression.iBranch < AbilityTree.Length; ++Progression.iBranch)
-		{
-			if (AbilitiestoFind.Find( AbilityTree[ Progression.iBranch ].AbilityName ) != INDEX_NONE)
-			{
-				SoldierProgression.AddItem( Progression );
-				AbilitiestoFind.RemoveItem( AbilityTree[ Progression.iBranch ].AbilityName );
-				if (AbilitiestoFind.Length==0)
-				{
-					break;
-				}
-			}
-		}
-	}
-	if (AbilitiestoFind.Length!=0)
-	{
-		ClassTemplate = UnitState.GetSoldierClassTemplate();
-		Progression.iRank = 0;
-		// Single line for Issue #306
-		Progression.iBranch = UnitState.GetRankAbilityCount(0);
-		// #307 The SoldierProgression array contains references to entries in the units AbilityTree, not ability names directly.
-		// In order to create the missing AbilityTree entry, the abilityname isn't enough, due to possible weapon slot linking etc.
-		// First check the classes random ability decks, if any
-		for (j = 0; j < ClassTemplate.RandomAbilityDecks.Length; ++j)
-		{
-			AbilityTree = ClassTemplate.RandomAbilityDecks[j].Abilities;
-			for (i = AbilitiestoFind.Length - 1; i >= 0; i--)
-			{
-				Index = AbilityTree.Find ('AbilityName', AbilitiestoFind[i]);
-				if (Index != INDEX_NONE)
-				{
-					// #307 The ability has to exist in the Units ability tree, where doesn't matter,
-					// So just add it to the end of the first Rank.
-					UnitState.AbilityTree[0].Abilities.AddItem(AbilityTree[Index]);
-					SoldierProgression.AddItem( Progression );
-					Progression.iBranch++;
-					AbilitiestoFind.RemoveItem( AbilitiestoFind[i] );
-				}
-			}
-		}
-		if (AbilitiestoFind.Length!=0)
-		{
-			// #307 If we still can't find some abilities, check AWC Abilities.
-			AbilityTree = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().GetCrossClassAbilities_CH(UnitState.AbilityTree);
-			for (i = 0; i < AbilitiestoFind.Length; i++)
-			{
-				Index = AbilityTree.Find ('AbilityName', AbilitiestoFind[i]);
-				if (Index != INDEX_NONE)
-				{
-					// #307 The ability has to exist in the Units ability tree, where doesn't matter,
-					// So just add it to the end of the first Rank.
-					UnitState.AbilityTree[0].Abilities.AddItem(AbilityTree[Index]);
-					SoldierProgression.AddItem( Progression );
-					Progression.iBranch++;
-				}
-			}
-		}
-	}
-	// End Issue #307
-	UnitState.SetSoldierProgression( SoldierProgression );
-
-	UnitState.AppearanceStore.Length = 0;
-
-	// Add all the items for this configuration level
-	SwapItem( StartState, UnitState, SoldierConfigData.PrimaryWeaponTemplate );
-	SwapItem( StartState, UnitState, SoldierConfigData.SecondaryWeaponTemplate );
-	SwapItem( StartState, UnitState, SoldierConfigData.ArmorTemplate );
-	SwapItem( StartState, UnitState, SoldierConfigData.HeavyWeaponTemplate );
-	SwapItem( StartState, UnitState, SoldierConfigData.GrenadeSlotTemplate, eInvSlot_GrenadePocket );
-	SwapUtilityItem( StartState, UnitState, SoldierConfigData.UtilityItem1Template, 0 );
-	SwapUtilityItem( StartState, UnitState, SoldierConfigData.UtilityItem2Template, 1 );
-
-	if ((SoldierConfigData.SoldierClassTemplate == 'Grenadier') &&
-		(SoldierConfigData.GrenadeSlotTemplate == ''))
-	{
-		SwapItem( StartState, UnitState, 'FragGrenade', eInvSlot_GrenadePocket );
-	}
-
-	BackpackItems = UnitState.GetAllItemsInSlot( eInvSlot_Backpack );
-	for (index = 0; index < BackpackItems.Length; ++index)
-	{
-		UnitState.RemoveItemFromInventory( BackpackItems[index], StartState );
-		`XCOMHISTORY.PurgeObjectIDFromStartState( BackpackItems[index].ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
-	}
-
-	PrimaryWeapon = UnitState.GetPrimaryWeapon( );
-	PrimaryWeapon = XComGameState_Item( StartState.GetGameStateForObjectID( PrimaryWeapon.ObjectID ) );
-	WeaponTemplate = X2WeaponTemplate( PrimaryWeapon.GetMyTemplate( ) );
-	if (WeaponTemplate.NumUpgradeSlots > 0)
-		PrimaryWeapon.WipeUpgradeTemplates( );
-
-	ItemManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	TemplateManager = class'X2LadderUpgradeTemplateManager'.static.GetLadderUpgradeTemplateManager( );
-	foreach Upgrades( UpgradeName )
-	{
-		UpgradeTemplate = TemplateManager.FindUpgradeTemplate( UpgradeName );
-
-		foreach UpgradeTemplate.Upgrades( Entry )
-		{
-			if ((Entry.ClassFilter != "") && (Entry.ClassFilter != string(SoldierConfigData.SoldierClassTemplate)))
-				continue;
-
-			foreach Entry.EquipmentNames( ItemName )
-			{
-				EquipmentTemplate = X2EquipmentTemplate( ItemManager.FindItemTemplate( ItemName ) );
-				WeaponUpgradeTemplate = X2WeaponUpgradeTemplate( ItemManager.FindItemTemplate( ItemName ) );
-
-				if (EquipmentTemplate != none)
-				{
-					if (EquipmentTemplate.InventorySlot != eInvSlot_Utility)
-					{
-						ItemName = MaybeTweakItemName( EquipmentTemplate, UnitState );
-						SwapItem( StartState, UnitState, ItemName );
-					}
-					else if (EquipmentTemplate.ItemCat == 'grenade')
-					{
-						SwapUtilityItem( StartState, UnitState, ItemName, 0 );
-					}
-					else
-					{
-						SwapUtilityItem( StartState, UnitState, ItemName, 1 );
-					}
-				}
-				else if ((WeaponUpgradeTemplate != none) && (WeaponTemplate.NumUpgradeSlots > 0))
-				{
-					WeaponUpgrades = PrimaryWeapon.GetMyWeaponUpgradeTemplateNames( );
-
-					for (index = 0; index < WeaponUpgrades.Length; ++index)
-					{
-						if (WeaponUpgradeTemplate.MutuallyExclusiveUpgrades.Find( WeaponUpgrades[ index ] ) != -1)
-						{
-							PrimaryWeapon.ApplyWeaponUpgradeTemplate( WeaponUpgradeTemplate, index );
-							break;
-						}
-					}
-
-					if (index == WeaponUpgrades.Length)
-					{
-						if (index < WeaponTemplate.NumUpgradeSlots)
-						{
-							PrimaryWeapon.ApplyWeaponUpgradeTemplate( WeaponUpgradeTemplate );
-						}
-						else
-						{
-							`redscreen( "Unable to determine space to apply weapon upgrade"@WeaponUpgradeTemplate.DataName );
-						}
-					}
-				}
-			}
-		}
-	}
-
-	UnitState.SetCurrentStat( eStat_HP, UnitState.GetMaxStat( eStat_HP ) );
-}
-
-static function name MaybeTweakItemName( X2EquipmentTemplate EquipmentTemplate, XComGameState_Unit UnitState )
-{
-	local XComGameState_Item ExistingItem;
-	local X2EquipmentTemplate ExistingTemplate, UpgradeTemplate;
-	local X2ItemTemplateManager ItemManager;
-	local X2DataTemplate Template;
-
-	`LOG("==== MaybeTweakItemName");
-
-	// if it's not a weapon, don't bother with trying to upgrades
-	if ((EquipmentTemplate.InventorySlot != eInvSlot_PrimaryWeapon) &&
-		(EquipmentTemplate.InventorySlot != eInvSlot_SecondaryWeapon))
-	{
-		return EquipmentTemplate.DataName;
-	}
-
-	ExistingItem = UnitState.GetItemInSlot( EquipmentTemplate.InventorySlot );
-	ExistingTemplate = X2EquipmentTemplate( ExistingItem.GetMyTemplate( ) );
-
-	if (EquipmentTemplate.Tier >= ExistingTemplate.Tier)
-		return EquipmentTemplate.DataName;
-
-	ItemManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-
-	foreach ItemManager.IterateTemplates( Template )
-	{
-		UpgradeTemplate = X2EquipmentTemplate( Template );
-
-		if (UpgradeTemplate.BaseItem == EquipmentTemplate.DataName)
-		{
-			EquipmentTemplate = UpgradeTemplate;
-
-			if (EquipmentTemplate.Tier >= ExistingTemplate.Tier)
-				return EquipmentTemplate.DataName;
-		}
-	}
-
-	return EquipmentTemplate.DataName;
 }
 
 event OnCreation( optional X2DataTemplate InitTemplate )
@@ -1539,124 +1031,23 @@ function EventListenerReturn OnCivilianRescued(Object EventData, Object EventSou
 	return ELR_NoInterrupt;
 }
 
-function FilterUpgradeTemplates( array<X2LadderUpgradeTemplate> AllTemplates, array<name> SquadMembers, int RungIndex, out array<X2LadderUpgradeTemplate> FilteredTemplates )
-{
-	local X2LadderUpgradeTemplate Template;
-	local bool AMatch, ThisMatch;
-	local Upgrade Entry;
-	local name SoldierName;
-
-	`LOG("==== FilterUpgradeTemplates");
-
-	FilteredTemplates.Length = 0;
-
-	foreach AllTemplates( Template )
-	{
-		if ((Template.MinLadderLevel >= 0) && (Template.MinLadderLevel > RungIndex))
-			continue;
-
-		if ((Template.MaxLadderLevel >= 0) && (Template.MaxLadderLevel < RungIndex))
-			continue;
-
-		AMatch = false;
-		foreach Template.Upgrades( Entry )
-		{
-			if (Entry.ClassFilter == "")
-				continue;
-
-			ThisMatch = false;
-			foreach SquadMembers(SoldierName)
-			{
-				if ( InStr( string(SoldierName), Entry.ClassFilter ) >= 0 )
-				{
-					AMatch = true;
-					ThisMatch = true;
-					break;
-				}
-			}
-
-			if (Entry.Required && !ThisMatch)
-			{
-				AMatch = false;
-				break;
-			}
-		}
-
-		if (!AMatch) // at least one match is needed for this to be a valid upgrade choice
-			continue;
-
-		FilteredTemplates.AddItem( Template );
-	}
-}
-
-function PopulateUpgradeProgression( )
-{
-	local X2LadderUpgradeTemplateManager TemplateManager;
-	local X2DataTemplate Template;
-	local array<X2LadderUpgradeTemplate> AllTemplates, FilteredTemplates;
-	local int x, RandIdx;
-	local array<name> SquadProgressionNames;
-
-	`LOG("==== PopulateUpgradeProgression");
-
-	TemplateManager = class'X2LadderUpgradeTemplateManager'.static.GetLadderUpgradeTemplateManager( );
-	foreach TemplateManager.IterateTemplates( Template )
-	{
-		`assert( X2LadderUpgradeTemplate( Template ) != none );
-		AllTemplates.AddItem( X2LadderUpgradeTemplate( Template ) );
-	}
-
-	ProgressionChoices1.Length = LadderSize - 1;
-	ProgressionChoices2.Length = LadderSize - 1;
-
-	for (x = 0; x < ProgressionChoices1.Length; ++x)
-	{
-		if (AllTemplates.Length < 2)
-			break;
-
-		// base the available upgrades based on what soldier we'll have on the next mission
-		SquadProgressionNames = GetSquadProgressionMembers( SquadProgressionName, x + 2 );
-
-		FilterUpgradeTemplates( AllTemplates, SquadProgressionNames, x, FilteredTemplates );
-
-		if (FilteredTemplates.Length < 2)
-			continue;
-
-		RandIdx = `SYNC_RAND( FilteredTemplates.Length );
-		ProgressionChoices1[ x ] = FilteredTemplates[ RandIdx ].DataName;
-		AllTemplates.RemoveItem( FilteredTemplates[ RandIdx ] );
-		FilteredTemplates.Remove( RandIdx, 1 );
-
-		RandIdx = `SYNC_RAND( FilteredTemplates.Length );
-		ProgressionChoices2[ x ] = FilteredTemplates[ RandIdx ].DataName;
-		AllTemplates.RemoveItem( FilteredTemplates[ RandIdx ] );
-		FilteredTemplates.Remove( RandIdx, 1 );
-	}
-}
-
 function OnComplete( Name ActionName )
 {
-	local name Selection;
+	local XComPresentationLayer Pres;
 
 	`LOG("==== OnComplete");
-
-	if (ActionName == 'eUIAction_Accept')
-	{
-		Selection = ProgressionChoices1[ LadderRung - 1 ];
-	}
-	else
-	{
-		Selection = ProgressionChoices2[ LadderRung - 1 ];
-	}
-
-	ProgressionUpgrades.AddItem( Selection );
-
 	`TACTICALRULES.bWaitingForMissionSummary = false;
-	`PRES.UICloseLadderUpgradeScreen();
+
+	//`PRES.UICloseLadderUpgradeScreen();
+	Pres = `PRES;
+	Pres.Screenstack.Pop(UpgradeScreen);
+	UpgradeScreen.Destroy();
+	UpgradeScreen = none;
 }
 
 static function bool MaybeDoLadderProgressionChoice( )
 {
+	local XComPresentationLayer Pres;
 	local XComGameState_LadderProgress_Override LadderData;
 
 	`LOG("==== MaybeDoLadderProgressionChoice");
@@ -1671,248 +1062,12 @@ static function bool MaybeDoLadderProgressionChoice( )
 	if (LadderData.LadderRung == LadderData.LadderSize)
 		return false;
 
-	`PRES.UIRaiseLadderUpgradeScreen();
-	return true;
-}
-
-static function bool MaybeDoLadderSoliderScreen( )
-{
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== MaybeDoLadderSoliderScreen");
-
-	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress', true));
-
-	// not playing a ladder, skip this UI
-	if (LadderData == none)
-		return false;
-
-	if (LadderData.LadderRung == LadderData.LadderSize+1)
-	{
-		// TODO: Show a ladder completed UI instead? (if we do, return true instead of false)
-		return false;
-	}
-
-	`PRES.UIRaiseLadderSoldierScreen();
-	return true;
-}
-
-static function bool MaybeDoLadderMedalScreen()
-{
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== MaybeDoLadderMedalScreen");
-
-	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress', true));
-
-	// not playing a ladder, skip this UI
-	if (LadderData == none)
-		return false;
-
-	if (LadderData.bRandomLadder) // don't show during procedural ladders
-		return false;
-
-	// show the right medal screen for where we are in the ladder
-	if (LadderData.LadderRung == LadderData.LadderSize+1)
-	{
-		// don't show if we didn't even make Bronze.
-		if (LadderData.CumulativeScore < LadderData.MedalThresholds[0] )
-		{
-			return false;
-		}
-
-		`PRES.UIRaiseLadderMedalScreen();
-	}
-	else
-		`PRES.UITLELadderMedalProgressScreen();
+	//`PRES.UIRaiseLadderUpgradeScreen();
+	Pres = `PRES;
+	LadderData.UpgradeScreen = Pres.Spawn(class'UILadderUpgradeScreen_Override');
+	Pres.Screenstack.Push(LadderData.UpgradeScreen);
 
 	return true;
-}
-
-static function bool MaybeDoLadderEndScreen()
-{
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== MaybeDoLadderEndScreen");
-
-	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress', true));
-
-	// not playing a ladder, skip this UI
-	if (LadderData == none)
-		return false;
-
-	if (LadderData.LadderRung < LadderData.LadderSize+1)
-	{
-		return false;
-	}
-
-	`PRES.UIRaiseLadderEndScreen();
-	return true;
-}
-
-static function name SelectQuestItem( string MissionType )
-{
-	local X2ItemTemplateManager ItemTemplateManager;
-	local X2DataTemplate DataTemplate;
-	local X2QuestItemTemplate QuestItemDataTemplate;
-	local array<X2QuestItemTemplate> ValidQuestItemTemplates;
-	local int RandIdx;
-
-	`LOG("==== SelectQuestItem");
-
-	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-
-	// collect all quest item templates that are valid for this mission/source/reward combo
-	foreach ItemTemplateManager.IterateTemplates(DataTemplate, none)
-	{
-		QuestItemDataTemplate = X2QuestItemTemplate(DataTemplate);
-		if (QuestItemDataTemplate == none) continue;
-
-		if (QuestItemDataTemplate.MissionType.Length > 0 && QuestItemDataTemplate.MissionType.Find(MissionType) == INDEX_NONE)
-		{
-			continue;
-		}
-
-		ValidQuestItemTemplates.AddItem( QuestItemDataTemplate );
-	};
-
-	if (ValidQuestItemTemplates.Length == 0)
-		return '';
-
-	RandIdx = `SYNC_RAND_STATIC( ValidQuestItemTemplates.Length );
-
-	return ValidQuestItemTemplates[ RandIdx ].DataName;
-}
-
-function PopulateFromNarrativeConfig( )
-{
-	local NarrativeLadder Entry;
-
-	`LOG("==== PopulateFromNarrativeConfig");
-
-	foreach NarrativeLadderConfig( Entry )
-	{
-		if (Entry.LadderIndex == LadderIndex)
-		{
-			ProgressionChoices1 = Entry.Choices1;
-			ProgressionChoices2 = Entry.Choices2;
-
-			LoadingScreenAkEvents = Entry.LoadingAkEvents;
-			LootSelectNarrative = Entry.LootNarratives;
-
-			MedalThresholds = Entry.MedalThresholds;
-
-			break;
-		}
-	}
-}
-
-static function int GetLadderMedalThreshold( int InLadderIndex, int MedalIndex )
-{
-	local NarrativeLadder Entry;
-
-	//`LOG("==== GetLadderMedalThreshold");
-
-	foreach default.NarrativeLadderConfig( Entry )
-	{
-		if ((Entry.LadderIndex == InLadderIndex) && (Entry.MedalThresholds.Length > MedalIndex))
-		{
-			return Entry.MedalThresholds[ MedalIndex ];
-		}
-	}
-
-	return -1;
-}
-
-function string GetBackgroundPath( optional int RungModifier = 0 )
-{
-	local NarrativeLadder Entry;
-
-	`LOG("==== GetBackgroundPath");
-
-	foreach default.NarrativeLadderConfig( Entry )
-	{
-		if ((Entry.LadderIndex == LadderIndex) && (Entry.BackgroundPaths.Length >= (LadderRung + RungModifier)))
-		{
-			return Entry.BackgroundPaths[ (LadderRung + RungModifier) - 1 ];
-		}
-	}
-
-	return "";
-}
-
-function string GetLadderCompletionUnlockImagePath( )
-{
-	local NarrativeLadder Entry;
-
-	`LOG("==== GetLadderCompletionUnlockImagePath");
-
-	foreach default.NarrativeLadderConfig( Entry )
-	{
-		if (Entry.LadderIndex == LadderIndex)
-		{
-			return Entry.CompletionUnlockImage;
-		}
-	}
-
-	return "";
-}
-
-static function array<name> GetSquadProgressionMembers( string ProgressionName, int Rung )
-{
-	local SquadProgression Progression;
-	local array<name> Members;
-
-	`LOG("==== GetSquadProgressionMembers");
-
-	foreach default.SquadProgressions( Progression )
-	{
-		if (Progression.SquadName != ProgressionName)
-			continue;
-
-		Members = Progression.Progression[ Rung - 1 ].Members;
-		break;
-	}
-
-	return Members;
-}
-
-static function name GetNarrativeSquadName( int LadderIdx, int Rung )
-{
-	local NarrativeLadder Entry;
-
-	`LOG("==== GetNarrativeSquadName");
-
-	foreach default.NarrativeLadderConfig( Entry )
-	{
-		if (Entry.LadderIndex == LadderIdx)
-		{
-			return Entry.SquadProgression[ Rung - 1 ];
-		}
-	}
-
-	return '';
-}
-
-function bool IsFixedNarrativeUnit(XComGameState_Unit UnitState)
-{
-	local int i;
-	local string LastName;
-
-	`LOG("==== IsFixedNarrativeUnit");
-
-	if (LadderIndex >= 10) return false;
-
-	LastName = UnitState.GetLastName();
-	for (i = 0; i < FixedNarrativeUnits[LadderIndex - 1].LastNames.length; ++i)
-	{
-		if (LastName == FixedNarrativeUnits[LadderIndex - 1].LastNames[i])
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
@@ -2038,6 +1193,7 @@ function SetSoldierStatesBeforeUpgrades()
 	local XComGameStateHistory History;
 	local XComGameState_HeadquartersXCom XComHQ;
 	local StateObjectReference UnitStateRef;
+	local XComGameState_Unit UnitState;
 	
 	History = `XCOMHISTORY;
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
@@ -2045,17 +1201,10 @@ function SetSoldierStatesBeforeUpgrades()
 
 	foreach XComHQ.Squad(UnitStateRef)
 	{
-		SoldierStatesBeforeUpgrades.AddItem( XComGameState_Unit( History.GetGameStateForObjectID( UnitStateRef.ObjectID ) ) );
+		UnitState = XComGameState_Unit( History.GetGameStateForObjectID( UnitStateRef.ObjectID ) );
+		if (!UnitState.bMissionProvided)
+		{
+			SoldierStatesBeforeUpgrades.AddItem(UnitState);
+		}
 	}
-}
-
-defaultproperties
-{
-	bNewLadder = false
-	LadderName="Missing Ladder Name"
-
-	FixedNarrativeUnits(0) = (LastNames=("Rojas", "Bradford", "Zeng", "Rutherford"))
-	FixedNarrativeUnits(1) = (LastNames=("Bedi", "Bradford", "Campbell", "Lewis"))
-	FixedNarrativeUnits(2) = (LastNames=("Shen", "Cohen", "Barta", "Marvez"))
-	FixedNarrativeUnits(3) = (LastNames=("Bradford", "Sokolov", "Eze"))
 }
