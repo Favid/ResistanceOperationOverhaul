@@ -1,6 +1,6 @@
 class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress;
 
-struct EndState
+struct UnitEndState
 {
 	var XComGameState_Unit UnitState;
 	var array<XComGameState_Item> Inventory;
@@ -51,30 +51,20 @@ static function ProceedToNextRung( )
 	local array<X2DownloadableContentInfo> DLCInfos;
 	local X2DownloadableContentInfo DLCInfo;
 
-	local array<name> SquadProgressionNames;
-	local ConfigurableSoldier SoldierConfigData;
-	local name ConfigName;
 	local int SoldierIndex;
-	local XComGameState_Player XComPlayer;
-	local XComOnlineProfileSettings Profile;
 
 	local array<string> PossibleMissionTypes;
 
 	local XComGameState_CampaignSettings CurrentCampaign, NextCampaign;
 	
-	local EndState EndingState;
-	local array<EndState> EndingStates;
+	local UnitEndState EndingState;
+	local array<UnitEndState> EndingStates;
 	local int EndingIndex;
-
-	local int MedalLevel;
 
 	local array<Actor> Visualizers;
 	local Actor Visualizer;
 
 	local int CampaignSaveID;
-
-	local LadderMissionID ID, Entry;
-	local bool Found;
 
 	local XComGameState_Analytics CurrentAnalytics, CampaignAnalytics;
 
@@ -87,13 +77,7 @@ static function ProceedToNextRung( )
 	EventManager = `XEVENTMGR;
 
 	LadderData = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override', true));
-	if (LadderData == none)
-	{
-		`LOG("==== LadderData not found, returning");
-		return;
-	}
-	
-	if (!LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
+	if (LadderData == none || !LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
 	{
 		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
 		super.ProceedToNextRung();
@@ -126,80 +110,10 @@ static function ProceedToNextRung( )
 		}
 	}
 
-	if (LadderData.LadderIndex < 10)
-	{
-		Profile = `XPROFILESETTINGS;
-
-		ID.LadderIndex = LadderData.LadderIndex;
-		ID.MissionIndex = LadderData.LadderRung;
-
-		Found = false;
-
-		foreach Profile.Data.HubStats.LadderCompletions(Entry)
-		{
-			if (Entry == ID)
-			{
-				Found = true;
-				break;
-			}
-		}
-
-		if (!Found)
-		{
-			Profile.Data.HubStats.LadderCompletions.AddItem( ID );
-
-			`ONLINEEVENTMGR.SaveProfileSettings();
-		}
-	}
-
 	// Case for completing a ladder
 	if (LadderData.LadderRung + 1 > LadderData.LadderSize)
 	{
 		`LOG("===== Ladder completed");
-		if (LadderData.MedalThresholds.Length > 0)
-		{
-			for (MedalLevel = 0; (LadderData.CumulativeScore > LadderData.MedalThresholds[ MedalLevel ]) && (MedalLevel < LadderData.MedalThresholds.Length); ++MedalLevel)
-				; // no actual work to be done, once the condition fails MedalLevel will be the value we want
-		}
-		else
-		{
-			MedalLevel = 0;
-		}
-
-		`FXSLIVE.BizAnalyticsLadderEnd( CurrentCampaign.BizAnalyticsCampaignID, LadderData.LadderIndex, LadderData.CumulativeScore, MedalLevel, LadderData.SquadProgressionName, CurrentCampaign.DifficultySetting );
-
-		if (MedalLevel == 3)
-		{
-			switch (LadderData.LadderIndex)
-			{
-				case 1:
-					class'X2TacticalGameRuleset'.static.ReleaseScriptLog("TLE Achievement Awarded: Gold Blast from the Past");
-					`ONLINEEVENTMGR.UnlockAchievement(AT_GoldBlastFromThePast);
-					break;
-
-				case 2:
-					class'X2TacticalGameRuleset'.static.ReleaseScriptLog("TLE Achievement Awarded: Gold It Came from the Sea");
-					`ONLINEEVENTMGR.UnlockAchievement(AT_GoldItCameFromTheSea);
-					break;
-
-				case 3:
-					class'X2TacticalGameRuleset'.static.ReleaseScriptLog("TLE Achievement Awarded: Gold Avenger Assemble");
-					`ONLINEEVENTMGR.UnlockAchievement(AT_GoldAvengerAssemble);
-					break;
-
-				case 4:
-					class'X2TacticalGameRuleset'.static.ReleaseScriptLog("TLE Achievement Awarded: Gold Lazarus Project");
-					`ONLINEEVENTMGR.UnlockAchievement(AT_GoldLazarusProject);
-					break;
-			}
-		}
-
-		if (LadderData.bNewLadder && LadderData.bRandomLadder)
-		{
-			class'X2TacticalGameRuleset'.static.ReleaseScriptLog("TLE Achievement Awarded: Complete Procedural Ladder");
-			`ONLINEEVENTMGR.UnlockAchievement(AT_CompleteProceduralLadder);
-		}
-
 		// Finished the ladder, delete the save so that next time the player will start from the beginning
 		CampaignSaveID = `AUTOSAVEMGR.GetSaveIDForCampaign( CurrentCampaign );
 		if (CampaignSaveID >= 0)
@@ -249,16 +163,10 @@ static function ProceedToNextRung( )
 			NextHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 			NextHQ.SeenCharacterTemplates = XComHQ.SeenCharacterTemplates;
 
-			// transfer over the player's current score to the loaded history start state.
+			// transfer over the player's current score, campaign settings, and credits to the loaded history start state.
 			NextMissionLadder = XComGameState_LadderProgress_Override( History.GetSingleGameStateObjectForClass( class'XComGameState_LadderProgress_Override' ) );
 			NextMissionLadder.CumulativeScore = LadderData.CumulativeScore;
-
-			// transfer over the active set of player choices (overwriting the choices they had made the previous time)
-			NextMissionLadder.ProgressionUpgrades = LadderData.ProgressionUpgrades;
-
 			NextMissionLadder.LastMissionState = LadderData.SoldierStatesBeforeUpgrades;
-
-			// My new properties
 			NextMissionLadder.PurchasedTechUpgrades = LadderData.PurchasedTechUpgrades;
 			NextMissionLadder.Settings = LadderData.Settings;
 			NextMissionLadder.CustomRungConfigurations = LadderData.CustomRungConfigurations;
@@ -270,7 +178,8 @@ static function ProceedToNextRung( )
 			NextCampaign.SetStartTime( CurrentCampaign.StartTime );
 			NextCampaign.HACK_ForceGameIndex( CurrentCampaign.GameIndex );
 			NextCampaign.BizAnalyticsCampaignID = CurrentCampaign.BizAnalyticsCampaignID;
-
+			
+			// Update the squad we loaded from the save so that they have the gear and abilities for the new ladder we're playing
 			SoldierIndex = 0;
 			foreach NextHQ.Squad(UnitStateRef)
 			{
@@ -289,15 +198,6 @@ static function ProceedToNextRung( )
 					++SoldierIndex;
 				}
 			}
-
-			// Don't want to do this anymore, it will make the squad use a squad progression
-			// fix up the soldier equipment for the choices we've made along the way
-			//HandlePreExistingSoliderEquipment( History, NextMissionLadder );
-		
-			// update the ability states based on the patch-ups that we've done to the gamestate
-			//RefreshAbilities( History ); // moved to tactical ruleset so that any cosmetic units that are spawned happen after we've loaded the new map
-
-			// TODO: any other patch up from the previous mission history into the new history.
 
 			BattleData = XComGameState_BattleData( History.GetSingleGameStateObjectForClass( class'XComGameState_BattleData' ) );
 			NextMissionLadder.ProgressCommand =  BattleData.m_strMapCommand;
@@ -444,7 +344,6 @@ static function ProceedToNextRung( )
 		if (PlayerState.ObjectID == LocalPlayerReference.ObjectID) // this is the local human team, need to keep track of it
 		{
 			LocalPlayerReference.ObjectID = NewPlayerState.ObjectID;
-			XComPlayer = NewPlayerState;
 		}
 	}
 
@@ -480,7 +379,7 @@ static function ProceedToNextRung( )
 		}
 	}
 
-	// Keeping it simple for now - no upgrades at all, just get them ready for the next mission and heal
+	// Get the soldiers ready for the next mission
 	SoldierIndex = 0;
 	foreach XComHQ.Squad(UnitStateRef)
 	{
@@ -490,60 +389,12 @@ static function ProceedToNextRung( )
 		if (!UnitState.bMissionProvided)
 		{
 			UnitState.SetHQLocation(eSoldierLoc_Dropship);
-
 			UnitState.ClearRemovedFromPlayFlag();
-		
 			UpdateUnitCustomization(UnitState, EndingStates[SoldierIndex].UnitState);
-
 			UnitState.SetCurrentStat( eStat_HP, UnitState.GetMaxStat( eStat_HP ) );
-
 			++SoldierIndex;
 		}
 	}
-
-	//SquadProgressionNames = GetSquadProgressionMembers( LadderData.SquadProgressionName, LadderData.LadderRung + 1 );
-//
-	//// make sure every unit on this leg of the mission is ready to go
-	//SoldierIndex = 0;
-	//foreach XComHQ.Squad(UnitStateRef)
-	//{
-		//// pull the unit from the archives, and add it to the start state
-		//UnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
-		//UnitState.SetHQLocation(eSoldierLoc_Dropship);
-//
-		//UnitState.ClearRemovedFromPlayFlag();
-//
-		//ConfigName = SquadProgressionNames[ SoldierIndex ];
-//
-		//if (class'UITacticalQuickLaunch_MapData'.static.GetConfigurableSoldierSpec( ConfigName, SoldierConfigData ))
-		//{
-			//UnitState.bIgnoreItemEquipRestrictions = true;
-			//UpdateUnitCustomization( UnitState, EndingUnitStates[ SoldierIndex ] );
-			//UpdateUnitState( StartState, UnitState, SoldierConfigData, LadderData.ProgressionUpgrades );
-		//}
-		//else
-		//{
-			//`warn("LadderMode Progression unable to find '" $ ConfigName $ "' soldier data.");
-		//}
-//
-		//++SoldierIndex;
-	//}
-
-	// For now, don't allow new squad members to be added
-	//while (SoldierIndex < SquadProgressionNames.Length) // new soldier added to the squad
-	//{
-		//ConfigName = SquadProgressionNames[ SoldierIndex ];
-//
-		//UnitState = class'UITacticalQuickLaunch_MapData'.static.ApplySoldier( ConfigName, StartState, XComPlayer );
-//
-		//if (class'UITacticalQuickLaunch_MapData'.static.GetConfigurableSoldierSpec( ConfigName, SoldierConfigData ))
-		//{
-			//UnitState.bIgnoreItemEquipRestrictions = true;
-			//UpdateUnitState( StartState, UnitState, SoldierConfigData, LadderData.ProgressionUpgrades );
-		//}
-//
-		//++SoldierIndex;
-	//}
 
 	History.UpdateStateObjectCache( );
 
@@ -613,14 +464,10 @@ private static function UpdateUnitCustomization( XComGameState_Unit NextMissionU
 	NextMissionUnit.SetCountry(Soldier.nmCountry);
 }
 
-private static function RefreshUnit( XComGameStateHistory History, XComGameState_LadderProgress LadderData, StateObjectReference NewUnitStateRef, EndState EndingState )
+private static function RefreshUnit( XComGameStateHistory History, XComGameState_LadderProgress LadderData, StateObjectReference NewUnitStateRef, UnitEndState EndingState )
 {
 	local XComGameState StartState;
-	local XComGameState_HeadquartersXCom XComHQ;
-	local int SoldierIndex, Index;
-	local StateObjectReference UnitStateRef;
-	local ConfigurableSoldier SoldierConfigData;
-	local name ConfigName;
+	local int Index;
 	local XComGameState_Unit NewUnitState;
 	local XComGameState_Item ItemState;
 	local XComGameState_Item NewItemState;
@@ -630,7 +477,6 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 	StartState = History.GetStartState( );
 	`assert( StartState != none );
 
-	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 	NewUnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', NewUnitStateRef.ObjectID));
 
 	// remove all their items
@@ -1082,10 +928,10 @@ function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
 {
 	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
 	local X2ResistanceTechUpgradeTemplate Template;
-	local X2StrategyElementTemplateManager TechMgr;
-	local X2TechTemplate TechTemplate, RequiredTechTemplate;
-	local XComGameState_Tech TechState, RequiredTechState;
-	local XComGameState_HeadquartersXCom XComHQ;
+	//local X2StrategyElementTemplateManager TechMgr;
+	//local X2TechTemplate TechTemplate, RequiredTechTemplate;
+	//local XComGameState_Tech TechState, RequiredTechState;
+	//local XComGameState_HeadquartersXCom XComHQ;
 
 	`LOG("=== PurchaseTechUpgrade");
 
