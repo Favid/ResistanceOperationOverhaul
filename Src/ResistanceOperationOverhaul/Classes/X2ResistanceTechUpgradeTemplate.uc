@@ -28,7 +28,7 @@ function string GetRequirementsText()
 		{
 			if (Text == "")
 			{
-				Text = "Requires" @ RequiredTemplate.DisplayName;
+				Text = class'UILadderSquadUpgradeScreen'.default.m_Requires @ RequiredTemplate.DisplayName;
 			}
 			else
 			{

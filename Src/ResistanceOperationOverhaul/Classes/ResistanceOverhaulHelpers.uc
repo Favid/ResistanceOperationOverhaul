@@ -24,7 +24,6 @@ struct LadderSettings
 	var array<SoldierOption> SoldierOptions;
 };
 
-
 static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters)
 {
 	local XComGameState_Unit Soldier;
@@ -248,21 +247,4 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	CharacterGenerator.Destroy( );
 
 	return BuildUnit;
-}
-
-public static function bool IsNonCustomLadder(XComGameState_LadderProgress_Override LadderData)
-{
-	`LOG("=== IsNonCustomLadder");
-	if (LadderData != none)
-	{
-		if (!LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
-		{
-			`LOG("=== IsNonCustomLadder: true");
-			`LOG("=== IsNonCustomLadder: LadderData.bRandomLadder: " $ string(LadderData.bRandomLadder));
-			`LOG("=== IsNonCustomLadder: LadderData.Settings.UseCustomSettings: " $ string(LadderData.Settings.UseCustomSettings));
-			return true;
-		}
-	}
-
-	return false;
 }

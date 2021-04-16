@@ -19,7 +19,6 @@ function X2ResistanceTechUpgradeTemplate FindTemplate(name DataName)
 
 function array<name> GetStartingTemplates()
 {
-	local array<X2ResistanceTechUpgradeTemplate> arrTemplates;
 	local X2DataTemplate Template;
 	local X2ResistanceTechUpgradeTemplate CastedTemplate;
 	local array<name> TemplateNames;

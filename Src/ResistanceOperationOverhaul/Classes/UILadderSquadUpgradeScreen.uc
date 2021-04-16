@@ -53,8 +53,38 @@ var XComGameState NewGameState;
 var XComGameStateHistory History;
 var XComGameState_LadderProgress_Override LadderData;
 
-var localized string ScreenTitle;
-var localized string ScreenSubtitles[EUIScreenState] <BoundEnum = EUIScreenState>;
+var localized string m_ScreenTitle;
+var localized string m_ScreenSubtitles[EUIScreenState] <BoundEnum = EUIScreenState>;
+var localized string m_Credits;
+var localized string m_Continue;
+var localized string m_Research;
+var localized string m_CompletedResearch;
+var localized string m_PrimaryWeapon;
+var localized string m_SecondaryWeapon;
+var localized string m_WeaponAttachment;
+var localized string m_Armor;
+var localized string m_PCS;
+var localized string m_UtilityItem;
+var localized string m_GrenadePocket;
+var localized string m_AmmoPocket;
+var localized string m_HeavyWeapon;
+var localized string m_NewAbility;
+var localized string m_ClassAbilities;
+var localized string m_None;
+var localized string m_PrimaryWeaponCat;
+var localized string m_SecondaryWeaponCat;
+var localized string m_HeavyWeaponCat;
+var localized string m_UtilityItemCat;
+var localized string m_ArmorCat;
+var localized string m_WeaponAttachmentCat;
+var localized string m_PCSCat;
+var localized string m_MiscCat;
+var localized string m_ErrorNotEnoughCredits;
+var localized string m_ConfirmResearchTitle;
+var localized string m_ConfirmResearchText;
+var localized string m_ConfirmContinueTitle;
+var localized string m_ConfirmContinueText;
+var localized string m_Requires;
 
 delegate OnSelectorClickDelegate(UIMechaListItem MechaItem);
 
@@ -186,7 +216,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 		}
 	}
 	
-	mc.FunctionString("SetScreenTitle", ScreenTitle);
+	mc.FunctionString("SetScreenTitle", m_ScreenTitle);
 
 	// Credits text
 	CreditsX = 740;
@@ -213,11 +243,11 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	CreditsText = Spawn(class'UIText',self);
 	CreditsText.bAnimateOnInit = false;
-	CreditsText.InitText('CreditsText',"Credits: " @ string(LadderData.Credits),false);
+	CreditsText.InitText('CreditsText',m_Credits $ ":" @ string(LadderData.Credits),false);
 	CreditsText.AnchorCenter();
 	CreditsText.SetPosition(CreditsX + 15, CreditsY + 5);
 	CreditsText.SetSize(200,40);
-	CreditsText.SetText("Credits: " @ string(LadderData.Credits));
+	CreditsText.SetText(m_Credits $ ":" @ string(LadderData.Credits));
 
 	`LOG("=== SCORE: " $ string(LadderData.CumulativeScore));
 	`LOG("=== CREDITS: " $ string(LadderData.Credits));
@@ -265,11 +295,11 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	
 	if( `ISCONTROLLERACTIVE )
 	{
-		mc.QueueString(class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -5) @ "Continue");
+		mc.QueueString(class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.const.ICON_START, 26, 26, -5) @ m_Continue);
 	}
 	else
 	{
-		mc.QueueString("Continue");
+		mc.QueueString(m_Continue);
 	}
 
 	mc.EndOp();
@@ -806,8 +836,8 @@ simulated function UpdateData()
 {
 	HideListItems();
 
-	mc.FunctionString("SetScreenTitle", ScreenTitle);
-	mc.FunctionString("SetScreenSubtitle", ScreenSubtitles[UIScreenState]);
+	mc.FunctionString("SetScreenTitle", m_ScreenTitle);
+	mc.FunctionString("SetScreenSubtitle", m_ScreenSubtitles[UIScreenState]);
 	
 	switch (UIScreenState)
 	{
@@ -907,7 +937,7 @@ simulated function UpdateDataSquad()
 
 	Index = 0;
 	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).UpdateDataValue("Research", "", , , OnClickEditSoldier);
+	GetListItem(Index).UpdateDataValue(m_Research, "", , , OnClickEditSoldier);
 
 	for( Index = 1; Index < Squad.Length + 1; Index++ )
 	{
@@ -991,9 +1021,9 @@ simulated function UpdateDataSoldierOptions()
 	// Primary Weapon
 	EquippedItem = Soldier.GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
 	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).UpdateDataValue("Primary Weapon", GetInventoryDisplayText(EquippedItem), OnClickPrimaryWeapon);
+	GetListItem(Index).UpdateDataValue(m_PrimaryWeapon, GetInventoryDisplayText(EquippedItem), OnClickPrimaryWeapon);
 	Index++;
-
+	
 	// Weapon Attachments
 	NumAttachmentSlots = 0;
 	if (X2WeaponTemplate(EquippedItem.GetMyTemplate()) != none)
@@ -1015,7 +1045,7 @@ simulated function UpdateDataSoldierOptions()
 				{
 					GetListItem(Index).SetDisabled(true, "Cannot change attachment");
 				}
-				GetListItem(Index).UpdateDataValue("Attachment " $ string(AttachmentIndex + 1), AttachmentTemplate.GetItemFriendlyNameNoStats(), OnClickWeaponAttachment);
+				GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), AttachmentTemplate.GetItemFriendlyNameNoStats(), OnClickWeaponAttachment);
 				GetListItem(Index).metadataInt = AttachmentIndex;
 				GetListItem(Index).metadataString = "Attachment";
 				Index++;
@@ -1028,7 +1058,7 @@ simulated function UpdateDataSoldierOptions()
 		{
 			GetListItem(Index).SetDisabled(true, "Cannot change attachment");
 		}
-		GetListItem(Index).UpdateDataValue("Attachment " $ string(AttachmentIndex + 1), "None", OnClickWeaponAttachment);
+		GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), "None", OnClickWeaponAttachment);
 		GetListItem(Index).metadataInt = AttachmentIndex;
 		GetListItem(Index).metadataString = "Attachment";
 		Index++;
@@ -1037,13 +1067,13 @@ simulated function UpdateDataSoldierOptions()
 	// Secondary Weapon
 	EquippedItem = Soldier.GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
 	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).UpdateDataValue("Secondary Weapon", GetInventoryDisplayText(EquippedItem), OnClickSecondaryWeapon);
+	GetListItem(Index).UpdateDataValue(m_SecondaryWeapon, GetInventoryDisplayText(EquippedItem), OnClickSecondaryWeapon);
 	Index++;
 
 	// Armor
 	EquippedItem = Soldier.GetItemInSlot(eInvSlot_Armor, NewGameState, false);
 	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).UpdateDataValue("Armor", GetInventoryDisplayText(EquippedItem), OnClickArmor);
+	GetListItem(Index).UpdateDataValue(m_Armor, GetInventoryDisplayText(EquippedItem), OnClickArmor);
 	Index++;
 
 	// PCS
@@ -1056,7 +1086,7 @@ simulated function UpdateDataSoldierOptions()
 			PcsText = EquippedPCSs[0].GetMyTemplate().GetItemFriendlyNameNoStats();
 		}
 		GetListItem(Index).EnableNavigation();
-		GetListItem(Index).UpdateDataValue(class'UITLE_SkirmishModeMenu'.default.m_PCSLabel, PcsText, OnClickPCS);
+		GetListItem(Index).UpdateDataValue(m_PCS, PcsText, OnClickPCS);
 		Index++;
 	}
 
@@ -1070,11 +1100,11 @@ simulated function UpdateDataSoldierOptions()
 		GetListItem(Index).EnableNavigation();
 		if (EquippedUtilityItems.Length > 0)
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 1", EquippedUtilityItems[0].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem1);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(1), EquippedUtilityItems[0].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem1);
 		}
 		else
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 1", "None", OnClickUtilItem1);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(1), "None", OnClickUtilItem1);
 		}
 		Index++;
 	}
@@ -1085,11 +1115,11 @@ simulated function UpdateDataSoldierOptions()
 		GetListItem(Index).EnableNavigation();
 		if (EquippedUtilityItems.Length > 1)
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 2", EquippedUtilityItems[1].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem2);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(2), EquippedUtilityItems[1].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem2);
 		}
 		else
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 2", "None", OnClickUtilItem2);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(2), "None", OnClickUtilItem2);
 		}
 		Index++;
 	}
@@ -1100,11 +1130,11 @@ simulated function UpdateDataSoldierOptions()
 		GetListItem(Index).EnableNavigation();
 		if (EquippedUtilityItems.Length > 2)
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 3", EquippedUtilityItems[2].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem3);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(3), EquippedUtilityItems[2].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem3);
 		}
 		else
 		{
-			GetListItem(Index).UpdateDataValue("Utility Item 3", "None", OnClickUtilItem3);
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(3), "None", OnClickUtilItem3);
 		}
 		Index++;
 	}
@@ -1114,7 +1144,7 @@ simulated function UpdateDataSoldierOptions()
 	{
 		EquippedItem = Soldier.GetItemInSlot(eInvSlot_GrenadePocket, NewGameState, false);
 		GetListItem(Index).EnableNavigation();
-		GetListItem(Index).UpdateDataValue("Grenade Pocket", GetInventoryDisplayText(EquippedItem), OnClickGrenadePocket);
+		GetListItem(Index).UpdateDataValue(m_GrenadePocket, GetInventoryDisplayText(EquippedItem), OnClickGrenadePocket);
 		Index++;
 	}
 
@@ -1123,7 +1153,7 @@ simulated function UpdateDataSoldierOptions()
 	{
 		EquippedItem = Soldier.GetItemInSlot(eInvSlot_AmmoPocket, NewGameState, false);
 		GetListItem(Index).EnableNavigation();
-		GetListItem(Index).UpdateDataValue("Ammo Pocket", GetInventoryDisplayText(EquippedItem), OnClickAmmoPocket);
+		GetListItem(Index).UpdateDataValue(m_AmmoPocket, GetInventoryDisplayText(EquippedItem), OnClickAmmoPocket);
 		Index++;
 	}
 
@@ -1132,7 +1162,7 @@ simulated function UpdateDataSoldierOptions()
 	{
 		EquippedItem = Soldier.GetItemInSlot(eInvSlot_HeavyWeapon, NewGameState, false);
 		GetListItem(Index).EnableNavigation();
-		GetListItem(Index).UpdateDataValue(class'UITLE_SkirmishModeMenu'.default.m_HeavyWeaponLabel, GetInventoryDisplayText(EquippedItem), OnClickHeavyWeapon);
+		GetListItem(Index).UpdateDataValue(m_HeavyWeapon, GetInventoryDisplayText(EquippedItem), OnClickHeavyWeapon);
 		Index++;
 	}
 
@@ -1156,11 +1186,11 @@ simulated function UpdateDataSoldierOptions()
 	if (!HasEarnedNewAbility[SelectedSoldierIndex])
 	{
 		PromoteIcon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_PromotionIcon, 20, 20, 0) $ " ";
-		GetListItem(Index).UpdateDataValue(PromoteIcon $ "Learn New Ability", "", OnClickAbilities);
+		GetListItem(Index).UpdateDataValue(PromoteIcon $ m_NewAbility, "", OnClickAbilities);
 	}
 	else
 	{
-		GetListItem(Index).UpdateDataValue("Class Abilities", "", OnClickAbilities);
+		GetListItem(Index).UpdateDataValue(m_ClassAbilities, "", OnClickAbilities);
 	}
 
 	Index++;
@@ -1175,7 +1205,7 @@ simulated function string GetInventoryDisplayText(XComGameState_Item ItemState)
 	}
 	else
 	{
-		Text = "None";
+		Text = m_None;
 	}
 	return Text;
 }
@@ -1327,7 +1357,7 @@ simulated function UpdateDataItems(array<X2ItemTemplate> ItemTemplates, delegate
 	Index = 0;
 	if (bIncludeNone)
 	{
-		GetListItem(Index).UpdateDataValue("None", "", , , OnSelectorClickDelegate);
+		GetListItem(Index).UpdateDataValue(m_None, "", , , OnSelectorClickDelegate);
 		GetListItem(Index).EnableNavigation();
 		Index++;
 	}
@@ -2110,46 +2140,46 @@ simulated function UpdateDataResearch()
 	// Add a button to view completed projects
 	Index = 0;
 	Icon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_GearIcon, 20, 20, 0) $ " ";
-	GetListItem(Index).UpdateDataValue(Icon $ "View Completed Projects", "", OnClickCompletedProjects);
+	GetListItem(Index).UpdateDataValue(Icon $ m_CompletedResearch, "", OnClickCompletedProjects);
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Primary Weapons", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_PrimaryWeaponCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Primary;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Secondary Weapons", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_SecondaryWeaponCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Secondary;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Heavy Weapons", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_HeavyWeaponCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Heavy;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Utility Items", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_UtilityItemCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Utility;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Armor", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_ArmorCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Armor;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Attachments", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_WeaponAttachmentCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Attachment;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("PCS Items", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_PCSCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_PCS;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue("Miscellaneous", "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(m_MiscCat, "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Misc;
 	GetListItem(Index).EnableNavigation();
 	Index++;
@@ -2203,7 +2233,7 @@ simulated function UpdateDataResearchCategory()
 					}
 					else if (!LadderData.CanAfford(Template))
 					{
-						GetListItem(Index).SetDisabled(true, "Not enough points");
+						GetListItem(Index).SetDisabled(true, m_ErrorNotEnoughCredits);
 					}
 
 					Index++;
@@ -2240,7 +2270,7 @@ simulated function ConfirmUpgradeSelection()
 
 	DialogData.eType = eDialog_Alert;
 	DialogData.bMuteAcceptSound = true;
-	DialogData.strTitle = "CONFIRM RESEARCH";
+	DialogData.strTitle = m_ConfirmResearchTitle;
 	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
 	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
 	DialogData.fnCallback = ComfirmUpgradeCallback;
@@ -2251,7 +2281,7 @@ simulated function ConfirmUpgradeSelection()
 	LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
 	LocTag.StrValue0 = Template.DisplayName;
 	LocTag.IntValue0 = Template.Cost;
-	DialogData.strText = `XEXPAND.ExpandString("Are you sure you want to research <XGParam:StrValue0/!DisplayName/> for <XGParam:IntValue0/!Cost/> Credits?");
+	DialogData.strText = `XEXPAND.ExpandString(m_ConfirmResearchText);
 	Movie.Pres.UIRaiseDialog(DialogData);
 	UpdateNavHelp();
 }
@@ -2355,7 +2385,7 @@ simulated function OnCancel()
 
 simulated function UpdateCreditsText()
 {
-	CreditsText.SetText("Credits: " @ string(LadderData.Credits));
+	CreditsText.SetText(m_Credits $ ":" @ string(LadderData.Credits));
 }
 
 simulated function HideListItems()
@@ -2402,12 +2432,12 @@ simulated function ConfirmContinue()
 
 	DialogData.eType = eDialog_Alert;
 	DialogData.bMuteAcceptSound = true;
-	DialogData.strTitle = "CONFIRM CONTINUE";
+	DialogData.strTitle = m_ConfirmContinueTitle;
 	DialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericYes;
 	DialogData.strCancel = class'UIUtilities_Text'.default.m_strGenericNO;
 	DialogData.fnCallback = ConfirmContinueCallback;
 
-	DialogData.strText = `XEXPAND.ExpandString("Not all soldiers have learned a new ability. Are you sure you want to continue?");
+	DialogData.strText = `XEXPAND.ExpandString(m_ConfirmContinueText);
 	Movie.Pres.UIRaiseDialog(DialogData);
 	UpdateNavHelp();
 }
