@@ -301,16 +301,6 @@ Description="Grants one R.A.G.E. Suit."
 DisplayName="R.A.G.E. Armor"
 Description="Grants one R.A.G.E. Armor."
 
-; Spark Armor
-
-[TU_PlatedSparkArmor X2ResistanceTechUpgradeTemplate]
-DisplayName="Reinforced Frames"
-Description="Grants access to Reinforced Frames for all SPARKs."
-
-[TU_PoweredSparkArmor X2ResistanceTechUpgradeTemplate]
-DisplayName="Annodized Chassis"
-Description="Grants access to Annodized Chassis for all SPARKs."
-
 ; Grenades
 
 [TU_SmokeGrenadeMk2 X2ResistanceTechUpgradeTemplate]
@@ -386,8 +376,8 @@ Description="Grants access to Hellweaves for all soldiers who can use them."
 ; Ammo
 
 [TU_TracerRounds X2ResistanceTechUpgradeTemplate]
-DisplayName="Trace Rounds"
-Description="Grants access to Trace Rounds for all soldiers who can use them."
+DisplayName="Tracer Rounds"
+Description="Grants access to Tracer Rounds for all soldiers who can use them."
 
 [TU_TalonRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Talon Rounds"
@@ -474,12 +464,6 @@ Description="Grants one of each rare PCS."
 [TU_EpicPCSs X2ResistanceTechUpgradeTemplate]
 DisplayName="Epic PCSs"
 Description="Grants one of each epic PCS."
-
-; Research
-
-[TU_BattlefieldMedicine X2ResistanceTechUpgradeTemplate]
-DisplayName="Battlefield Medicine"
-Description="Improves the recovery strength of our Medikits and Nanomedikits."
 
 ; LW2 Secondary Weapons
 
@@ -655,7 +639,7 @@ m_SoldierRandomClass="Random Class"
 
 [UILadderSquadUpgradeScreen]
 m_ScreenTitle="UPGRADE SQUAD"
-m_ScreenSubtitles[eUIScreenState_Squad]=""
+m_ScreenSubtitles[eUIScreenState_Squad]="TEST"
 m_ScreenSubtitles[eUIScreenState_Research]="SELECT RESEARCH CATEGORY"
 m_ScreenSubtitles[eUIScreenState_ResearchCategory]="SELECT RESEARCH PROJECT"
 m_ScreenSubtitles[eUIScreenState_CompletedProjects]="VIEW COMPLETED PROJECTS"
@@ -673,6 +657,7 @@ m_ScreenSubtitles[eUIScreenState_AmmoPocket]="EDIT AMMO POCKET"
 m_ScreenSubtitles[eUIScreenState_HeavyWeapon]="EDIT HEAVY WEAPON"
 m_ScreenSubtitles[eUIScreenState_Abilities]="EDIT SOLDIER ABILITIES"
 m_Credits="Credits"
+m_Science="Science";
 m_Continue="Continue"
 m_Research="Research"
 m_CompletedResearch="View Completed Projects"
@@ -702,3 +687,7 @@ m_ConfirmResearchText="Are you sure you want to research <XGParam:StrValue0/!Dis
 m_ConfirmContinueTitle="CONFIRM CONTINUE"
 m_ConfirmContinueText="Not all soldiers have learned a new ability. Are you sure you want to continue?"
 m_Requires="Requires"
+
+[UILadderChooseNextMission]
+m_ChooseMissionLabel="CHOOSE MISSION"
+m_ChooseMissionSubtitle="CHOOSE MISSION"

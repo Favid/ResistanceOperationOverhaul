@@ -42,6 +42,7 @@ var name PendingUpgradeName;
 var int LastSelectedIndexes[EUIScreenState] <BoundEnum = EUIScreenState>;
 
 var UIText CreditsText;
+var UIText ScienceText;
 var UIPanel CreditsPanel;
 var UIBGBox Background, PanelDecoration;
 var UILargeButton ContinueButton;
@@ -56,6 +57,7 @@ var XComGameState_LadderProgress_Override LadderData;
 var localized string m_ScreenTitle;
 var localized string m_ScreenSubtitles[EUIScreenState] <BoundEnum = EUIScreenState>;
 var localized string m_Credits;
+var localized string m_Science;
 var localized string m_Continue;
 var localized string m_Research;
 var localized string m_CompletedResearch;
@@ -141,6 +143,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	}
 
 	LadderData.SetSoldierStatesBeforeUpgrades();
+	LadderData.AddMissionCompletedRewards();
 	
 	foreach XComHQ.Squad(UnitStateRef)
 	{
@@ -228,7 +231,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	Background.InitBG('SelectChoice_Background');
 	Background.AnchorCenter();
 	Background.SetPosition(CreditsX,CreditsY);
-	Background.SetSize(200,40);
+	Background.SetSize(200,80);
 	Background.SetBGColor("cyan");
 	Background.SetAlpha(0.9f);	
 
@@ -237,7 +240,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	PanelDecoration.InitBG('SelectChoice_TitleBackground');
 	PanelDecoration.AnchorCenter();
 	PanelDecoration.setPosition(CreditsX,CreditsY);
-	PanelDecoration.setSize(200,40);
+	PanelDecoration.setSize(200,80);
 	PanelDecoration.SetBGColor("cyan");
 	PanelDecoration.SetAlpha(0.9f);
 
@@ -249,8 +252,17 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	CreditsText.SetSize(200,40);
 	CreditsText.SetText(m_Credits $ ":" @ string(LadderData.Credits));
 
+	ScienceText = Spawn(class'UIText',self);
+	ScienceText.bAnimateOnInit = false;
+	ScienceText.InitText('ScienceText',m_Science $ ":" @ string(LadderData.Science),false);
+	ScienceText.AnchorCenter();
+	ScienceText.SetPosition(CreditsX + 15, CreditsY + 5 + 40);
+	ScienceText.SetSize(200,40);
+	ScienceText.SetText(m_Science $ ":" @ string(LadderData.Science));
+
 	`LOG("=== SCORE: " $ string(LadderData.CumulativeScore));
 	`LOG("=== CREDITS: " $ string(LadderData.Credits));
+	`LOG("=== SCIENCE: " $ string(LadderData.Science));
 
 	// Left column
 	LeftColumn = Spawn(class'UIPanel', self);
@@ -812,7 +824,7 @@ simulated function UpdateSelectedResearchInfo(int ItemIndex)
 	mc.EndOp();
 }
 
-function UIMechaListItem GetListItem(int ItemIndex, optional bool bDisableItem, optional string DisabledReason)
+function UIMechaListItem GetListItem(int ItemIndex)
 {
 	local UIMechaListItem CustomizeItem;
 	local UIPanel Item;
@@ -945,6 +957,7 @@ simulated function UpdateDataSquad()
 
 		if (!HasEarnedNewAbility[Index - 1])
 		{
+			// xcom_icon and power_icon are both valid but not listed in UIUtilities_Image
 			PromoteIcon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_PromotionIcon, 20, 20, 0) $ " ";
 		}
 		else
@@ -2582,8 +2595,6 @@ simulated function string ToPascalCase(string Str)
 
 defaultproperties
 {
-	//Package = "NONE";
-	//MCName = "theScreen"; // this matches the instance name of the EmptyScreen MC in components.swf
 	LibID = "EmptyScreen"; // this is used to determine whether a LibID was overridden when UIMovie loads a screen
 	
 	Package = "/ package/gfxTLE_SkirmishMenu/TLE_SkirmishMenu";

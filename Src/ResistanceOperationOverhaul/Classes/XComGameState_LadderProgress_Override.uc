@@ -1,4 +1,4 @@
-class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress;
+class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress  config (LadderOptions);
 
 struct UnitEndState
 {
@@ -6,14 +6,38 @@ struct UnitEndState
 	var array<XComGameState_Item> Inventory;
 };
 
+struct AfterMissionStatus
+{
+	var bool bSoldierWounded;
+	var bool bSoldierDied;
+};
+
+struct MissionOption
+{
+	var string MissionType;
+	var int Credits;
+	var int Science;
+	var array<name> FreeUpgrades;
+};
+
+var config int CREDITS_BASE;
+var config int CREDITS_LADDER_BONUS;
+var config int CREDITS_NO_WOUNDS_BONUS;
+var config int CREDITS_NO_DEATHS_BONUS;
+var config array<int> SCIENCE_TABLE;
+
 var array<name> PurchasedTechUpgrades;
 var array<XComGameState_Unit> SoldierStatesBeforeUpgrades;
 var LadderSettings Settings;
 var array<RungConfig> CustomRungConfigurations;
 var array<SoldierOption> FutureSoldierOptions;
 var int Credits;
+var int Science;
+var AfterMissionStatus MissionStatus;
+var MissionOption ChosenMissionOption; // set this when the player chooses a map type from UILadderChooseNextMission
 
 var UILadderSquadUpgradeScreen UpgradeScreen;
+var UILadderChooseNextMission MissionScreen;
 
 static function ProceedToNextRung( )
 {
@@ -52,8 +76,6 @@ static function ProceedToNextRung( )
 	local X2DownloadableContentInfo DLCInfo;
 
 	local int SoldierIndex;
-
-	local array<string> PossibleMissionTypes;
 
 	local XComGameState_CampaignSettings CurrentCampaign, NextCampaign;
 	
@@ -109,6 +131,10 @@ static function ProceedToNextRung( )
 			EndingStates.AddItem(EndingState);
 		}
 	}
+
+	// Reset the after mission status
+	LadderData.MissionStatus.bSoldierWounded = false;
+	LadderData.MissionStatus.bSoldierDied = false;
 
 	// Case for completing a ladder
 	if (LadderData.LadderRung + 1 > LadderData.LadderSize)
@@ -172,6 +198,7 @@ static function ProceedToNextRung( )
 			NextMissionLadder.CustomRungConfigurations = LadderData.CustomRungConfigurations;
 			NextMissionLadder.FutureSoldierOptions = LadderData.FutureSoldierOptions;
 			NextMissionLadder.Credits = LadderData.Credits;
+			NextMissionLadder.Science = LadderData.Science;
 
 			// Maintain the campaign start times
 			NextCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
@@ -217,59 +244,22 @@ static function ProceedToNextRung( )
 
 	LadderData.LastMissionState = LadderData.SoldierStatesBeforeUpgrades;
 
-	if (LadderData.LadderRung < (LadderData.LadderSize - 1))
+	MissionType = LadderData.GetNextMissionType();
+	if(!MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
 	{
-		PossibleMissionTypes = default.AllowedMissionTypes;
-
-		do {
-			MissionType = PossibleMissionTypes[ `SYNC_RAND_STATIC( PossibleMissionTypes.Length ) ]; // try a random mission
-
-			if (!MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
-			{
-				MissionType = "";
-				continue; // try again
-			}
-
-			// see if we've already played that
-			if ((LadderData.PlayedMissionFamilies.Find( MissionDef.MissionFamily ) != INDEX_NONE) && (default.AllowedMissionTypes.Length > 1))
-			{
-				PossibleMissionTypes.RemoveItem( MissionType );
-
-				// if we ran out of mission types, start over but remove half the history
-				// this way we do repeat, but at least we repeat stuff that's older than what we just played.
-				if (PossibleMissionTypes.Length == 0)
-				{
-					PossibleMissionTypes = default.AllowedMissionTypes;
-					LadderData.PlayedMissionFamilies.Remove( 0, LadderData.PlayedMissionFamilies.Length / 2 );
-				}
-
-				MissionType = "";
-				continue; // try again
-			}
-
-		} until( MissionType != "" );
-
-		LadderData.PlayedMissionFamilies.AddItem( MissionDef.MissionFamily ); // add to the ladder history
+		`Redscreen("ProceedToNextRung(): Mission Type " $ MissionType $ " has no definition!");
+		LadderData.ProgressCommand = "disconnect";
+		return;
 	}
-	else
-	{
-		MissionType = default.FinalMissionTypes[ `SYNC_RAND_STATIC( default.FinalMissionTypes.Length ) ];
-
-		if(!MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
-		{
-			`Redscreen("TransferToNewMission(): Mission Type " $ MissionType $ " has no definition!");
-			LadderData.ProgressCommand = "disconnect";
-			return;
-		}
-	}
-
+	
+	LadderData.PlayedMissionFamilies.AddItem( MissionDef.MissionFamily );
 	MissionManager.ForceMission = MissionDef;
 
 	// pick our new map
 	ParcelManager.GetValidPlotsForMission(ValidPlots, MissionDef);
 	if(ValidPlots.Length == 0)
 	{
-		`Redscreen("TransferToNewMission(): Could not find a plot to transfer to for mission type " $ MissionType $ "!");
+		`Redscreen("ProceedToNextRung(): Could not find a plot to transfer to for mission type " $ MissionType $ "!");
 		LadderData.ProgressCommand = "disconnect";
 		return;
 	}
@@ -286,18 +276,8 @@ static function ProceedToNextRung( )
 	BattleData.MapData.ActiveMission = MissionDef;
 	BattleData.LostSpawningLevel = BattleData.SelectLostActivationCount();
 	BattleData.m_strMapCommand = "open" @ BattleData.MapData.PlotMapName $ "?game=XComGame.XComTacticalGame";
-
-	if (LadderData.Settings.UseCustomSettings)
-	{
-		BattleData.SetForceLevel( LadderData.CustomRungConfigurations[ LadderData.LadderRung ].ForceLevel );
-		BattleData.SetAlertLevel( LadderData.CustomRungConfigurations[ LadderData.LadderRung ].AlertLevel );
-	}
-	else
-	{
-		BattleData.SetForceLevel( default.RungConfiguration[ LadderData.LadderRung ].ForceLevel );
-		BattleData.SetAlertLevel( default.RungConfiguration[ LadderData.LadderRung ].AlertLevel );
-	}
-
+	BattleData.SetForceLevel( LadderData.CustomRungConfigurations[ LadderData.LadderRung ].ForceLevel );
+	BattleData.SetAlertLevel( LadderData.CustomRungConfigurations[ LadderData.LadderRung ].AlertLevel );
 	BattleData.m_nQuestItem = SelectQuestItem( MissionDef.sType );
 	BattleData.BizAnalyticsMissionID = `FXSLIVE.GetGUID( );
 
@@ -664,7 +644,8 @@ function EventListenerReturn OnUnitDamage(Object EventData, Object EventSource, 
 
 		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
 		LadderData.CumulativeScore -= SoldierScoring.UninjuredBonus;
-		LadderData.Credits -= SoldierScoring.UninjuredBonus;
+		//LadderData.Credits -= SoldierScoring.UninjuredBonus / 100;
+		LadderData.MissionStatus.bSoldierWounded = true;
 
 		Analytics = XComGameState_Analytics( `XCOMHISTORY.GetSingleGameStateObjectForClass( class'XComGameState_Analytics', true ) );
 		if (Analytics != none)
@@ -715,7 +696,8 @@ function EventListenerReturn OnUnitKilled(Object EventData, Object EventSource, 
 
 		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
 		LadderData.CumulativeScore -= SoldierScoring.WoundedBonus;
-		LadderData.Credits -= SoldierScoring.WoundedBonus;
+		//LadderData.Credits -= SoldierScoring.WoundedBonus / 100;
+		LadderData.MissionStatus.bSoldierDied = true;
 
 		if(UnitState.IsUnconscious())
 		{
@@ -758,7 +740,7 @@ function EventListenerReturn OnChallengeModeScore(Object EventData, Object Event
 	{
 		if (Scoring.LadderBonus > 0)
 		{
-			GameState.GetContext().PostBuildVisualizationFn.AddItem( BuildLadderBonusVis );
+			//GameState.GetContext().PostBuildVisualizationFn.AddItem( BuildLadderBonusVis );
 			return ELR_NoInterrupt;
 		}
 	}
@@ -817,7 +799,7 @@ function EventListenerReturn OnKillMail(Object EventData, Object EventSource, XC
 		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
 
 		LadderData.CumulativeScore += AddedPoints;
-		LadderData.Credits += AddedPoints;
+		//LadderData.Credits += AddedPoints / 100;
 
 		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
 	}
@@ -845,7 +827,7 @@ function EventListenerReturn OnMissionObjectiveComplete(Object EventData, Object
 			LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
 
 			LadderData.CumulativeScore += AddedPoints;
-			LadderData.Credits += AddedPoints;
+			//LadderData.Credits += AddedPoints / 100;
 
 			`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
 		}
@@ -870,7 +852,7 @@ function EventListenerReturn OnCivilianRescued(Object EventData, Object EventSou
 		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
 
 		LadderData.CumulativeScore += AddedPoints;
-		LadderData.Credits += AddedPoints;
+		//LadderData.Credits += AddedPoints / 100;
 
 		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
 	}
@@ -891,11 +873,35 @@ function OnComplete( Name ActionName )
 		return;
 	}
 
-	`TACTICALRULES.bWaitingForMissionSummary = false;
+	// Bring down the squad screen
 	Pres = `PRES;
 	Pres.Screenstack.Pop(UpgradeScreen);
 	UpgradeScreen.Destroy();
 	UpgradeScreen = none;
+	
+	// Only bring up the mission selection screen if we aren't going to the last mission
+	if (LadderRung + 1 < LadderSize)
+	{
+		// Bring up the mission selection screen
+		MissionScreen = Pres.Spawn(class'UILadderChooseNextMission');
+		Pres.Screenstack.Push(MissionScreen);
+	}
+}
+
+function OnChooseMission(MissionOption Option)
+{
+	local XComPresentationLayer Pres;
+
+	`LOG("==== OnChooseMission");
+
+	ChosenMissionOption = Option;
+
+	`TACTICALRULES.bWaitingForMissionSummary = false;
+
+	Pres = `PRES;
+	Pres.Screenstack.Pop(MissionScreen);
+	MissionScreen.Destroy();
+	MissionScreen = none;
 }
 
 static function bool MaybeDoLadderProgressionChoice( )
@@ -1061,4 +1067,259 @@ function SetSoldierStatesBeforeUpgrades()
 			SoldierStatesBeforeUpgrades.AddItem(UnitState);
 		}
 	}
+}
+
+function AddMissionCompletedRewards()
+{
+	local int NewCredits;
+	local int NewScience;
+	local name NewUpgrade;
+
+	if (LadderRung <= 1)
+	{
+		NewCredits = default.CREDITS_BASE;
+		NewCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
+		NewScience = default.SCIENCE_TABLE[0];
+	}
+	else
+	{
+		NewCredits = ChosenMissionOption.Credits;
+		NewScience = ChosenMissionOption.Science;
+	}
+
+	if (!MissionStatus.bSoldierWounded)
+	{
+		NewCredits += default.CREDITS_NO_WOUNDS_BONUS;
+	}
+
+	if (!MissionStatus.bSoldierDied)
+	{
+		NewCredits += default.CREDITS_NO_DEATHS_BONUS;
+	}
+
+	if (NewCredits > 0)
+	{
+		Credits += NewCredits;
+	}
+
+	if (NewScience > 0)
+	{
+		Science += NewScience;
+	}
+
+	foreach ChosenMissionOption.FreeUpgrades (NewUpgrade)
+	{
+		if (PurchasedTechUpgrades.Find(NewUpgrade) == INDEX_NONE)
+		{
+			PurchasedTechUpgrades.AddItem(NewUpgrade);
+		}
+	}
+}
+
+function array<MissionOption> GetMissionOptions()
+{
+	local array<string> MissionTypeOptions;
+	local MissionOption Option0;
+	local MissionOption Option1;
+	local array<MissionOption> MissionOptions;
+	local int BaseCredits;
+	local int ChoiceSet;
+	local X2ResistanceTechUpgradeTemplate Template0;
+	local X2ResistanceTechUpgradeTemplate Template1;
+
+	BaseCredits = default.CREDITS_BASE;
+	BaseCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
+	
+	MissionTypeOptions = GetMissionTypeOptions();
+
+	Option0.MissionType = MissionTypeOptions[0];
+	Option0.Credits = BaseCredits;
+	Option0.Science = default.SCIENCE_TABLE[LadderRung];
+
+	Option1.MissionType = MissionTypeOptions[1];
+	Option1.Credits = BaseCredits;
+	Option1.Science = default.SCIENCE_TABLE[LadderRung];
+
+	Template0 = GetFreeResearchOption('');
+	Template1 = GetFreeResearchOption(Template0.DataName);
+
+	if (Template0 == none)
+	{
+		// No valid free upgrades
+		ChoiceSet = 0;
+	}
+	else if (Template1 == none)
+	{
+		// Only one valid free upgrade
+		ChoiceSet = `SYNC_RAND_STATIC(3);
+	}
+	else
+	{
+		ChoiceSet = `SYNC_RAND_STATIC(4);
+	}
+	
+	switch (ChoiceSet)
+	{
+	case 0:
+		// Science vs Credits
+		Option0.Science += 1;
+		Option1.Credits += (LadderRung * default.CREDITS_LADDER_BONUS);
+		break;
+	case 1:
+		// Credits vs Free Research
+		Option0.FreeUpgrades.AddItem(Template0.DataName); 
+		Option1.Credits += Template0.Cost / 2;
+		break;
+	case 2:
+		// Science vs Free Research
+		Option0.FreeUpgrades.AddItem(Template0.DataName); 
+		Option1.Science += 1;
+		break;
+	case 3:
+		// Free Research vs Free Research
+		Option0.FreeUpgrades.AddItem(Template0.DataName); 
+		Option1.FreeUpgrades.AddItem(Template1.DataName); 
+
+		if (Template0.Cost > Template1.Cost)
+		{
+			Option1.Credits += (Template0.Cost - Template1.Cost);
+		}
+		else if (Template1.Cost > Template0.Cost)
+		{
+			Option0.Credits += (Template1.Cost - Template0.Cost);
+		}
+
+		break;
+	}
+
+	// Coin flip to determine which one is on which side
+	if (`SYNC_RAND_STATIC(1) == 0)
+	{
+		MissionOptions.AddItem(Option0);
+		MissionOptions.AddItem(Option1);
+	}
+	else
+	{
+		MissionOptions.AddItem(Option1);
+		MissionOptions.AddItem(Option0);
+	}
+
+	return MissionOptions;
+}
+
+private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name IgnoreTemplateName)
+{
+	local int MinCreditCost;
+	local int MaxCreditCost;
+	local array<name> TemplateNames;
+	local name TemplateName;
+	local array<X2ResistanceTechUpgradeTemplate> ResearchOptions;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local X2ResistanceTechUpgradeTemplate Template;
+	local int RandomIndex;
+
+	MinCreditCost = (LadderRung * default.CREDITS_LADDER_BONUS);
+	MaxCreditCost = ((LadderRung + 2) * default.CREDITS_LADDER_BONUS);
+	
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	
+	UpgradeTemplateManager.GetTemplateNames(TemplateNames);
+	foreach TemplateNames (TemplateName)
+	{
+		Template = UpgradeTemplateManager.FindTemplate(TemplateName);
+		if (PurchasedTechUpgrades.Find(TemplateName) == INDEX_NONE 
+			&& HasRequiredTechs(Template) 
+			&& CanAfford(Template) 
+			&& Template.Cost <= MaxCreditCost
+			&& Template.Cost >= MinCreditCost
+			&& TemplateName != IgnoreTemplateName)
+		{
+			ResearchOptions.AddItem(Template);
+		}
+	}
+
+	if (ResearchOptions.Length == 0)
+	{
+		return none;
+	}
+
+	RandomIndex = `SYNC_RAND_STATIC(ResearchOptions.Length);
+	Template = ResearchOptions[RandomIndex];
+
+	return Template;
+}
+
+private function array<string> GetMissionTypeOptions()
+{
+	local array<string> MissionTypeOptions;
+	local array<string> PossibleMissionTypes;
+	local string MissionType;
+	local XComTacticalMissionManager MissionManager;
+	local MissionDefinition MissionDef;
+	local int RandIndex;
+	
+	MissionManager = `TACTICALMISSIONMGR;
+
+	PossibleMissionTypes = default.AllowedMissionTypes;
+
+	// Start by populating PossibleMissionTypes with everything that hasn't been played
+	foreach default.AllowedMissionTypes (MissionType)
+	{
+		if (MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
+		{
+			if (PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE)
+			{
+				PossibleMissionTypes.AddItem(MissionType);
+			}
+		}
+	}
+
+	// If we don't have at least 2 mission types...
+	if (PossibleMissionTypes.Length < 2)
+	{
+		// Remove half the history of played mission types, and retry
+		PlayedMissionFamilies.Remove( 0, PlayedMissionFamilies.Length / 2 );
+
+		foreach default.AllowedMissionTypes (MissionType)
+		{
+			if (MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
+			{
+				if (PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE && PossibleMissionTypes.Find(MissionType) == INDEX_NONE)
+				{
+					PossibleMissionTypes.AddItem(MissionType);
+				}
+			}
+		}
+	}
+
+	// Add the first choice
+	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
+	MissionTypeOptions.AddItem(PossibleMissionTypes[RandIndex]);
+
+	// Add the second choice
+	PlayedMissionFamilies.Remove(RandIndex, 1);
+	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
+	MissionTypeOptions.AddItem(PossibleMissionTypes[RandIndex]);
+
+	return MissionTypeOptions;
+}
+
+function string GetNextMissionType()
+{
+	local string MissionType;
+
+	if (LadderRung == 0)
+	{
+		MissionType = default.AllowedMissionTypes[ `SYNC_RAND_STATIC( default.AllowedMissionTypes.Length ) ];
+	}
+	else if (LadderRung < (LadderSize - 1))
+	{
+		MissionType = ChosenMissionOption.MissionType;
+	}
+	else
+	{
+		MissionType = default.FinalMissionTypes[ `SYNC_RAND_STATIC( default.FinalMissionTypes.Length ) ];
+	}
+
+	return MissionType;
 }
