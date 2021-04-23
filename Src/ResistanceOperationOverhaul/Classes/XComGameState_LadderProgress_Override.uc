@@ -6,12 +6,6 @@ struct UnitEndState
 	var array<XComGameState_Item> Inventory;
 };
 
-struct AfterMissionStatus
-{
-	var bool bSoldierWounded;
-	var bool bSoldierDied;
-};
-
 struct MissionOption
 {
 	var string MissionType;
@@ -33,9 +27,9 @@ var array<RungConfig> CustomRungConfigurations;
 var array<SoldierOption> FutureSoldierOptions;
 var int Credits;
 var int Science;
-var AfterMissionStatus MissionStatus;
 var MissionOption ChosenMissionOption; // set this when the player chooses a map type from UILadderChooseNextMission
 
+var UILadderRewards RewardsScreen;
 var UILadderSquadUpgradeScreen UpgradeScreen;
 var UILadderChooseNextMission MissionScreen;
 
@@ -131,10 +125,6 @@ static function ProceedToNextRung( )
 			EndingStates.AddItem(EndingState);
 		}
 	}
-
-	// Reset the after mission status
-	LadderData.MissionStatus.bSoldierWounded = false;
-	LadderData.MissionStatus.bSoldierDied = false;
 
 	// Case for completing a ladder
 	if (LadderData.LadderRung + 1 > LadderData.LadderSize)
@@ -584,282 +574,6 @@ private static function TransferUnitToNewMission(XComGameState_Unit UnitState,
 	}
 }
 
-event OnCreation( optional X2DataTemplate InitTemplate )
-{
-	local X2EventManager EventManager;
-	local Object ThisObj;
-
-	`LOG("==== OnCreation");
-
-	EventManager = `XEVENTMGR;
-	ThisObj = self;
-
-	EventManager.RegisterForEvent( ThisObj, 'KillMail', OnKillMail, ELD_OnStateSubmitted, , , true ); // unit died messages
-	EventManager.RegisterForEvent( ThisObj, 'KillMail', OnUnitKilled, ELD_OnStateSubmitted, , , true ); // unit died messages
-	EventManager.RegisterForEvent( ThisObj, 'KnockSelfoutUnconscious', OnUnitUnconscious, ELD_OnStateSubmitted, , , true ); // unit goes unconscious instead of killed messages
-	EventManager.RegisterForEvent( ThisObj, 'CivilianRescued', OnCivilianRescued, ELD_OnStateSubmitted, , , true ); // civilian rescued
-	EventManager.RegisterForEvent( ThisObj, 'MissionObjectiveMarkedCompleted', OnMissionObjectiveComplete, ELD_OnStateSubmitted, , , true ); // mission objective complete
-	EventManager.RegisterForEvent( ThisObj, 'UnitTakeEffectDamage', OnUnitDamage, ELD_OnStateSubmitted, , , true ); // unit damaged messages
-	EventManager.RegisterForEvent( ThisObj, 'ChallengeModeScoreChange', OnChallengeModeScore, ELD_OnStateSubmitted, , , true );
-}
-
-function EventListenerReturn OnUnitDamage(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local XComGameState_Unit UnitState, PreviousState;
-	local XComChallengeModeManager ChallengeModeManager;
-	local ChallengeSoldierScoring SoldierScoring;
-	local XComGameState NewGameState;
-	local XComGameState_LadderProgress_Override LadderData;
-	local XComGameState_ChallengeScore ChallengeScore;
-	local UnitValue UnitValue;
-	local XComGameState_Analytics Analytics;
-
-	`LOG("==== OnUnitDamage");
-
-	UnitState = XComGameState_Unit( EventData );
-
-	if (UnitState.GetPreviousTeam() != eTeam_XCom) // Not XCom
-		return ELR_NoInterrupt;
-	if (UnitState.bMissionProvided) // Not a soldier
-		return ELR_NoInterrupt;
-	if (UnitState.GetMyTemplate().bIsCosmetic) // Not a soldier
-		return ELR_NoInterrupt;
-	if (UnitState.GetUnitValue( 'NewSpawnedUnit', UnitValue )) // spawned unit like a Ghost or Mimic Beacon
-		return ELR_NoInterrupt;
-
-	PreviousState = XComGameState_Unit( `XCOMHISTORY.GetGameStateForObjectID( UnitState.ObjectID, , GameState.HistoryIndex - 1 ) );
-	if (PreviousState.HighestHP > PreviousState.LowestHP) // already taken damage
-		return ELR_NoInterrupt;
-
-	ChallengeModeManager = `CHALLENGEMODE_MGR;
-	ChallengeModeManager.GetSoldierScoring( SoldierScoring );
-
-	if (SoldierScoring.UninjuredBonus > 0)
-	{
-		NewGameState = class'XComGameStateContext_ChallengeScore'.static.CreateChangeState( );
-
-		ChallengeScore = XComGameState_ChallengeScore( NewGameState.CreateStateObject( class'XComGameState_ChallengeScore' ) );
-		ChallengeScore.ScoringType = CMPT_WoundedSoldier;
-		ChallengeScore.AddedPoints = -SoldierScoring.UninjuredBonus;
-
-		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
-		LadderData.CumulativeScore -= SoldierScoring.UninjuredBonus;
-		//LadderData.Credits -= SoldierScoring.UninjuredBonus / 100;
-		LadderData.MissionStatus.bSoldierWounded = true;
-
-		Analytics = XComGameState_Analytics( `XCOMHISTORY.GetSingleGameStateObjectForClass( class'XComGameState_Analytics', true ) );
-		if (Analytics != none)
-		{
-			Analytics = XComGameState_Analytics( NewGameState.ModifyStateObject( class'XComGameState_Analytics', Analytics.ObjectID ) );
-			Analytics.AddValue( "TLE_INJURIES", 1 );
-		}
-
-		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
-	}
-
-	return ELR_NoInterrupt;
-}
-
-function EventListenerReturn OnUnitKilled(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local XComGameState_Unit UnitState, UnitStateUpdated;
-	local XComChallengeModeManager ChallengeModeManager;
-	local ChallengeSoldierScoring SoldierScoring;
-	local XComGameState NewGameState;
-	local XComGameState_LadderProgress_Override LadderData;
-	local XComGameState_ChallengeScore ChallengeScore;
-	local UnitValue UnitValue;
-
-	`LOG("==== OnUnitKilled");
-
-	UnitState = XComGameState_Unit( EventData );
-
-	if (UnitState.GetPreviousTeam() != eTeam_XCom) // Not XCom
-		return ELR_NoInterrupt;
-	if (UnitState.bMissionProvided) // Not a soldier
-		return ELR_NoInterrupt;
-	if (UnitState.GetMyTemplate().bIsCosmetic) // Not a soldier
-		return ELR_NoInterrupt;
-	if (UnitState.GetUnitValue( 'NewSpawnedUnit', UnitValue )) // spawned unit like a Ghost or Mimic Beacon
-		return ELR_NoInterrupt;
-
-	ChallengeModeManager = `CHALLENGEMODE_MGR;
-	ChallengeModeManager.GetSoldierScoring( SoldierScoring );
-
-	if (SoldierScoring.WoundedBonus > 0)
-	{
-		NewGameState = class'XComGameStateContext_ChallengeScore'.static.CreateChangeState( );
-
-		ChallengeScore = XComGameState_ChallengeScore( NewGameState.CreateStateObject( class'XComGameState_ChallengeScore' ) );
-		ChallengeScore.ScoringType = CMPT_DeadSoldier;
-		ChallengeScore.AddedPoints = -SoldierScoring.WoundedBonus;
-
-		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
-		LadderData.CumulativeScore -= SoldierScoring.WoundedBonus;
-		//LadderData.Credits -= SoldierScoring.WoundedBonus / 100;
-		LadderData.MissionStatus.bSoldierDied = true;
-
-		if(UnitState.IsUnconscious())
-		{
-			// We only set this if the unit went unconscious. This helps prevent issues if a unit is not allowed to become unconscious.
-			UnitStateUpdated = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', UnitState.ObjectID));
-			UnitStateUpdated.SetUnitFloatValue('LadderKilledScored', 1.0, eCleanup_BeginTactical);
-		}
-
-		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
-	}
-
-	return ELR_NoInterrupt;
-}
-
-function EventListenerReturn OnUnitUnconscious(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local XComGameState_Unit UnitState;
-	local StateObjectReference AbilityRef;
-	local UnitValue UnitValue;
-
-	`LOG("==== OnUnitUnconscious");
-
-	UnitState = XComGameState_Unit(EventSource);
-	AbilityRef = UnitState.FindAbility('LadderUnkillable');
-	if (AbilityRef.ObjectID == 0) // Does not have the LadderUnkillable ability
-		return ELR_NoInterrupt;
-	if (UnitState.GetUnitValue('LadderKilledScored', UnitValue)) // Already scored as Ladder Killed (and not been revived)
-		return ELR_NoInterrupt;
-
-	return OnUnitKilled(UnitState, EventSource, GameState, Event, CallbackData);
-}
-
-function EventListenerReturn OnChallengeModeScore(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local XComGameState_ChallengeScore Scoring;
-
-	`LOG("==== OnChallengeModeScore");
-
-	foreach GameState.IterateByClassType(class'XComGameState_ChallengeScore', Scoring)
-	{
-		if (Scoring.LadderBonus > 0)
-		{
-			//GameState.GetContext().PostBuildVisualizationFn.AddItem( BuildLadderBonusVis );
-			return ELR_NoInterrupt;
-		}
-	}
-
-	return ELR_NoInterrupt;
-}
-
-static function BuildLadderBonusVis( XComGameState VisualizeGameState )
-{
-	local XComGameState_ChallengeScore Scoring;
-	local VisualizationActionMetadata ActionMetadata;
-	local X2Action_PlayMessageBanner Action;
-	local XGParamTag Tag;
-
-	`LOG("==== BuildLadderBonusVis");
-
-	Tag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-
-	foreach VisualizeGameState.IterateByClassType(class'XComGameState_ChallengeScore', Scoring)
-	{
-		if (Scoring.LadderBonus <= 0)
-			continue;
-
-		if (Action == none)
-		{
-			ActionMetadata.StateObject_OldState = Scoring;
-			ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
-			ActionMetadata.VisualizeActor = `XCOMHISTORY.GetVisualizer( `TACTICALRULES.GetLocalClientPlayerObjectID() );
-
-			Action = X2Action_PlayMessageBanner( class'X2Action_PlayMessageBanner'.static.AddToVisualizationTree( ActionMetadata, VisualizeGameState.GetContext() ) );
-		}
-
-		Tag.IntValue0 = Scoring.LadderBonus;
-
-		Action.AddMessageBanner(	default.EarlyBirdTitle,
-									,
-									,
-									`XEXPAND.ExpandString( default.EarlyBirdBonus ),
-									eUIState_Good );
-	}
-}
-
-function EventListenerReturn OnKillMail(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local int AddedPoints;
-	local XComGameState NewGameState;
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== OnKillMail");
-
-	AddedPoints = class'XComGameState_ChallengeScore'.static.AddKillMail( XComGameState_Unit(EventSource), XComGameState_Unit(EventData), GameState );
-
-	if (AddedPoints > 0)
-	{
-		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState( "LadderScoreKillMail" );
-		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
-
-		LadderData.CumulativeScore += AddedPoints;
-		//LadderData.Credits += AddedPoints / 100;
-
-		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
-	}
-
-	return ELR_NoInterrupt;
-}
-
-function EventListenerReturn OnMissionObjectiveComplete(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local SeqAct_DisplayMissionObjective SeqActDisplayMissionObjective;
-	local int AddedPoints;
-	local XComGameState NewGameState;
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== OnMissionObjectiveComplete");
-
-	SeqActDisplayMissionObjective = SeqAct_DisplayMissionObjective( EventSource );
-	if (SeqActDisplayMissionObjective != none)
-	{
-		AddedPoints = class'XComGameState_ChallengeScore'.static.AddIndividualMissionObjectiveComplete( SeqActDisplayMissionObjective );
-
-		if (AddedPoints > 0)
-		{
-			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState( "LadderScoreObjectiveComplete" );
-			LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
-
-			LadderData.CumulativeScore += AddedPoints;
-			//LadderData.Credits += AddedPoints / 100;
-
-			`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
-		}
-	}
-
-	return ELR_NoInterrupt;
-}
-
-function EventListenerReturn OnCivilianRescued(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
-{
-	local int AddedPoints;
-	local XComGameState NewGameState;
-	local XComGameState_LadderProgress_Override LadderData;
-
-	`LOG("==== OnCivilianRescued");
-
-	AddedPoints = class'XComGameState_ChallengeScore'.static.AddCivilianRescued( XComGameState_Unit(EventSource), XComGameState_Unit(EventData) );
-
-	if (AddedPoints > 0)
-	{
-		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState( "LadderScoreCivilianRescue" );
-		LadderData = XComGameState_LadderProgress_Override( NewGameState.ModifyStateObject( class'XComGameState_LadderProgress', ObjectID ) );
-
-		LadderData.CumulativeScore += AddedPoints;
-		//LadderData.Credits += AddedPoints / 100;
-
-		`XCOMGAME.GameRuleset.SubmitGameState( NewGameState );
-	}
-
-	return ELR_NoInterrupt;
-}
-
 function OnComplete( Name ActionName )
 {
 	local XComPresentationLayer Pres;
@@ -885,6 +599,10 @@ function OnComplete( Name ActionName )
 		// Bring up the mission selection screen
 		MissionScreen = Pres.Spawn(class'UILadderChooseNextMission');
 		Pres.Screenstack.Push(MissionScreen);
+	}
+	else
+	{
+		`TACTICALRULES.bWaitingForMissionSummary = false;
 	}
 }
 
@@ -919,15 +637,32 @@ static function bool MaybeDoLadderProgressionChoice( )
 		return super.MaybeDoLadderProgressionChoice();
 	}
 
-	// don't do an upgrade choice for completing the last mission
+	// don't do any of our new screens after completing the last mission
 	if (LadderData.LadderRung == LadderData.LadderSize)
 		return false;
 
+	// Bring up the rewards screen
 	Pres = `PRES;
-	LadderData.UpgradeScreen = Pres.Spawn(class'UILadderSquadUpgradeScreen');
-	Pres.Screenstack.Push(LadderData.UpgradeScreen);
+	LadderData.RewardsScreen = Pres.Spawn(class'UILadderRewards');
+	Pres.Screenstack.Push(LadderData.RewardsScreen);
+	LadderData.RewardsScreen.Populate(LadderData);
 
 	return true;
+}
+
+function OnCloseRewardsScreen()
+{
+	local XComPresentationLayer Pres;
+
+	// Bring down the rewards scren
+	Pres = `PRES;
+	Pres.Screenstack.Pop(RewardsScreen);
+	RewardsScreen.Destroy();
+	RewardsScreen = none;
+
+	// Bring up the upgrade screen
+	UpgradeScreen = Pres.Spawn(class'UILadderSquadUpgradeScreen');
+	Pres.Screenstack.Push(UpgradeScreen);
 }
 
 function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
@@ -1074,28 +809,9 @@ function AddMissionCompletedRewards()
 	local int NewCredits;
 	local int NewScience;
 	local name NewUpgrade;
-
-	if (LadderRung <= 1)
-	{
-		NewCredits = default.CREDITS_BASE;
-		NewCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
-		NewScience = default.SCIENCE_TABLE[0];
-	}
-	else
-	{
-		NewCredits = ChosenMissionOption.Credits;
-		NewScience = ChosenMissionOption.Science;
-	}
-
-	if (!MissionStatus.bSoldierWounded)
-	{
-		NewCredits += default.CREDITS_NO_WOUNDS_BONUS;
-	}
-
-	if (!MissionStatus.bSoldierDied)
-	{
-		NewCredits += default.CREDITS_NO_DEATHS_BONUS;
-	}
+	
+	NewCredits = ChosenMissionOption.Credits;
+	NewScience = ChosenMissionOption.Science;
 
 	if (NewCredits > 0)
 	{
@@ -1128,7 +844,7 @@ function array<MissionOption> GetMissionOptions()
 	local X2ResistanceTechUpgradeTemplate Template1;
 
 	BaseCredits = default.CREDITS_BASE;
-	BaseCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
+	BaseCredits += ((LadderRung + 1) * default.CREDITS_LADDER_BONUS);
 	
 	MissionTypeOptions = GetMissionTypeOptions();
 
@@ -1193,7 +909,7 @@ function array<MissionOption> GetMissionOptions()
 	}
 
 	// Coin flip to determine which one is on which side
-	if (`SYNC_RAND_STATIC(1) == 0)
+	if (`SYNC_RAND_STATIC(2) == 0)
 	{
 		MissionOptions.AddItem(Option0);
 		MissionOptions.AddItem(Option1);
@@ -1234,6 +950,7 @@ private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name Igno
 			&& Template.Cost >= MinCreditCost
 			&& TemplateName != IgnoreTemplateName)
 		{
+			// TODO make sure someone in the squad can use it
 			ResearchOptions.AddItem(Template);
 		}
 	}

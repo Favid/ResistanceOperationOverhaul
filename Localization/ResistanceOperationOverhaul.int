@@ -691,3 +691,11 @@ m_Requires="Requires"
 [UILadderChooseNextMission]
 m_ChooseMissionLabel="CHOOSE MISSION"
 m_ChooseMissionSubtitle="CHOOSE MISSION"
+
+[UILadderRewards]
+m_Title="Mission Reward Summary"
+m_Continue="Continue"
+m_Credits="Credits"
+m_Science="Science"
+m_Upgrades="Upgrades"
+m_NoUpgrade="None"

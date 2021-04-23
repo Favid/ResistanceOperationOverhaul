@@ -44,7 +44,7 @@ var int LastSelectedIndexes[EUIScreenState] <BoundEnum = EUIScreenState>;
 var UIText CreditsText;
 var UIText ScienceText;
 var UIPanel CreditsPanel;
-var UIBGBox Background, PanelDecoration;
+var UIBGBox Background;
 var UILargeButton ContinueButton;
 
 var UIList List;
@@ -230,8 +230,8 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	// Credits text
 	CreditsPrefix = class'UIUtilities_Text'.static.InjectImage(CreditsIcon, 20, 20, 0) $ " " $ m_Credits $ ": ";
 	SciencePrefix = class'UIUtilities_Text'.static.InjectImage(ScienceIcon, 20, 20, 0) $ " " $ m_Science $ ": ";
-	CreditsX = 740;
-	CreditsY = -500;
+	CreditsX = -780;
+	CreditsY = -460;
 
 	Background = Spawn(class'UIBGBox', self);
 	Background.bAnimateOnInit = false;
@@ -241,16 +241,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	Background.SetPosition(CreditsX,CreditsY);
 	Background.SetSize(200,80);
 	Background.SetBGColor("cyan");
-	Background.SetAlpha(0.9f);	
-
-	PanelDecoration = Spawn(class'UIBGBox',self);
-	PanelDecoration.bAnimateOnInit = false;
-	PanelDecoration.InitBG('SelectChoice_TitleBackground');
-	PanelDecoration.AnchorCenter();
-	PanelDecoration.setPosition(CreditsX,CreditsY);
-	PanelDecoration.setSize(200,80);
-	PanelDecoration.SetBGColor("cyan");
-	PanelDecoration.SetAlpha(0.9f);
+	Background.SetAlpha(0.9f);
 
 	CreditsText = Spawn(class'UIText',self);
 	CreditsText.bAnimateOnInit = false;

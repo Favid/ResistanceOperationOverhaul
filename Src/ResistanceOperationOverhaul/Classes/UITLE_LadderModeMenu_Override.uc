@@ -1187,6 +1187,15 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 		`Redscreen("CreateNewLadder(): Mission Type " $ MissionType $ " has no definition!");
 		return;
 	}
+	
+	// This block has been modified
+	if (Settings.UseCustomSettings)
+	{
+		LadderData.ChosenMissionOption.MissionType = MissionType;
+		LadderData.ChosenMissionOption.Credits = class'XComGameState_LadderProgress_Override'.default.CREDITS_BASE;
+		LadderData.ChosenMissionOption.Credits += class'XComGameState_LadderProgress_Override'.default.CREDITS_LADDER_BONUS;
+		LadderData.ChosenMissionOption.Science = class'XComGameState_LadderProgress_Override'.default.SCIENCE_TABLE[0];
+	}
 
 	TacticalMissionManager.ForceMission = MissionDef;
 
