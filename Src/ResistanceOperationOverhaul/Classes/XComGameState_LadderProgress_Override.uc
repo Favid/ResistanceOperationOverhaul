@@ -1021,7 +1021,7 @@ function bool HasRequiredTechs(X2ResistanceTechUpgradeTemplate Template)
 
 function bool CanAfford(X2ResistanceTechUpgradeTemplate Template)
 {
-	if (Credits < Template.Cost)
+	if (Credits < Template.Cost || Science < Template.RequiredScience)
 	{
 		return false;
 	}

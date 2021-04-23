@@ -2,6 +2,7 @@ class X2ResistanceTechUpgradeTemplate extends X2DataTemplate;
 
 // var name DataName; from X2DataTemplate
 var int Cost;
+var int RequiredScience;
 var name AssociatedTech;
 var array<InventoryUpgrade> InventoryUpgrades;
 var array<name> RequiredTechUpgrades;

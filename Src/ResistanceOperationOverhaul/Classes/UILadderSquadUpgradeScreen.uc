@@ -88,6 +88,12 @@ var localized string m_ConfirmContinueTitle;
 var localized string m_ConfirmContinueText;
 var localized string m_Requires;
 
+const CreditsIcon = "UIEvent_engineer";
+const ScienceIcon = "img:///UILibrary_Common.UIEvent_science";
+
+var string CreditsPrefix;
+var string SciencePrefix;
+
 delegate OnSelectorClickDelegate(UIMechaListItem MechaItem);
 
 simulated function OnInit()
@@ -222,6 +228,8 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	mc.FunctionString("SetScreenTitle", m_ScreenTitle);
 
 	// Credits text
+	CreditsPrefix = class'UIUtilities_Text'.static.InjectImage(CreditsIcon, 20, 20, 0) $ " " $ m_Credits $ ": ";
+	SciencePrefix = class'UIUtilities_Text'.static.InjectImage(ScienceIcon, 20, 20, 0) $ " " $ m_Science $ ": ";
 	CreditsX = 740;
 	CreditsY = -500;
 
@@ -246,19 +254,19 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	CreditsText = Spawn(class'UIText',self);
 	CreditsText.bAnimateOnInit = false;
-	CreditsText.InitText('CreditsText',m_Credits $ ":" @ string(LadderData.Credits),false);
+	CreditsText.InitText('CreditsText', CreditsPrefix $ string(LadderData.Credits),false);
 	CreditsText.AnchorCenter();
 	CreditsText.SetPosition(CreditsX + 15, CreditsY + 5);
 	CreditsText.SetSize(200,40);
-	CreditsText.SetText(m_Credits $ ":" @ string(LadderData.Credits));
+	CreditsText.SetText(CreditsPrefix $ string(LadderData.Credits));
 
 	ScienceText = Spawn(class'UIText',self);
 	ScienceText.bAnimateOnInit = false;
-	ScienceText.InitText('ScienceText',m_Science $ ":" @ string(LadderData.Science),false);
+	ScienceText.InitText('ScienceText', SciencePrefix $ string(LadderData.Science),false);
 	ScienceText.AnchorCenter();
 	ScienceText.SetPosition(CreditsX + 15, CreditsY + 5 + 40);
 	ScienceText.SetSize(200,40);
-	ScienceText.SetText(m_Science $ ":" @ string(LadderData.Science));
+	ScienceText.SetText(SciencePrefix $ string(LadderData.Science));
 
 	`LOG("=== SCORE: " $ string(LadderData.CumulativeScore));
 	`LOG("=== CREDITS: " $ string(LadderData.Credits));
@@ -957,7 +965,6 @@ simulated function UpdateDataSquad()
 
 		if (!HasEarnedNewAbility[Index - 1])
 		{
-			// xcom_icon and power_icon are both valid but not listed in UIUtilities_Image
 			PromoteIcon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_PromotionIcon, 20, 20, 0) $ " ";
 		}
 		else
@@ -2152,7 +2159,7 @@ simulated function UpdateDataResearch()
 
 	// Add a button to view completed projects
 	Index = 0;
-	Icon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.const.HTML_GearIcon, 20, 20, 0) $ " ";
+	Icon = class'UIUtilities_Text'.static.InjectImage(ScienceIcon, 20, 20, 0) $ " ";
 	GetListItem(Index).UpdateDataValue(Icon $ m_CompletedResearch, "", OnClickCompletedProjects);
 	GetListItem(Index).EnableNavigation();
 	Index++;
@@ -2213,6 +2220,7 @@ simulated function UpdateDataResearchCategory()
 	local X2ResistanceTechUpgradeTemplate Template;
 	local array<name> TemplateNames;
 	local name TemplateName;
+	local string CostString;
 
 	Index = 0;
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
@@ -2235,7 +2243,16 @@ simulated function UpdateDataResearchCategory()
 					//`LOG("=== Template DataName: " $ string(Template.DataName));
 					//`LOG("=== Template DisplayName: " $ Template.DisplayName);
 					//`LOG("=== Template Description: " $ Template.Description);
-					GetListItem(Index).UpdateDataValue(Template.DisplayName, string(Template.Cost), , , OnClickUpgradeTech);
+
+					CostString = "";
+					if (Template.RequiredScience > 0)
+					{
+						CostString = CostString $ string(Template.RequiredScience) $ " " $ class'UIUtilities_Text'.static.InjectImage(ScienceIcon, 20, 20, 0) $ "  ";
+					}
+
+					CostString = CostString $ string(Template.Cost) $ " " $ class'UIUtilities_Text'.static.InjectImage(CreditsIcon, 20, 20, 0);
+
+					GetListItem(Index).UpdateDataValue(Template.DisplayName, CostString, , , OnClickUpgradeTech);
 					GetListItem(Index).metadataString = string(Template.DataName);
 					GetListItem(Index).metadataInt = Template.Cost;
 					GetListItem(Index).EnableNavigation();
@@ -2398,7 +2415,7 @@ simulated function OnCancel()
 
 simulated function UpdateCreditsText()
 {
-	CreditsText.SetText(m_Credits $ ":" @ string(LadderData.Credits));
+	CreditsText.SetText(CreditsPrefix $ string(LadderData.Credits));
 }
 
 simulated function HideListItems()

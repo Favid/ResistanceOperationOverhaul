@@ -22,6 +22,7 @@ struct TechUpgrade
 {
 	var name TemplateName;
 	var int Cost;
+	var int RequiredScience;
 	var name AssociatedTech;
 	var array<InventoryUpgrade> InventoryUpgrades;
 	var array<name> RequiredTechUpgrades;
@@ -52,6 +53,7 @@ private static function X2DataTemplate CreateTemplate(TechUpgrade Upgrade)
 	`CREATE_X2TEMPLATE(class'X2ResistanceTechUpgradeTemplate', Template, Upgrade.TemplateName);
 
 	Template.Cost = Upgrade.Cost;
+	Template.RequiredScience = Upgrade.RequiredScience;
 	Template.AssociatedTech = Upgrade.AssociatedTech;
 	Template.InventoryUpgrades = Upgrade.InventoryUpgrades;
 	Template.RequiredTechUpgrades = Upgrade.RequiredTechUpgrades;
