@@ -595,6 +595,44 @@ Description="Grants access to Advanced Rocket Launcher secondary weapons for all
 DisplayName="Elerium Rocket Launcers"
 Description="Grants access to Elerium Rocket Launcher secondary weapons for all soldiers who can use them."
 
+; Iridar's Underbarrel Attachments
+
+[TU_UBS_Conv X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Shotgun"
+Description="Grants one Underbarrel Shotgun."
+
+[TU_UBS_Mag X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Shard Gun"
+Description="Grants one Underbarrel Shard Gun."
+
+[TU_UBS_Beam X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Storm Gun"
+Description="Grants one Underbarrel Storm Gun."
+
+[TU_UBGL_Conv X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Grenade Launcher"
+Description="Grants one Underbarrel Grenade Launcher."
+
+[TU_UBGL_Mag X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Mag Launcher"
+Description="Grants one Underbarrel Mag Launcher."
+
+[TU_UBGL_Beam X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Beam Launcher"
+Description="Grants one Underbarrel Beam Launcher."
+
+[TU_UBFlame_Conv X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Flamethrower"
+Description="Grants one Underbarrel Flamethrower."
+
+[TU_UBFlame_Mag X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Elerium Thrower"
+Description="Grants one Underbarrel Elerium Thrower."
+
+[TU_UBFlame_Beam X2ResistanceTechUpgradeTemplate]
+DisplayName="Underbarrel Elerium Acid Thrower"
+Description="Grants one Underbarrel Elerium Acid Thrower."
+
 ; Strings
 
 [UITLE_LadderModeMenu_Override]
