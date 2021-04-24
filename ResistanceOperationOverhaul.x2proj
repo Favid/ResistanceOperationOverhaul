@@ -53,6 +53,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\ResistanceOperationOverhaul\Classes\X2DownloadableContentInfo_ResistanceOperationOverhaul.uc" />
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\X2EventListener_HasHeavyWeapon.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\ResistanceOperationOverhaul\Classes\X2ResistanceTechUpgradeTemplate.uc">
       <SubType>Content</SubType>
     </Content>

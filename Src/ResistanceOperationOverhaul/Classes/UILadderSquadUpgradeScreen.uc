@@ -694,7 +694,7 @@ simulated function SetSoldierGear()
 
 	equippedItem = Soldier.GetItemInSlot(eInvSlot_HeavyWeapon, NewGameState, false);
 	mc.BeginFunctionOp("SetSoldierHeavyWeaponSlot");
-	if (equippedItem != none && Soldier.HasHeavyWeapon())
+	if (equippedItem != none && Soldier.HasHeavyWeapon(NewGameState))
 	{
 		mc.QueueString(equippedItem.GetMyTemplate().GetItemFriendlyNameNoStats());
 		mc.QueueString(equippedItem.GetMyTemplate().strImage);
@@ -1169,7 +1169,7 @@ simulated function UpdateDataSoldierOptions()
 	}
 
 	// Heavy weapon
-	if (Soldier.HasHeavyWeapon())
+	if (Soldier.HasHeavyWeapon(NewGameState))
 	{
 		EquippedItem = Soldier.GetItemInSlot(eInvSlot_HeavyWeapon, NewGameState, false);
 		GetListItem(Index).EnableNavigation();
@@ -1343,6 +1343,8 @@ simulated function UpdateDataPrimaryWeapon()
 simulated function bool ItemAlreadyInUse(name TemplateName, int ExcludeSoldierIndex)
 {
 	local int Index;
+	local XComGameState_Item ItemState;
+	local array<name> AttachmentNames;
 
 	for (Index = 0; Index < Squad.Length; Index++)
 	{
@@ -1351,6 +1353,16 @@ simulated function bool ItemAlreadyInUse(name TemplateName, int ExcludeSoldierIn
 			if (Squad[Index].HasItemOfTemplateType(TemplateName))
 			{
 				return true;
+			}
+
+			ItemState = Squad[Index].GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
+			if (ItemState != none)
+			{
+				AttachmentNames = ItemState.GetMyWeaponUpgradeTemplateNames();
+				if (AttachmentNames.Find(TemplateName) != INDEX_NONE)
+				{
+					return true;
+				}
 			}
 		}
 	}
