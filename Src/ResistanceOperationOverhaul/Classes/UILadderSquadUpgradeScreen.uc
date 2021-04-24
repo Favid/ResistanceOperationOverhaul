@@ -2342,7 +2342,79 @@ simulated function PurchaseTechUpgrade(X2ResistanceTechUpgradeTemplate Template)
 {
 	LadderData.PurchaseTechUpgrade(Template.DataName, NewGameState);
 	UpdateCreditsText();
+	UpgradeGear(Template);
 	UpdateData();
+}
+
+simulated function UpgradeGear(X2ResistanceTechUpgradeTemplate Template)
+{
+	local XComGameState_Unit Soldier;
+	local XComGameState_Item EquippedItem;
+	local X2ArmorTemplate NewArmorTemplate;
+	local X2WeaponTemplate NewWeaponTemplate;
+	local array<X2EquipmentTemplate> NewEquipmentTemplates;
+	local X2ItemTemplateManager ItemTemplateManager;
+	local bool ChangeMade;
+	local InventoryUpgrade ItemUpgrade;
+	local X2EquipmentTemplate EquipmentTemplate;
+	
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	foreach Template.InventoryUpgrades (ItemUpgrade)
+	{
+		if (!ItemUpgrade.bSingle)
+		{
+			EquipmentTemplate = X2EquipmentTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+			if (EquipmentTemplate != none)
+			{
+				foreach Squad(Soldier)
+				{
+					ChangeMade = false;
+
+					// Primary Weapon
+					NewWeaponTemplate = X2WeaponTemplate(EquipmentTemplate);
+					if (NewWeaponTemplate != none 
+						&& Soldier.GetSoldierClassTemplate().IsWeaponAllowedByClass(NewWeaponTemplate) 
+						&& NewWeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon
+						&& NewWeaponTemplate.bInfiniteItem)
+					{
+						EquippedItem = Soldier.GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState);
+						NewEquipmentTemplates.Length = 0;
+						NewEquipmentTemplates.AddItem(NewWeaponTemplate);
+						ChangeMade = Soldier.UpgradeEquipment(NewGameState, EquippedItem, NewEquipmentTemplates, eInvSlot_PrimaryWeapon) || ChangeMade;
+					}
+					
+					// Secondary Weapon
+					if (NewWeaponTemplate != none 
+						&& Soldier.GetSoldierClassTemplate().IsWeaponAllowedByClass(NewWeaponTemplate) 
+						&& NewWeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon
+						&& NewWeaponTemplate.bInfiniteItem)
+					{
+						EquippedItem = Soldier.GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState);
+						NewEquipmentTemplates.Length = 0;
+						NewEquipmentTemplates.AddItem(NewWeaponTemplate);
+						ChangeMade = Soldier.UpgradeEquipment(NewGameState, EquippedItem, NewEquipmentTemplates, eInvSlot_SecondaryWeapon) || ChangeMade;
+					}
+
+					// Armor
+					NewArmorTemplate = X2ArmorTemplate(EquipmentTemplate);
+					if (NewArmorTemplate != none
+						&& Soldier.GetSoldierClassTemplate().IsArmorAllowedByClass(NewArmorTemplate)
+						&& NewArmorTemplate.bInfiniteItem)
+					{
+						EquippedItem = Soldier.GetItemInSlot(eInvSlot_Armor, NewGameState);
+						NewEquipmentTemplates.Length = 0;
+						NewEquipmentTemplates.AddItem(NewArmorTemplate);
+						ChangeMade = Soldier.UpgradeEquipment(NewGameState, EquippedItem, NewEquipmentTemplates, eInvSlot_Armor) || ChangeMade;
+					}
+
+					if (ChangeMade)
+					{
+						Soldier.ValidateLoadout(NewGameState);
+					}
+				}
+			}
+		}
+	}
 }
 
 simulated function OnClickCompletedProjects()

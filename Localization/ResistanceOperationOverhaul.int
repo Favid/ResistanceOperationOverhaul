@@ -248,8 +248,8 @@ DisplayName="Plasma Blasters"
 Description="Grants access to Plasma Blasters for all soldiers who can use them."
 
 [TU_ShredstormCannon X2ResistanceTechUpgradeTemplate]
-DisplayName="Hellfire Projectors"
-Description="Grants access to Hellfire Projectors for all soldiers who can use them."
+DisplayName="Shredstorm Cannons"
+Description="Grants access to Shredstorm Cannons for all soldiers who can use them."
 
 ; Medium Armor
 
