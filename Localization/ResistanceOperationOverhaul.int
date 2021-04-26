@@ -728,7 +728,7 @@ m_Requires="Requires"
 
 [UILadderChooseNextMission]
 m_ChooseMissionLabel="CHOOSE MISSION"
-m_ChooseMissionSubtitle="CHOOSE MISSION"
+m_ChooseMissionSubtitle="CHOOSE NEXT MISSION"
 
 [UILadderRewards]
 m_Title="Mission Reward Summary"

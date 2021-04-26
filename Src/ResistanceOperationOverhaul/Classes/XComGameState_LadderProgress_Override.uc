@@ -1,9 +1,15 @@
-class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress  config (LadderOptions);
+class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress dependson(X2DataSet_ResistanceTechUpgrades) config (LadderOptions);
 
 struct UnitEndState
 {
 	var XComGameState_Unit UnitState;
 	var array<XComGameState_Item> Inventory;
+};
+
+struct MissionTypeOption
+{
+	var string MissionType0;
+	var string MissionType1;
 };
 
 struct MissionOption
@@ -28,6 +34,7 @@ var array<SoldierOption> FutureSoldierOptions;
 var int Credits;
 var int Science;
 var MissionOption ChosenMissionOption; // set this when the player chooses a map type from UILadderChooseNextMission
+var array<MissionTypeOption> LadderMissionTypeOptions;
 
 var UILadderRewards RewardsScreen;
 var UILadderSquadUpgradeScreen UpgradeScreen;
@@ -143,24 +150,13 @@ static function ProceedToNextRung( )
 		return;
 	}
 
-	// Case for an existing ladder
-	if (!LadderData.bNewLadder)
+	// Case for restarting an existing ladder (which was previously abandoned or completed)
+	if (LadderData.LadderRung == 0 && !LadderData.bNewLadder)
 	{
 		`LOG("===== Existing ladder");
 		Visualizers = History.GetAllVisualizers( );
 
-		if (!History.ReadHistoryFromFile( "Ladders/", "Mission_" $ LadderData.LadderIndex $ "_" $ (LadderData.LadderRung + 1) $ "_" $ CurrentCampaign.DifficultySetting ))
-		{
-			`LOG("===== Failed to find save file");
-			if (!LadderData.bRandomLadder)
-			{
-				LadderData.ProgressCommand = "disconnect";
-				return;
-			}
-			// there isn't a next mission for this procedural ladder, fall through to the normal procedural ladder progression
-			`LOG("===== Falling through");
-		}
-		else
+		if (History.ReadHistoryFromFile( "Ladders/", "Mission_" $ LadderData.LadderIndex $ "_" $ (LadderData.LadderRung + 1) $ "_" $ CurrentCampaign.DifficultySetting ))
 		{
 			`LOG("===== Save file found");
 			foreach Visualizers( Visualizer ) // gotta get rid of all these since we'll be wiping out the history objects they may be referring to (but only if we loaded a history)
@@ -189,6 +185,8 @@ static function ProceedToNextRung( )
 			NextMissionLadder.FutureSoldierOptions = LadderData.FutureSoldierOptions;
 			NextMissionLadder.Credits = LadderData.Credits;
 			NextMissionLadder.Science = LadderData.Science;
+			NextMissionLadder.LadderMissionTypeOptions = LadderData.LadderMissionTypeOptions;
+			NextMissionLadder.ChosenMissionOption = LadderData.ChosenMissionOption;
 
 			// Maintain the campaign start times
 			NextCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
@@ -242,7 +240,10 @@ static function ProceedToNextRung( )
 		return;
 	}
 	
-	LadderData.PlayedMissionFamilies.AddItem( MissionDef.MissionFamily );
+	if (LadderData.PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE)
+	{
+		LadderData.PlayedMissionFamilies.AddItem( MissionDef.MissionFamily );
+	}
 	MissionManager.ForceMission = MissionDef;
 
 	// pick our new map
@@ -397,7 +398,7 @@ static function ProceedToNextRung( )
 	class'X2SitRepTemplate'.static.ModifyPreMissionBattleDataState(BattleData, BattleData.ActiveSitReps);
 
 	LadderData.ProgressCommand = BattleData.m_strMapCommand;
-	++LadderData.LadderRung;
+	LadderData.LadderRung++;
 
 	History.AddGameStateToHistory(StartState);
 }
@@ -834,7 +835,7 @@ function AddMissionCompletedRewards()
 
 function array<MissionOption> GetMissionOptions()
 {
-	local array<string> MissionTypeOptions;
+	local MissionTypeOption MissionTypeOptions;
 	local MissionOption Option0;
 	local MissionOption Option1;
 	local array<MissionOption> MissionOptions;
@@ -843,16 +844,19 @@ function array<MissionOption> GetMissionOptions()
 	local X2ResistanceTechUpgradeTemplate Template0;
 	local X2ResistanceTechUpgradeTemplate Template1;
 
-	BaseCredits = default.CREDITS_BASE;
-	BaseCredits += ((LadderRung + 1) * default.CREDITS_LADDER_BONUS);
-	
-	MissionTypeOptions = GetMissionTypeOptions();
+	// LadderRung will be 1 when this is first called (after the first mission is complete)
+	`LOG("=== GetMissionOptions LadderRung: " $ LadderRung);
 
-	Option0.MissionType = MissionTypeOptions[0];
+	BaseCredits = default.CREDITS_BASE;
+	BaseCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
+	
+	MissionTypeOptions = LadderMissionTypeOptions[LadderRung - 1];
+
+	Option0.MissionType = MissionTypeOptions.MissionType0;
 	Option0.Credits = BaseCredits;
 	Option0.Science = default.SCIENCE_TABLE[LadderRung];
 
-	Option1.MissionType = MissionTypeOptions[1];
+	Option1.MissionType = MissionTypeOptions.MissionType1;
 	Option1.Credits = BaseCredits;
 	Option1.Science = default.SCIENCE_TABLE[LadderRung];
 
@@ -950,8 +954,10 @@ private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name Igno
 			&& Template.Cost >= MinCreditCost
 			&& TemplateName != IgnoreTemplateName)
 		{
-			// TODO make sure someone in the squad can use it
-			ResearchOptions.AddItem(Template);
+			if (DoesSomeoneBenefit(Template))
+			{
+				ResearchOptions.AddItem(Template);
+			}
 		}
 	}
 
@@ -964,6 +970,92 @@ private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name Igno
 	Template = ResearchOptions[RandomIndex];
 
 	return Template;
+}
+
+private function bool DoesSomeoneBenefit(X2ResistanceTechUpgradeTemplate Template)
+{
+	local InventoryUpgrade Upgrade;
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2ItemTemplate ItemTemplate;
+	local X2ArmorTemplate ArmorTemplate;
+	local X2WeaponTemplate WeaponTemplate;
+	local StateObjectReference UnitStateRef;
+	local XComGameState_Unit Soldier;
+	local XComGameStateHistory History;
+	local XComGameState_HeadquartersXCom XComHQ;
+
+	History = `XCOMHISTORY;
+	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	foreach Template.InventoryUpgrades (Upgrade)
+	{
+		ItemTemplate = ItemTemplateManager.FindItemTemplate(Upgrade.TemplateName);
+		if (ItemTemplate != none)
+		{
+			ArmorTemplate = X2ArmorTemplate(ItemTemplate);
+			if (ArmorTemplate != none)
+			{
+				foreach XComHQ.Squad(UnitStateRef)
+				{
+					Soldier = XComGameState_Unit(History.GetGameStateForObjectID(UnitStateRef.ObjectID));
+					if (Soldier.GetSoldierClassTemplate().IsArmorAllowedByClass(ArmorTemplate))
+					{
+						return true;
+					}
+				}
+			}
+		
+			WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+			if (WeaponTemplate != none)
+			{
+				foreach XComHQ.Squad(UnitStateRef)
+				{
+					Soldier = XComGameState_Unit(History.GetGameStateForObjectID(UnitStateRef.ObjectID));
+					if (Soldier.GetSoldierClassTemplate().IsWeaponAllowedByClass(WeaponTemplate))
+					{
+						return true;
+					}
+				}
+			}
+
+			if (ArmorTemplate == none && WeaponTemplate == none)
+			{
+				// If it's not a weapon or armor, it's probably a utility item or something that anyone can use
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+public function InitMissionTypeOptions()
+{
+	local int Index;
+	local array<string> Options;
+	local MissionTypeOption Option;
+	local string MissionType;
+
+	LadderMissionTypeOptions.Length = 0;
+	for (Index = 0; Index < LadderSize - 1; Index++)
+	{
+		if (Index < LadderSize - 2)
+		{
+			Options = GetMissionTypeOptions();
+			Option.MissionType0 = Options[0];
+			Option.MissionType1 = Options[1];
+			LadderMissionTypeOptions.AddItem(Option);
+		}
+		else
+		{
+			// This is for the final mission
+			MissionType = default.FinalMissionTypes[ `SYNC_RAND_STATIC( default.FinalMissionTypes.Length ) ];
+			Option.MissionType0 = MissionType;
+			Option.MissionType1 = MissionType;
+			LadderMissionTypeOptions.AddItem(Option);
+		}
+	}
 }
 
 private function array<string> GetMissionTypeOptions()
@@ -1027,15 +1119,18 @@ function string GetNextMissionType()
 
 	if (LadderRung == 0)
 	{
+		// This should never happen, because the first mission is chosen in UITLE_LadderModeMenu_Override
 		MissionType = default.AllowedMissionTypes[ `SYNC_RAND_STATIC( default.AllowedMissionTypes.Length ) ];
 	}
 	else if (LadderRung < (LadderSize - 1))
 	{
+		// Use the mission that the user chose
 		MissionType = ChosenMissionOption.MissionType;
 	}
 	else
 	{
-		MissionType = default.FinalMissionTypes[ `SYNC_RAND_STATIC( default.FinalMissionTypes.Length ) ];
+		// Grab the last randomized mission from earlier
+		MissionType = LadderMissionTypeOptions[LadderMissionTypeOptions.Length - 1].MissionType0;
 	}
 
 	return MissionType;

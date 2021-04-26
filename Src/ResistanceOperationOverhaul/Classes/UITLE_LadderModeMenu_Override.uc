@@ -531,6 +531,12 @@ simulated function OnClickSave()
 
 simulated function OnClickLoad()
 {
+	local LadderSaveData SaveData;	
+	
+	foreach m_LadderSaveData(SaveData)
+	{
+		`LOG("=== SaveData.Filename: " $ SaveData.Filename);
+	}
 	UIScreenState = eUILadderScreenState_Load;
 	UpdateCustomListData();
 }
@@ -1187,15 +1193,6 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 		`Redscreen("CreateNewLadder(): Mission Type " $ MissionType $ " has no definition!");
 		return;
 	}
-	
-	// This block has been modified
-	if (Settings.UseCustomSettings)
-	{
-		LadderData.ChosenMissionOption.MissionType = MissionType;
-		LadderData.ChosenMissionOption.Credits = class'XComGameState_LadderProgress_Override'.default.CREDITS_BASE;
-		LadderData.ChosenMissionOption.Credits += class'XComGameState_LadderProgress_Override'.default.CREDITS_LADDER_BONUS;
-		LadderData.ChosenMissionOption.Science = class'XComGameState_LadderProgress_Override'.default.SCIENCE_TABLE[0];
-	}
 
 	TacticalMissionManager.ForceMission = MissionDef;
 
@@ -1251,6 +1248,15 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 	}
 
 	LadderData.PlayedMissionFamilies.AddItem( TacticalMissionManager.arrMissions[ BattleDataState.m_iMissionType ].MissionFamily );
+	
+	// This block has been modified
+	if (Settings.UseCustomSettings)
+	{
+		LadderData.ChosenMissionOption.MissionType = MissionType;
+		LadderData.ChosenMissionOption.Credits = class'XComGameState_LadderProgress_Override'.default.CREDITS_BASE;
+		LadderData.ChosenMissionOption.Science = class'XComGameState_LadderProgress_Override'.default.SCIENCE_TABLE[0];
+		LadderData.InitMissionTypeOptions();
+	}
 
 	CampaignSettings = XComGameState_CampaignSettings( History.GetSingleGameStateObjectForClass( class'XComGameState_CampaignSettings' ) );
 	CampaignSettings.SetSuppressFirstTimeNarrativeEnabled( true );
@@ -1390,10 +1396,12 @@ simulated function OnLadderAbandoned( UIList ContainerList, int ItemIndex )
 {
 	local int LadderIndex;
 	local XComGameStateHistory History;
-	local XComGameState_LadderProgress_Override LadderData;
-	local XComGameState_LadderProgress LadderData2;
+	local XComGameState_LadderProgress_Override LadderDataOverride;
+	local XComGameState_LadderProgress LadderData;
 	local XComGameState_CampaignSettings CurrentCampaign;
 	local LadderSaveData SaveData;
+	local int SaveID;
+	local int Index;
 
 	LadderIndex = GetCurrentLadderIndex();
 
@@ -1407,33 +1415,37 @@ simulated function OnLadderAbandoned( UIList ContainerList, int ItemIndex )
 			History.ReadHistoryFromFile( "Ladders/", "Ladder_" $ LadderIndex );
 			
 			CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
-			LadderData = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
-			if (LadderData == none)
+			LadderDataOverride = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
+			if (LadderDataOverride == none)
 			{
-				LadderData2 = XComGameState_LadderProgress(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress'));
-				if (LadderData2 == none)
+				LadderData = XComGameState_LadderProgress(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress'));
+				if (LadderData == none)
 				{
 					return;
 				}
 			}
 
-			`FXSLIVE.BizAnalyticsLadderEnd( CurrentCampaign.BizAnalyticsCampaignID, LadderIndex, 0, 0, LadderData.SquadProgressionName, CurrentCampaign.DifficultySetting );
+			`FXSLIVE.BizAnalyticsLadderEnd( CurrentCampaign.BizAnalyticsCampaignID, LadderIndex, 0, 0, LadderDataOverride.SquadProgressionName, CurrentCampaign.DifficultySetting );
 
 			`ONLINEEVENTMGR.DeleteSaveGame( SaveData.SaveID );
 			`ONLINEEVENTMGR.UpdateSaveGameList();
 
-			if (LadderData == none)
-			{
-				XComCheatManager(GetALocalPlayerController().CheatManager).CreateLadder( LadderIndex, LadderData2.LadderSize, CurrentCampaign.DifficultySetting );
-			}
-			else if (!LadderData.Settings.UseCustomSettings)
+			if (LadderDataOverride == none)
 			{
 				XComCheatManager(GetALocalPlayerController().CheatManager).CreateLadder( LadderIndex, LadderData.LadderSize, CurrentCampaign.DifficultySetting );
 			}
+			else if (!LadderDataOverride.Settings.UseCustomSettings)
+			{
+				XComCheatManager(GetALocalPlayerController().CheatManager).CreateLadder( LadderIndex, LadderDataOverride.LadderSize, CurrentCampaign.DifficultySetting );
+			}
 			else
 			{
+				// Would like to delete all the Mission_ save files in /Ladders except for the first one,
+				// to account for the player choosing different missions on the second playthrough. 
+				// This doesn't seem to be something I can do though...
+
 				// TODO need to modify the saved ladder data such that it displays the first mission
-				// RecreateAbandonedLadder(LadderData);
+				// RecreateAbandonedLadder(LadderDataOverride);
 			}
 
 			if(ContainerList == NarrativeList)
