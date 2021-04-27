@@ -1033,7 +1033,6 @@ private function bool DoesSomeoneBenefit(X2ResistanceTechUpgradeTemplate Templat
 public function InitMissionTypeOptions()
 {
 	local int Index;
-	local array<string> Options;
 	local MissionTypeOption Option;
 	local string MissionType;
 
@@ -1042,9 +1041,8 @@ public function InitMissionTypeOptions()
 	{
 		if (Index < LadderSize - 2)
 		{
-			Options = GetMissionTypeOptions();
-			Option.MissionType0 = Options[0];
-			Option.MissionType1 = Options[1];
+			Option.MissionType0 = GetRandomMissionType();
+			Option.MissionType1 = GetRandomMissionType();
 			LadderMissionTypeOptions.AddItem(Option);
 		}
 		else
@@ -1058,9 +1056,8 @@ public function InitMissionTypeOptions()
 	}
 }
 
-private function array<string> GetMissionTypeOptions()
+private function string GetRandomMissionType()
 {
-	local array<string> MissionTypeOptions;
 	local array<string> PossibleMissionTypes;
 	local string MissionType;
 	local XComTacticalMissionManager MissionManager;
@@ -1082,9 +1079,9 @@ private function array<string> GetMissionTypeOptions()
 			}
 		}
 	}
-
-	// If we don't have at least 2 mission types...
-	if (PossibleMissionTypes.Length < 2)
+	
+	// If we don't have at least 1 mission type...
+	if (PossibleMissionTypes.Length == 0)
 	{
 		// Remove half the history of played mission types, and retry
 		PlayedMissionFamilies.Remove( 0, PlayedMissionFamilies.Length / 2 );
@@ -1100,17 +1097,20 @@ private function array<string> GetMissionTypeOptions()
 			}
 		}
 	}
-
-	// Add the first choice
+	
 	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
-	MissionTypeOptions.AddItem(PossibleMissionTypes[RandIndex]);
+	MissionType = PossibleMissionTypes[RandIndex];
 
-	// Add the second choice
-	PlayedMissionFamilies.Remove(RandIndex, 1);
-	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
-	MissionTypeOptions.AddItem(PossibleMissionTypes[RandIndex]);
+	// Add the one we're choosing to the list of played families
+	if (MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
+	{
+		if (PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE)
+		{
+			PlayedMissionFamilies.AddItem(MissionDef.MissionFamily);
+		}
+	}
 
-	return MissionTypeOptions;
+	return MissionType;
 }
 
 function string GetNextMissionType()
