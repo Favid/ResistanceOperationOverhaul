@@ -1172,7 +1172,6 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 		LadderData.LadderSize = Settings.LadderLength;
 		LadderData.Settings = Settings;
 		LadderData.CustomRungConfigurations = CalculateRungConfiguration();
-		InitSquad(TacticalStartState, XComPlayerState, LadderData);
 	}
 	else
 	{
@@ -1269,6 +1268,7 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 	if (Settings.UseCustomSettings)
 	{
 		AddSecondWaveOptionsToCampaignSettings(CampaignSettings);
+		InitSquad(TacticalStartState, XComPlayerState, LadderData);
 	}
 
 	HeadquartersStateObject = XComGameState_HeadquartersXCom( History.GetSingleGameStateObjectForClass( class'XComGameState_HeadquartersXCom' ) );
@@ -1400,8 +1400,6 @@ simulated function OnLadderAbandoned( UIList ContainerList, int ItemIndex )
 	local XComGameState_LadderProgress LadderData;
 	local XComGameState_CampaignSettings CurrentCampaign;
 	local LadderSaveData SaveData;
-	local int SaveID;
-	local int Index;
 
 	LadderIndex = GetCurrentLadderIndex();
 
