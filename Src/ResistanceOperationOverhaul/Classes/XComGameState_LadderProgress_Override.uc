@@ -755,6 +755,16 @@ function bool HasRequiredTechs(X2ResistanceTechUpgradeTemplate Template)
 	return true;
 }
 
+function bool HasEnoughScience(X2ResistanceTechUpgradeTemplate Template)
+{
+	if (Science < Template.RequiredScience)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 function bool CanAfford(X2ResistanceTechUpgradeTemplate Template)
 {
 	if (Credits < Template.Cost || Science < Template.RequiredScience)
@@ -948,8 +958,8 @@ private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name Igno
 	{
 		Template = UpgradeTemplateManager.FindTemplate(TemplateName);
 		if (PurchasedTechUpgrades.Find(TemplateName) == INDEX_NONE 
-			&& HasRequiredTechs(Template) 
-			&& CanAfford(Template) 
+			&& HasRequiredTechs(Template)
+			&& HasEnoughScience(Template)
 			&& Template.Cost <= MaxCreditCost
 			&& Template.Cost >= MinCreditCost
 			&& TemplateName != IgnoreTemplateName)

@@ -194,8 +194,9 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 				UsedCharacters.AddItem(NewSoldier.GetFullName());
 			}
 			
-			for (RankIndex = 1; RankIndex < LadderData.LadderRung && RankIndex < Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank(); RankIndex++)
+			for (RankIndex = 1; RankIndex < LadderData.LadderRung && RankIndex < NewSoldier.GetSoldierClassTemplate().GetMaxConfiguredRank(); RankIndex++)
 			{
+				`LOG("Ranking them up");
 				NewSoldier.RankUpSoldier(NewGameState);
 			}
 

@@ -28,6 +28,8 @@ struct TechUpgrade
 	var array<name> RequiredTechUpgrades;
 	var bool bStarting;
 	var EUpgradeCategory Category;
+	var array<name> RequiredMods;         // This is an AND. All mods in the list must be enabled for this upgrade to exist
+	var array<name> IgnoreIfModsEnabled;  // This is an OR. If any mod in this list is enabled, then this upgrade will not exist
 };
 
 var config array<TechUpgrade> TechUpgrades;
@@ -36,10 +38,42 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 	local TechUpgrade Upgrade;
+	local bool ShouldCreate;
+	local name Mod;
 
 	foreach default.TechUpgrades (Upgrade)
 	{
-		Templates.AddItem(CreateTemplate(Upgrade));
+		ShouldCreate = true;
+		foreach Upgrade.RequiredMods (Mod)
+		{
+			if (!class'ResistanceOverhaulHelpers'.static.IsModInstalled(Mod))
+			{
+				ShouldCreate = false;
+				break;
+			}
+		}
+		
+		if (ShouldCreate)
+		{
+			foreach Upgrade.IgnoreIfModsEnabled (Mod)
+			{
+				if (class'ResistanceOverhaulHelpers'.static.IsModInstalled(Mod))
+				{
+					ShouldCreate = false;
+					break;
+				}
+			}
+		}
+
+		if (ShouldCreate)
+		{
+			Templates.AddItem(CreateTemplate(Upgrade));
+			`LOG("=== Created X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName));
+		}
+		else
+		{
+			`LOG("=== Ignoring X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName));
+		}
 	}
 
 	`LOG("=== Created this many templates: " $ string(Templates.Length));

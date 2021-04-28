@@ -248,3 +248,17 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 
 	return BuildUnit;
 }
+
+static function bool IsModInstalled(name X2DCIName)
+{
+	local X2DownloadableContentInfo Mod;
+
+	foreach `ONLINEEVENTMGR.m_cachedDLCInfos (Mod)
+	{
+		if (Mod.Class.Name == X2DCIName)
+		{
+			return true;
+		}
+	}
+	return false;
+}
