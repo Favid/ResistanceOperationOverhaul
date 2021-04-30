@@ -23,11 +23,11 @@ Description="Grants access to basic heavy weapons for all soldiers."
 
 ; Assault Rifles
 
-[TU_MagneticRifles X2ResistanceTechUpgradeTemplate]
+[TU_AssaultRifle_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Magnetic Rifles"
 Description="Grants access to Magnetic Rifles for all soldiers who can use them."
 
-[TU_BeamRifles X2ResistanceTechUpgradeTemplate]
+[TU_AssaultRifle_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Plasma Rifles"
 Description="Grants access to Plasma Rifles for all soldiers who can use them."
 
@@ -47,13 +47,35 @@ Description="Grants one Plasma Bolt Caster."
 DisplayName="Disruptor Rifle"
 Description="Grants one Disruptor Rifle."
 
+; Assault Rifles - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_AssaultRifle_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Magnetic Rifles"
+Description="Grants access to Magnetic Rifles for all soldiers who can use them."
+
+[TU_IRI_AssaultRifle_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Coil Rifles"
+Description="Grants access to Coil Rifles for all soldiers who can use them."
+
+[TU_IRI_AssaultRifle_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Rifles"
+Description="Grants access to Laser Rifles for all soldiers who can use them."
+
+[TU_IRI_AssaultRifle_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Plasma Rifles"
+Description="Grants access to Plasma Rifles for all soldiers who can use them."
+
+[TU_IRI_ChosenRifle_XCOM X2ResistanceTechUpgradeTemplate]
+DisplayName="Disruptor Rifle"
+Description="Grants one Disruptor Rifle."
+
 ; Shotguns
 
-[TU_MagneticShotguns X2ResistanceTechUpgradeTemplate]
+[TU_Shotgun_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Shard Guns"
 Description="Grants access to Shard Guns for all soldiers who can use them."
 
-[TU_BeamShotguns X2ResistanceTechUpgradeTemplate]
+[TU_Shotgun_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Storm Guns"
 Description="Grants access to Storm Guns for all soldiers who can use them."
 
@@ -61,13 +83,35 @@ Description="Grants access to Storm Guns for all soldiers who can use them."
 DisplayName="Arashi"
 Description="Grants one Arashi."
 
+; Shotguns - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Shotgun_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Shard Guns"
+Description="Grants access to Shard Guns for all soldiers who can use them."
+
+[TU_IRI_Shotgun_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Scatterguns"
+Description="Grants access to Scatterguns for all soldiers who can use them."
+
+[TU_IRI_Shotgun_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Scatter Blasters"
+Description="Grants access to Scatter Blasters for all soldiers who can use them."
+
+[TU_IRI_Shotgun_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Storm Guns"
+Description="Grants access to Storm Guns for all soldiers who can use them."
+
+[TU_IRI_ChosenShotgun_XCOM X2ResistanceTechUpgradeTemplate]
+DisplayName="Arashi"
+Description="Grants one Arashi."
+
 ; Sniper Rifles
 
-[TU_MagneticSniperRifles X2ResistanceTechUpgradeTemplate]
+[TU_SniperRifle_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Gauss Rifles"
 Description="Grants access to Gauss Rifles for all soldiers who can use them."
 
-[TU_BeamSniperRifles X2ResistanceTechUpgradeTemplate]
+[TU_SniperRifle_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Plasma Lances"
 Description="Grants access to Plasma Lances for all soldiers who can use them."
 
@@ -75,15 +119,83 @@ Description="Grants access to Plasma Lances for all soldiers who can use them."
 DisplayName="Darklance"
 Description="Grants one Darklance."
 
+; Sniper Rifles - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_SniperRifle_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Gauss Rifles"
+Description="Grants access to Gauss Rifles for all soldiers who can use them."
+
+[TU_IRI_SniperRifle_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Gauss Long Rifles"
+Description="Grants access to Gauss Long Rifles for all soldiers who can use them."
+
+[TU_IRI_SniperRifle_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Lances"
+Description="Grants access to Pulse Lances for all soldiers who can use them."
+
+[TU_IRI_SniperRifle_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Plasma Lances"
+Description="Grants access to Plasma Lances for all soldiers who can use them."
+
+[TU_IRI_ChosenSniperRifle_XCOM X2ResistanceTechUpgradeTemplate]
+DisplayName="Darklance"
+Description="Grants one Darklance."
+
 ; Cannons
 
-[TU_MagneticCannons X2ResistanceTechUpgradeTemplate]
+[TU_Cannon_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Mag Cannons"
 Description="Grants access to Mag Cannons for all soldiers who can use them."
 
-[TU_BeamCannons X2ResistanceTechUpgradeTemplate]
+[TU_Cannon_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Beam Cannons"
 Description="Grants access to Beam Cannons for all soldiers who can use them."
+
+; Cannons - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Cannon_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Mag Cannons"
+Description="Grants access to Mag Cannons for all soldiers who can use them."
+
+[TU_IRI_Cannon_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Gauss Cannons"
+Description="Grants access to Gauss Cannons for all soldiers who can use them."
+
+[TU_IRI_Cannon_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Cannons"
+Description="Grants access to Pulse Cannons for all soldiers who can use them."
+
+[TU_IRI_Cannon_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Beam Cannons"
+Description="Grants access to Beam Cannons for all soldiers who can use them."
+
+; SMGs
+
+[TU_SMG_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Stuttermags"
+Description="Grants access to Stuttermags for all soldiers who can use them."
+
+[TU_SMG_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Scramguns"
+Description="Grants access to Scramguns for all soldiers who can use them."
+
+; SMGs - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_SMG_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Stuttermags"
+Description="Grants access to Stuttermags for all soldiers who can use them."
+
+[TU_IRI_SMG_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Subcoilers"
+Description="Grants access to Subcoilers for all soldiers who can use them."
+
+[TU_IRI_SMG_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Stenguns"
+Description="Grants access to Pulse Stenguns for all soldiers who can use them."
+
+[TU_IRI_SMG_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Storm Guns"
+Description="Grants access to Scramguns for all soldiers who can use them."
 
 ; Vector Rifles
 
@@ -95,6 +207,24 @@ Description="Grants access to Temnotic Rifles for all soldiers who can use them.
 DisplayName="Shadow Lances"
 Description="Grants access to Shadow Lances for all soldiers who can use them."
 
+; Vector Rifles - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_VektorRifle_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Temnotic Rifles"
+Description="Grants access to Temnotic Rifles for all soldiers who can use them."
+
+[TU_IRI_VektorRifle_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Tesla Lances"
+Description="Grants access to Tesla Lances for all soldiers who can use them."
+
+[TU_IRI_VektorRifle_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Crimson Lances"
+Description="Grants access to Crimson Lances for all soldiers who can use them."
+
+[TU_IRI_VektorRifle_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Shadow Lances"
+Description="Grants access to Shadow Lances for all soldiers who can use them."
+
 ; Bullpups
 
 [TU_Bullpup_MG X2ResistanceTechUpgradeTemplate]
@@ -102,6 +232,24 @@ DisplayName="KAL-15 Bullpups"
 Description="Grants access to KAL-15 Bullpups for all soldiers who can use them."
 
 [TU_Bullpup_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="KAL-90 Bullpups"
+Description="Grants access to KAL-90 Bullpups for all soldiers who can use them."
+
+; Bullpups - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Bullpup_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="KAL-15 Bullpups"
+Description="Grants access to KAL-15 Bullpups for all soldiers who can use them."
+
+[TU_IRI_Bullpup_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Kal-50 Bullpups"
+Description="Grants access to Kal-50 Bullpups for all soldiers who can use them."
+
+[TU_IRI_Bullpup_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Kal-33 Bullpups"
+Description="Grants access to Kal-33 Bullpups for all soldiers who can use them."
+
+[TU_IRI_Bullpup_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="KAL-90 Bullpups"
 Description="Grants access to KAL-90 Bullpups for all soldiers who can use them."
 
@@ -125,14 +273,32 @@ Description="Grants access to Helix Rail-Cannons for all soldiers who can use th
 DisplayName="Elerium Phase-Cannons"
 Description="Grants access to Elerium Phase-Cannons for all soldiers who can use them."
 
+; Spark Rifles - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_SparkRifle_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Helix Rail-Cannons"
+Description="Grants access to Helix Rail-Cannons for all soldiers who can use them."
+
+[TU_IRI_SparkRifle_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Rush-Nano Gausscannons"
+Description="Grants access to Rush-Nano Gausscannons for all soldiers who can use them."
+
+[TU_IRI_SparkRifle_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Spitfire Pulsecannons"
+Description="Grants access to Spitfire Pulsecannons for all soldiers who can use them."
+
+[TU_IRI_SparkRifle_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Elerium Phase-Cannons"
+Description="Grants access to Elerium Phase-Cannons for all soldiers who can use them."
+
 ; Swords
 
-[TU_ArcBlades X2ResistanceTechUpgradeTemplate]
+[TU_Sword_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Arc Blades"
 Description="Grants access to Arc Blades for all soldiers who can use them."
 
-[TU_FusionBlades X2ResistanceTechUpgradeTemplate]
-DisplayName="Fusion Blade"
+[TU_Sword_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Fusion Blades"
 Description="Grants access to Fusion Blades for all soldiers who can use them."
 
 [TU_AlienHunterAxe_CV X2ResistanceTechUpgradeTemplate]
@@ -151,13 +317,35 @@ Description="Grants one Fusion Axe."
 DisplayName="Katana"
 Description="Grants one Katana."
 
+; Swords - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Sword_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Arc Blades"
+Description="Grants access to Arc Blades for all soldiers who can use them."
+
+[TU_IRI_Sword_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Coil Swords"
+Description="Grants access to Coil Swords for all soldiers who can use them."
+
+[TU_IRI_Sword_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Laser Kriegsmessers"
+Description="Grants access to Laser Kriegsmessers for all soldiers who can use them."
+
+[TU_IRI_Sword_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Fusion Blades"
+Description="Grants access to Fusion Blades for all soldiers who can use them."
+
+[TU_IRI_ChosenSword_XCOM X2ResistanceTechUpgradeTemplate]
+DisplayName="Katana"
+Description="Grants one Katana."
+
 ; Pistols
 
-[TU_MagneticPistols X2ResistanceTechUpgradeTemplate]
+[TU_Pistol_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Mag Pistols"
 Description="Grants access to Mag Pistols for all soldiers who can use them."
 
-[TU_BeamPistols X2ResistanceTechUpgradeTemplate]
+[TU_Pistol_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Beam Pistols"
 Description="Grants access to Beam Pistols for all soldiers who can use them."
 
@@ -174,6 +362,28 @@ DisplayName="Powered Shadowkeeper"
 Description="Grants one Powered Shadowkeeper."
 
 [TU_ChosenSniperPistol_XCOM X2ResistanceTechUpgradeTemplate]
+DisplayName="Darkclaw"
+Description="Grants one Darkclaw."
+
+; Pistols - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Pistol_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Mag Pistols"
+Description="Grants access to Mag Pistols for all soldiers who can use them."
+
+[TU_IRI_Pistol_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Gauss Pistols"
+Description="Grants access to Gauss Pistols for all soldiers who can use them."
+
+[TU_IRI_Pistol_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Pistols"
+Description="Grants access to Pulse Pistols for all soldiers who can use them."
+
+[TU_IRI_Pistol_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Beam Pistols"
+Description="Grants access to Beam Pistols for all soldiers who can use them."
+
+[TU_IRI_ChosenSniperPistol_XCOM X2ResistanceTechUpgradeTemplate]
 DisplayName="Darkclaw"
 Description="Grants one Darkclaw."
 
@@ -213,6 +423,24 @@ Description="Grants access to Ionic Ripjacks for all soldiers who can use them."
 DisplayName="Fusion Ripjacks"
 Description="Grants access to Fusion Ripjacks for all soldiers who can use them."
 
+; Ripjacks - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_WristBlade_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Ionic Ripjacks"
+Description="Grants access to Ionic Ripjacks for all soldiers who can use them."
+
+[TU_IRI_WristBlade_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Nanotech Ripjacks"
+Description="Grants access to Nanotech Ripjacks for all soldiers who can use them."
+
+[TU_IRI_WristBlade_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Pulse Ripjacks"
+Description="Grants access to Pulse Ripjacks for all soldiers who can use them."
+
+[TU_IRI_WristBlade_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Fusion Ripjacks"
+Description="Grants access to Fusion Ripjacks for all soldiers who can use them."
+
 ; Sidearms
 
 [TU_Sidearm_MG X2ResistanceTechUpgradeTemplate]
@@ -220,6 +448,24 @@ DisplayName="Mag Autopistols"
 Description="Grants access to Mag Autopistols for all soldiers who can use them."
 
 [TU_Sidearm_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Beam Autopistols"
+Description="Grants access to Beam Autopistols for all soldiers who can use them."
+
+; Sidearms - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_Sidearm_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Mag Autopistols"
+Description="Grants access to Mag Autopistols for all soldiers who can use them."
+
+[TU_IRI_Sidearm_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Cyclers"
+Description="Grants access to Cyclers for all soldiers who can use them."
+
+[TU_IRI_Sidearm_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Heaters"
+Description="Grants access to Heaters for all soldiers who can use them."
+
+[TU_IRI_Sidearm_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Beam Autopistols"
 Description="Grants access to Beam Autopistols for all soldiers who can use them."
 
@@ -495,11 +741,47 @@ Description="Grants access to Mag Shorties for all soldiers who can use them."
 DisplayName="Plasma Shorties"
 Description="Grants access to Plasma Shorties for all soldiers who can use them."
 
+; Sawed-Off Shotguns - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_SawedOffShotgun_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Mag Shorties"
+Description="Grants access to Mag Shorties for all soldiers who can use them."
+
+[TU_IRI_SawedOffShotgun_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Coil Shorties"
+Description="Grants access to Coil Shorties for all soldiers who can use them."
+
+[TU_IRI_SawedOffShotgun_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Blazers"
+Description="Grants access to Blazers for all soldiers who can use them."
+
+[TU_IRI_SawedOffShotgun_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Plasma Shorties"
+Description="Grants access to Plasma Shorties for all soldiers who can use them."
+
 [TU_CombatKnife_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="Vibroblades"
 Description="Grants access to Vibroblades for all soldiers who can use them."
 
 [TU_CombatKnife_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Vibroblades"
+Description="Grants access to Advanced Vibroblades for all soldiers who can use them."
+
+; Combat Knives - Iridar's Five Tier Weapon Overhaul
+
+[TU_IRI_CombatKnife_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Vibroblades"
+Description="Grants access to Vibroblades for all soldiers who can use them."
+
+[TU_IRI_CombatKnife_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="Progressive Knives"
+Description="Grants access to Progressive Knives for all soldiers who can use them."
+
+[TU_IRI_CombatKnife_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="Laser Cutlasses"
+Description="Grants access to Laser Cutlasses for all soldiers who can use them."
+
+[TU_IRI_CombatKnife_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="Advanced Vibroblades"
 Description="Grants access to Advanced Vibroblades for all soldiers who can use them."
 
