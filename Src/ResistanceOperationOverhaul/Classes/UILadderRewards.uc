@@ -181,6 +181,32 @@ public function OnPanelButtonAccept(UIButton Button)
 	LadderData.OnCloseRewardsScreen();
 }
 
+simulated function bool OnUnrealCommand(int cmd, int arg)
+{
+	local bool bHandled;
+
+	if (!CheckInputIsReleaseOrDirectionRepeat(cmd, arg))
+		return true;
+
+	switch (cmd)
+	{
+	case class'UIUtilities_Input'.const.FXS_BUTTON_A :
+	case class'UIUtilities_Input'.const.FXS_BUTTON_B :
+	case class'UIUtilities_Input'.const.FXS_KEY_ENTER :
+	case class'UIUtilities_Input'.const.FXS_KEY_ESCAPE :
+	case class'UIUtilities_Input'.const.FXS_KEY_SPACEBAR :
+		OnPanelButtonAccept(none);
+		bHandled = true;
+		break;
+	default:
+		bHandled = false;
+		break;
+	}
+
+	// always give base class a chance to handle the input so key input is propogated to the panel's navigator
+	return (bHandled || super.OnUnrealCommand(cmd, arg));
+}
+
 defaultproperties
 {
 	EDGE_PADDING = 20;
