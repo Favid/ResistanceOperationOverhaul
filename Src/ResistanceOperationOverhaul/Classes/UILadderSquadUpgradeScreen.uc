@@ -81,6 +81,9 @@ var localized string m_ArmorCat;
 var localized string m_WeaponAttachmentCat;
 var localized string m_PCSCat;
 var localized string m_MiscCat;
+var localized string m_GrenadeCat;
+var localized string m_AmmoCat;
+var localized string m_VestCat;
 var localized string m_ErrorNotEnoughCredits;
 var localized string m_ConfirmResearchTitle;
 var localized string m_ConfirmResearchText;
@@ -126,7 +129,10 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	local int CreditsX, CreditsY;
 	local StateObjectReference EffectRef;
 	local XComGameState_Effect EffectState;
-	
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local name NewUpgrade;
+	local X2ResistanceTechUpgradeTemplate NewUpgradeTemplate;
+
 	`LOG("==== InitScreen");
 
 	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
@@ -171,6 +177,13 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 				UsedCharacters.AddItem(Soldier.GetFullName());
 			}
 		}
+	}
+
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	foreach LadderData.ChosenMissionOption.FreeUpgrades (NewUpgrade)
+	{
+		NewUpgradeTemplate = UpgradeTemplateManager.FindTemplate(NewUpgrade);
+		UpgradeSquadGear(NewUpgradeTemplate);
 	}
 
 	// Check if we're getting any new soldiers next rung
@@ -679,8 +692,9 @@ simulated function SetSoldierGear()
 	
 
 	utilItems = Soldier.GetAllItemsInSlot(eInvSlot_Utility, NewGameState, false, true);
-	mc.QueueString("Utility Items");//util 1
+	mc.QueueString("Utility Items");
 
+	// Utility 1
 	if(utilItems.Length > 0)
 	{
 		mc.QueueString(utilItems[0].GetMyTemplate().strImage);
@@ -692,9 +706,10 @@ simulated function SetSoldierGear()
 		mc.QueueString("");
 	}
 
+	// Utility 2
 	if (utilItems.Length > 1)
 	{
-		mc.QueueString(utilItems[1].GetMyTemplate().strImage);// util 2 and 3
+		mc.QueueString(utilItems[1].GetMyTemplate().strImage);
 		mc.QueueString(utilItems[1].GetMyTemplate().GetItemFriendlyNameNoStats());
 	}
 	else
@@ -703,7 +718,8 @@ simulated function SetSoldierGear()
 		mc.QueueString("");
 	}
 
-	equippedItem = Soldier.GetItemInSlot(eInvSlot_GrenadePocket, NewGameState, false);
+	// Other utility slot
+	equippedItem = FindThirdUtilityItemToDisplay(Soldier, utilItems);
 	if (equippedItem != none)
 	{
 		mc.QueueString(equippedItem.GetMyTemplate().strImage);
@@ -777,6 +793,46 @@ simulated function SetSoldierPrimaryWeapon(XComGameState_Item Item)
 		MC.QueueString(NewImages[i]);
 
 	MC.EndOp();
+}
+
+simulated function XComGameState_Item FindThirdUtilityItemToDisplay(XComGameState_Unit Soldier, array<XComGameState_Item> UtilityItems)
+{
+	local XComGameState_Item ItemState;
+	local array<CHItemSlot> ModSlots;
+	local int ModIndex;
+	local string LockedReason;
+
+	ItemState = Soldier.GetItemInSlot(eInvSlot_GrenadePocket, NewGameState, false);
+	if (ItemState != none)
+	{
+		return ItemState;
+	}
+
+	ItemState = Soldier.GetItemInSlot(eInvSlot_AmmoPocket, NewGameState, false);
+	if (ItemState != none)
+	{
+		return ItemState;
+	}
+
+	if (UtilityItems.Length > 2)
+	{
+		return UtilityItems[2];
+	}
+
+	ModSlots = class'CHItemSlot'.static.GetAllSlotTemplates();
+	for (ModIndex = 0; ModIndex < ModSlots.Length; ModIndex++)
+	{
+		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState))
+		{
+			ItemState = Soldier.GetItemInSlot(ModSlots[ModIndex].InvSlot, NewGameState, false);
+			if (ItemState != none)
+			{
+				return ItemState;
+			}
+		}
+	}
+
+	return none;
 }
 
 simulated function UpdateSelectedEquipmentInfo(int ItemIndex)
@@ -1372,8 +1428,6 @@ simulated function UpdateDataPrimaryWeapon()
 simulated function bool ItemAlreadyInUse(name TemplateName, int ExcludeSoldierIndex)
 {
 	local int Index;
-	local XComGameState_Item ItemState;
-	local array<name> AttachmentNames;
 
 	for (Index = 0; Index < Squad.Length; Index++)
 	{
@@ -1383,15 +1437,50 @@ simulated function bool ItemAlreadyInUse(name TemplateName, int ExcludeSoldierIn
 			{
 				return true;
 			}
+		}
+	}
 
+	return false;
+}
+
+simulated function bool AttachmentAlreadyInUse(name TemplateName, int ExcludeSoldierIndex)
+{
+	local int Index;
+	local XComGameState_Item ItemState;
+	local array<name> AttachmentNames;
+
+	for (Index = 0; Index < Squad.Length; Index++)
+	{
+		if (Index != ExcludeSoldierIndex)
+		{
 			ItemState = Squad[Index].GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
-			if (ItemState != none)
+			if (ItemState != none && X2WeaponTemplate(ItemState.GetMyTemplate()).NumUpgradeSlots > 0)
 			{
 				AttachmentNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 				if (AttachmentNames.Find(TemplateName) != INDEX_NONE)
 				{
 					return true;
 				}
+			}
+		}
+	}
+
+	return false;
+}
+
+simulated function bool PCSAlreadyInUse(name TemplateName, int ExcludeSoldierIndex)
+{
+	local int Index;
+	local XComGameState_Item ItemState;
+
+	for (Index = 0; Index < Squad.Length; Index++)
+	{
+		if (Index != ExcludeSoldierIndex)
+		{
+			ItemState = Squad[Index].GetItemInSlot(eInvSlot_CombatSim, NewGameState, false);
+			if (ItemState != none && ItemState.GetMyTemplateName() == TemplateName)
+			{
+				return true;
 			}
 		}
 	}
@@ -1457,9 +1546,10 @@ simulated function UpdateDataWeaponAttachment()
 			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
 			{
 				AttachmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+
 				if (AttachmentTemplate != none 
 					&& AttachmentTemplate.CanApplyUpgradeToWeapon(EquippedWeapon, SelectedAttachmentIndex)
-					&& !(ItemUpgrade.bSingle && ItemAlreadyInUse(AttachmentTemplate.DataName, SelectedSoldierIndex)))
+					&& !(ItemUpgrade.bSingle && AttachmentAlreadyInUse(AttachmentTemplate.DataName, SelectedSoldierIndex)))
 				{
 					AttachmentTemplates.AddItem(AttachmentTemplate);
 				}
@@ -1610,7 +1700,7 @@ simulated function UpdateDataPCS()
 				EquipmentTemplate = X2EquipmentTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
 				if (EquipmentTemplate != none 
 					&& EquipmentTemplate.InventorySlot == eInvSlot_CombatSim
-					&& !(ItemUpgrade.bSingle && ItemAlreadyInUse(EquipmentTemplate.DataName, SelectedSoldierIndex)))
+					&& !(ItemUpgrade.bSingle && PCSAlreadyInUse(EquipmentTemplate.DataName, SelectedSoldierIndex)))
 				{
 					EquipmentTemplates.AddItem(EquipmentTemplate);
 				}
@@ -1987,8 +2077,15 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 			`LOG("====== Failed to add item to inventory");
 		}
 
+		if (Slot == eInvSlot_PrimaryWeapon)
+		{
+			TransferAttachments(ExistingItem, NewItem);
+		}
+
 		Soldier.ValidateLoadout(NewGameState);
 	}
+
+	History.UpdateStateObjectCache(NewGameState);
 
 	`LOG("====== EquipItem should be swapped");
 }
@@ -2211,13 +2308,28 @@ simulated function UpdateDataResearch()
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_UtilityItemCat, "", , , OnClickResearchCategory);
-	GetListItem(Index).metadataInt = eUpCat_Utility;
+	GetListItem(Index).UpdateDataValue(m_ArmorCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).metadataInt = eUpCat_Armor;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_ArmorCat, "", , , OnClickResearchCategory);
-	GetListItem(Index).metadataInt = eUpCat_Armor;
+	GetListItem(Index).UpdateDataValue(m_GrenadeCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).metadataInt = eUpCat_Grenade;
+	GetListItem(Index).EnableNavigation();
+	Index++;
+	
+	GetListItem(Index).UpdateDataValue(m_AmmoCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).metadataInt = eUpCat_Ammo;
+	GetListItem(Index).EnableNavigation();
+	Index++;
+	
+	GetListItem(Index).UpdateDataValue(m_VestCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).metadataInt = eUpCat_Vest;
+	GetListItem(Index).EnableNavigation();
+	Index++;
+	
+	GetListItem(Index).UpdateDataValue(m_UtilityItemCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).metadataInt = eUpCat_Utility;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
@@ -2437,6 +2549,7 @@ private simulated function UpgradeIfBetter (XComGameState_Unit Soldier, X2Equipm
 	local array<X2EquipmentTemplate> NewEquipmentTemplates;
 	local bool ChangeMade;
 	local XComGameState_Item EquippedItem;
+	local XComGameState_Item NewlyEquippedItem;
 
 	ChangeMade = false;
 
@@ -2450,7 +2563,12 @@ private simulated function UpgradeIfBetter (XComGameState_Unit Soldier, X2Equipm
 		EquippedItem = Soldier.GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState);
 		NewEquipmentTemplates.Length = 0;
 		NewEquipmentTemplates.AddItem(NewWeaponTemplate);
-		ChangeMade = Soldier.UpgradeEquipment(NewGameState, EquippedItem, NewEquipmentTemplates, eInvSlot_PrimaryWeapon) || ChangeMade;
+		ChangeMade = Soldier.UpgradeEquipment(NewGameState, EquippedItem, NewEquipmentTemplates, eInvSlot_PrimaryWeapon, NewlyEquippedItem) || ChangeMade;
+
+		if (ChangeMade)
+		{
+			TransferAttachments(EquippedItem, NewlyEquippedItem);
+		}
 	}
 
 	// Secondary Weapon
@@ -2480,6 +2598,31 @@ private simulated function UpgradeIfBetter (XComGameState_Unit Soldier, X2Equipm
 	if (ChangeMade)
 	{
 		Soldier.ValidateLoadout(NewGameState);
+	}
+}
+
+private simulated function TransferAttachments(XComGameState_Item PrevEquippedItem, XComGameState_Item NewlyEquippedItem)
+{
+	local array<X2WeaponUpgradeTemplate> AttachmentTemplates;
+	local X2WeaponUpgradeTemplate AttachmentTemplate;
+	local int SlotIndex;
+
+	// Transfer attachments to the new weapon
+	if (PrevEquippedItem != none 
+		&& NewlyEquippedItem != none 
+		&& X2WeaponTemplate(PrevEquippedItem.GetMyTemplate()).NumUpgradeSlots > 0
+		&& X2WeaponTemplate(NewlyEquippedItem.GetMyTemplate()).NumUpgradeSlots > 0)
+	{
+		SlotIndex = 0;
+		AttachmentTemplates = PrevEquippedItem.GetMyWeaponUpgradeTemplates();
+		foreach AttachmentTemplates (AttachmentTemplate)
+		{
+			if (X2WeaponTemplate(NewlyEquippedItem.GetMyTemplate()).NumUpgradeSlots > SlotIndex)
+			{
+				NewlyEquippedItem.ApplyWeaponUpgradeTemplate(AttachmentTemplate);
+			}
+			SlotIndex++;
+		}
 	}
 }
 
@@ -2713,6 +2856,20 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 		bHandled = true;
 		break;
 
+	case class'UIUtilities_Input'.const.FXS_MOUSE_5:
+	case class'UIUtilities_Input'.const.FXS_KEY_TAB:
+	case class'UIUtilities_Input'.const.FXS_BUTTON_RBUMPER:
+		ToNextSoldier();
+		bHandled = true;
+		break;
+		
+	case class'UIUtilities_Input'.const.FXS_MOUSE_4:
+	case class'UIUtilities_Input'.const.FXS_KEY_LEFT_SHIFT:
+	case class'UIUtilities_Input'.const.FXS_BUTTON_LBUMPER:
+		ToPreviousSoldier();
+		bHandled = true;
+		break;
+
 	default:
 		bHandled = false;
 		break;
@@ -2726,6 +2883,38 @@ simulated function bool OnUnrealCommand(int cmd, int arg)
 
 	// always give base class a chance to handle the input so key input is propogated to the panel's navigator
 	return (bHandled || super.OnUnrealCommand(cmd, arg));
+}
+
+simulated function ToNextSoldier()
+{
+	if (UIScreenState >= eUIScreenState_Soldier)
+	{
+		SelectedSoldierIndex++;
+		if (SelectedSoldierIndex >= Squad.Length)
+		{
+			SelectedSoldierIndex = 0;
+		}
+		
+		LastSelectedIndexes[eUIScreenState_Squad] = SelectedSoldierIndex + 1;
+		UIScreenState = eUIScreenState_Soldier;
+		UpdateData();
+	}
+}
+
+simulated function ToPreviousSoldier()
+{
+	if (UIScreenState >= eUIScreenState_Soldier)
+	{
+		SelectedSoldierIndex--;
+		if (SelectedSoldierIndex < 0)
+		{
+			SelectedSoldierIndex = Squad.Length - 1;
+		}
+		
+		LastSelectedIndexes[eUIScreenState_Squad] = SelectedSoldierIndex + 1;
+		UIScreenState = eUIScreenState_Soldier;
+		UpdateData();
+	}
 }
 
 simulated function string ToPascalCase(string Str)

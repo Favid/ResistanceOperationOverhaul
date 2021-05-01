@@ -9,7 +9,10 @@ enum EUpgradeCategory
 	eUpCat_Utility,
 	eUpCat_Armor,
 	eUpCat_Attachment,
-	eUpCat_PCS
+	eUpCat_PCS,
+	eUpCat_Grenade,
+	eUpCat_Ammo,
+	eUpCat_Vest,
 };
 
 struct InventoryUpgrade
@@ -28,7 +31,7 @@ struct TechUpgrade
 	var array<name> RequiredTechUpgrades;
 	var bool bStarting;
 	var EUpgradeCategory Category;
-	var array<name> RequiredMods;         // This is an AND. All mods in the list must be enabled for this upgrade to exist
+	var array<name> RequiredMods;         // This is an OR. At least one mod in the list must be enabled for this upgrade to exist
 	var array<name> IgnoreIfModsEnabled;  // This is an OR. If any mod in this list is enabled, then this upgrade will not exist
 };
 
@@ -38,19 +41,26 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 	local TechUpgrade Upgrade;
+	local bool AtleastOneExists;
 	local bool ShouldCreate;
 	local name Mod;
 
 	foreach default.TechUpgrades (Upgrade)
 	{
 		ShouldCreate = true;
+		AtleastOneExists = false;
 		foreach Upgrade.RequiredMods (Mod)
 		{
-			if (!class'ResistanceOverhaulHelpers'.static.IsModInstalled(Mod))
+			if (class'ResistanceOverhaulHelpers'.static.IsModInstalled(Mod))
 			{
-				ShouldCreate = false;
+				AtleastOneExists = true;
 				break;
 			}
+		}
+
+		if (Upgrade.RequiredMods.Length > 0 && !AtleastOneExists)
+		{
+			ShouldCreate = false;
 		}
 		
 		if (ShouldCreate)

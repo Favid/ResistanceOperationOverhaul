@@ -839,6 +839,7 @@ function AddMissionCompletedRewards()
 		if (PurchasedTechUpgrades.Find(NewUpgrade) == INDEX_NONE)
 		{
 			PurchasedTechUpgrades.AddItem(NewUpgrade);
+			// TODO upgrade soldier gear if better
 		}
 	}
 }
@@ -1073,6 +1074,8 @@ private function string GetRandomMissionType()
 	local XComTacticalMissionManager MissionManager;
 	local MissionDefinition MissionDef;
 	local int RandIndex;
+
+	`LOG("=== GetRandomMissionType");
 	
 	MissionManager = `TACTICALMISSIONMGR;
 
@@ -1111,11 +1114,14 @@ private function string GetRandomMissionType()
 	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
 	MissionType = PossibleMissionTypes[RandIndex];
 
+	`LOG("=== GetRandomMissionType MissionType: " $ MissionType);
+
 	// Add the one we're choosing to the list of played families
 	if (MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
 	{
 		if (PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE)
 		{
+			`LOG("=== GetRandomMissionType Adding to PlayedMissionFamilies: " $ MissionDef.MissionFamily);
 			PlayedMissionFamilies.AddItem(MissionDef.MissionFamily);
 		}
 	}

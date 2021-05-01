@@ -170,7 +170,7 @@ simulated function Populate(XComGameState_LadderProgress_Override InLadderData)
 	UpgradeValText.InitText('UpgradeValText', UpgradeString,false);
 	UpgradeValText.AnchorCenter();
 	UpgradeValText.SetPosition(fInitPosX+EDGE_PADDING + SecondColumnOffsetX,fInitPosY+TOP_PADDING+OffsetY);
-	UpgradeValText.SetSize(200,40);
+	UpgradeValText.SetSize(300,40);
 	UpgradeValText.SetText(UpgradeString);
 
 	`LOG("=== Populate() end");
@@ -211,9 +211,9 @@ defaultproperties
 {
 	EDGE_PADDING = 20;
 	TOP_PADDING = 20;
-	fInitPosX = -165;
+	fInitPosX = -215;
 	fInitPosY = -200;
 	fAlpha = 1.0f;
 	SecondColumnOffsetX=130;
-	DIALOG_WIDTH=330;
+	DIALOG_WIDTH=430;
 }
