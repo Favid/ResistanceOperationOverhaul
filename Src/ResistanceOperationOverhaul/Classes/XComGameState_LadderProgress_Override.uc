@@ -22,8 +22,7 @@ struct MissionOption
 
 var config int CREDITS_BASE;
 var config int CREDITS_LADDER_BONUS;
-var config int CREDITS_NO_WOUNDS_BONUS;
-var config int CREDITS_NO_DEATHS_BONUS;
+var config int FREE_UPGRADE_MIN_COST_MODIFIER;
 var config array<int> SCIENCE_TABLE;
 
 var array<name> PurchasedTechUpgrades;
@@ -839,7 +838,6 @@ function AddMissionCompletedRewards()
 		if (PurchasedTechUpgrades.Find(NewUpgrade) == INDEX_NONE)
 		{
 			PurchasedTechUpgrades.AddItem(NewUpgrade);
-			// TODO upgrade soldier gear if better
 		}
 	}
 }
@@ -856,8 +854,6 @@ function array<MissionOption> GetMissionOptions()
 	local X2ResistanceTechUpgradeTemplate Template1;
 
 	// LadderRung will be 1 when this is first called (after the first mission is complete)
-	`LOG("=== GetMissionOptions LadderRung: " $ LadderRung);
-
 	BaseCredits = default.CREDITS_BASE;
 	BaseCredits += (LadderRung * default.CREDITS_LADDER_BONUS);
 	
@@ -949,7 +945,7 @@ private function X2ResistanceTechUpgradeTemplate GetFreeResearchOption(name Igno
 	local X2ResistanceTechUpgradeTemplate Template;
 	local int RandomIndex;
 
-	MinCreditCost = (LadderRung * default.CREDITS_LADDER_BONUS);
+	MinCreditCost = LadderRung * default.FREE_UPGRADE_MIN_COST_MODIFIER;
 	MaxCreditCost = ((LadderRung + 2) * default.CREDITS_LADDER_BONUS);
 	
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();

@@ -549,9 +549,21 @@ Description="Grants one R.A.G.E. Armor."
 
 ; Grenades
 
+[TU_FlashbangGrenadeMk2 X2ResistanceTechUpgradeTemplate]
+DisplayName="Flashbang Bombs"
+Description="Grants access to Flashbang Bombs for all soldiers who can use them."
+
+[TU_FlashbangGrenadeMk3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Flashbang Warheads"
+Description="Grants access to Flashbang Warheads for all soldiers who can use them."
+
 [TU_SmokeGrenadeMk2 X2ResistanceTechUpgradeTemplate]
 DisplayName="Smoke Bombs"
 Description="Grants access to Smoke Bombs for all soldiers who can use them."
+
+[TU_SmokeGrenadeM3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Smoke Warheads"
+Description="Grants access to Smoke Warheads for all soldiers who can use them."
 
 [TU_AlienGrenade X2ResistanceTechUpgradeTemplate]
 DisplayName="Alien Grenades"
@@ -560,6 +572,14 @@ Description="Grants access to Alien Grenades for all soldiers who can use them."
 [TU_ProximityMine X2ResistanceTechUpgradeTemplate]
 DisplayName="Proximity Mines"
 Description="Grants access to Proximity Mines for all soldiers who can use them."
+
+[TU_ProximityMineMk2 X2ResistanceTechUpgradeTemplate]
+DisplayName="Proximity Bombs"
+Description="Grants access to Proximity Bombs for all soldiers who can use them."
+
+[TU_ProximityMineMk3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Proximity Warheads"
+Description="Grants access to Proximity Warheads for all soldiers who can use them."
 
 [TU_Firebomb X2ResistanceTechUpgradeTemplate]
 DisplayName="Incendiary Grenades"
@@ -596,6 +616,18 @@ Description="Grants access to EMP Bombs for all soldiers who can use them."
 [TU_Frostbomb X2ResistanceTechUpgradeTemplate]
 DisplayName="Frost Bomb"
 Description="Grants one Frost Bomb."
+
+[TU_FM_Frostbomb X2ResistanceTechUpgradeTemplate]
+DisplayName="Frost Grenades"
+Description="Grants access to Frost Grenades for all soldiers who can use them."
+
+[TU_FM_FrostbombMk2 X2ResistanceTechUpgradeTemplate]
+DisplayName="Frost Bomb"
+Description="Grants access to Frost Bombs for all soldiers who can use them."
+
+[TU_FM_FrostbombMk3 X2ResistanceTechUpgradeTemplate]
+DisplayName="Frost Warheads"
+Description="Grants access to Frost Warheads for all soldiers who can use them."
 
 ; Vests
 
@@ -915,6 +947,24 @@ Description="Grants one Underbarrel Elerium Thrower."
 DisplayName="Underbarrel Elerium Acid Thrower"
 Description="Grants one Underbarrel Elerium Acid Thrower."
 
+; High Quality Rounds
+
+[TU_HighQualityRounds X2ResistanceTechUpgradeTemplate]
+DisplayName="High Quality Rounds"
+Description="Grants access to High Quality Rounds for all soldiers who can use them."
+
+; Corrosive Rounds
+
+[TU_CorrosiveRounds X2ResistanceTechUpgradeTemplate]
+DisplayName="Corrosive Rounds"
+Description="Grants access to Corrosive Rounds for all soldiers who can use them."
+
+; Arctic Rounds
+
+[TU_ArcticRounds X2ResistanceTechUpgradeTemplate]
+DisplayName="Arctic Rounds"
+Description="Grants access to Arctic Rounds for all soldiers who can use them."
+
 ; Strings
 
 [UITLE_LadderModeMenu_Override]
@@ -959,23 +1009,24 @@ m_SoldierRandomClass="Random Class"
 
 [UILadderSquadUpgradeScreen]
 m_ScreenTitle="UPGRADE SQUAD"
-m_ScreenSubtitles[eUIScreenState_Squad]="TEST"
-m_ScreenSubtitles[eUIScreenState_Research]="SELECT RESEARCH CATEGORY"
-m_ScreenSubtitles[eUIScreenState_ResearchCategory]="SELECT RESEARCH PROJECT"
-m_ScreenSubtitles[eUIScreenState_CompletedProjects]="VIEW COMPLETED PROJECTS"
-m_ScreenSubtitles[eUIScreenState_Soldier]="EDIT SOLDIER"
-m_ScreenSubtitles[eUIScreenState_PrimaryWeapon]="EDIT PRIMARY WEAPON"
-m_ScreenSubtitles[eUIScreenState_WeaponAttachment]="EDIT WEAPON ATTACHMENT"
-m_ScreenSubtitles[eUIScreenState_SecondaryWeapon]="EDIT SECONDARY WEAPON"
-m_ScreenSubtitles[eUIScreenState_Armor]="EDIT ARMOR"
-m_ScreenSubtitles[eUIScreenState_PCS]="EDIT PCS"
-m_ScreenSubtitles[eUIScreenState_UtilItem1]="EDIT UTILITY ITEM 1"
-m_ScreenSubtitles[eUIScreenState_UtilItem2]="EDIT UTILITY ITEM 2"
-m_ScreenSubtitles[eUIScreenState_UtilItem3]="EDIT UTILITY ITEM 3"
-m_ScreenSubtitles[eUIScreenState_GrenadePocket]="EDIT GRENADE POCKET"
-m_ScreenSubtitles[eUIScreenState_AmmoPocket]="EDIT AMMO POCKET"
-m_ScreenSubtitles[eUIScreenState_HeavyWeapon]="EDIT HEAVY WEAPON"
-m_ScreenSubtitles[eUIScreenState_Abilities]="EDIT SOLDIER ABILITIES"
+m_ScreenSubtitles_eUIScreenState_Squad="SELECT SOLDIER"
+m_ScreenSubtitles_eUIScreenState_Research="SELECT RESEARCH CATEGORY"
+m_ScreenSubtitles_eUIScreenState_ResearchCategory="SELECT RESEARCH PROJECT"
+m_ScreenSubtitles_eUIScreenState_CompletedProjects="VIEW COMPLETED PROJECTS"
+m_ScreenSubtitles_eUIScreenState_Soldier="EDIT SOLDIER"
+m_ScreenSubtitles_eUIScreenState_PrimaryWeapon="EDIT PRIMARY WEAPON"
+m_ScreenSubtitles_eUIScreenState_WeaponAttachment="EDIT WEAPON ATTACHMENT"
+m_ScreenSubtitles_eUIScreenState_SecondaryWeapon="EDIT SECONDARY WEAPON"
+m_ScreenSubtitles_eUIScreenState_Armor="EDIT ARMOR"
+m_ScreenSubtitles_eUIScreenState_PCS="EDIT PCS"
+m_ScreenSubtitles_eUIScreenState_UtilItem1="EDIT UTILITY ITEM 1"
+m_ScreenSubtitles_eUIScreenState_UtilItem2="EDIT UTILITY ITEM 2"
+m_ScreenSubtitles_eUIScreenState_UtilItem3="EDIT UTILITY ITEM 3"
+m_ScreenSubtitles_eUIScreenState_GrenadePocket="EDIT GRENADE POCKET"
+m_ScreenSubtitles_eUIScreenState_AmmoPocket="EDIT AMMO POCKET"
+m_ScreenSubtitles_eUIScreenState_HeavyWeapon="EDIT HEAVY WEAPON"
+m_ScreenSubtitles_eUIScreenState_Abilities="EDIT SOLDIER ABILITIES"
+m_ScreenSubtitles_eUIScreenState_CustomSlot="EDIT EQUIPMENT"
 m_Credits="Credits"
 m_Science="Science"
 m_Continue="Continue"

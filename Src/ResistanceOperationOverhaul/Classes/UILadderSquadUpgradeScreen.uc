@@ -54,8 +54,26 @@ var XComGameState NewGameState;
 var XComGameStateHistory History;
 var XComGameState_LadderProgress_Override LadderData;
 
+var localized string m_ScreenSubtitles_eUIScreenState_Squad;
+var localized string m_ScreenSubtitles_eUIScreenState_Research;
+var localized string m_ScreenSubtitles_eUIScreenState_ResearchCategory;
+var localized string m_ScreenSubtitles_eUIScreenState_CompletedProjects;
+var localized string m_ScreenSubtitles_eUIScreenState_Soldier;
+var localized string m_ScreenSubtitles_eUIScreenState_PrimaryWeapon;
+var localized string m_ScreenSubtitles_eUIScreenState_WeaponAttachment;
+var localized string m_ScreenSubtitles_eUIScreenState_SecondaryWeapon;
+var localized string m_ScreenSubtitles_eUIScreenState_Armor;
+var localized string m_ScreenSubtitles_eUIScreenState_PCS;
+var localized string m_ScreenSubtitles_eUIScreenState_UtilItem1;
+var localized string m_ScreenSubtitles_eUIScreenState_UtilItem2;
+var localized string m_ScreenSubtitles_eUIScreenState_UtilItem3;
+var localized string m_ScreenSubtitles_eUIScreenState_GrenadePocket;
+var localized string m_ScreenSubtitles_eUIScreenState_AmmoPocket;
+var localized string m_ScreenSubtitles_eUIScreenState_HeavyWeapon;
+var localized string m_ScreenSubtitles_eUIScreenState_Abilities;
+var localized string m_ScreenSubtitles_eUIScreenState_CustomSlot;
+
 var localized string m_ScreenTitle;
-var localized string m_ScreenSubtitles[EUIScreenState] <BoundEnum = EUIScreenState>;
 var localized string m_Credits;
 var localized string m_Science;
 var localized string m_Continue;
@@ -930,10 +948,10 @@ function UIMechaListItem GetListItem(int ItemIndex)
 
 simulated function UpdateData()
 {
+	local string Subtitle;
 	HideListItems();
 
 	mc.FunctionString("SetScreenTitle", m_ScreenTitle);
-	mc.FunctionString("SetScreenSubtitle", m_ScreenSubtitles[UIScreenState]);
 	
 	switch (UIScreenState)
 	{
@@ -965,61 +983,81 @@ simulated function UpdateData()
 	switch (UIScreenState)
 	{
 	case eUIScreenState_Squad:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Squad;
 		UpdateDataSquad();
 		break;
 	case eUIScreenState_Research:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Research;
 		UpdateDataResearch();
 		break;
 	case eUIScreenState_ResearchCategory:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_ResearchCategory;
 		UpdateDataResearchCategory();
 		break;
 	case eUIScreenState_CompletedProjects:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_CompletedProjects;
 		UpdateDataCompletedProjects();
 		break;
 	case eUIScreenState_Soldier:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Soldier;
 		UpdateDataSoldierData();
 		UpdateDataSoldierOptions();
 		break;
 	case eUIScreenState_Abilities:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Abilities;
 		UpdateDataSoldierAbilities();
 		break;
 	case eUIScreenState_PrimaryWeapon:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_PrimaryWeapon;
 		UpdateDataPrimaryWeapon();
 		break;
 	case eUIScreenState_SecondaryWeapon:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_SecondaryWeapon;
 		UpdateDataSecondaryWeapon();
 		break;
 	case eUIScreenState_Armor:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Armor;
 		UpdateDataArmor();
 		break;
 	case eUIScreenState_PCS:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_PCS;
 		UpdateDataPCS();
 		break;
 	case eUIScreenState_UtilItem1:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem1;
 		UpdateDataUtilItem1();
 		break;
 	case eUIScreenState_UtilItem2:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem2;
 		UpdateDataUtilItem2();
 		break;
 	case eUIScreenState_UtilItem3:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem3;
 		UpdateDataUtilItem3();
 		break;
 	case eUIScreenState_GrenadePocket:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_GrenadePocket;
 		UpdateDataGrenadePocket();
 		break;
 	case eUIScreenState_AmmoPocket:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_AmmoPocket;
 		UpdateDataAmmoPocket();
 		break;
 	case eUIScreenState_HeavyWeapon:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_HeavyWeapon;
 		UpdateDataHeavyWeapon();
 		break;
 	case eUIScreenState_WeaponAttachment:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_WeaponAttachment;
 		UpdateDataWeaponAttachment();
 		break;
 	case eUIScreenState_CustomSlot:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_CustomSlot;
 		UpdateDataCustomSlot();
 		break;
 	};
+	
+	mc.FunctionString("SetScreenSubtitle", Subtitle);
 
 	if( List.IsSelectedNavigation() )
 		List.SetSelectedIndex(LastSelectedIndexes[UIScreenState]);
