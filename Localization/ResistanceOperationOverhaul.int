@@ -965,6 +965,66 @@ Description="Grants access to Corrosive Rounds for all soldiers who can use them
 DisplayName="Arctic Rounds"
 Description="Grants access to Arctic Rounds for all soldiers who can use them."
 
+; LW2 Utility Plating
+
+[TU_LW2WOTC_CeramicPlating X2ResistanceTechUpgradeTemplate]
+DisplayName="Ceramic Plating"
+Description="Grants access to Ceramic Plating for all soldiers who can use them."
+
+[TU_LW2WOTC_AlloyPlating X2ResistanceTechUpgradeTemplate]
+DisplayName="Alloy Plating"
+Description="Grants access to Alloy Plating for all soldiers who can use them."
+
+[TU_LW2WOTC_ChitinPlating X2ResistanceTechUpgradeTemplate]
+DisplayName="Chitin Plating"
+Description="Grants access to Chitin Plating for all soldiers who can use them."
+
+[TU_LW2WOTC_CarapacePlating X2ResistanceTechUpgradeTemplate]
+DisplayName="Carapace Plating"
+Description="Grants access to Carapace Plating for all soldiers who can use them."
+
+; LW2 Classes and Perks - PCS
+
+[TU_DepthPerceptionPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Depth Perception"
+Description="Grants one PCS: Depth Perception."
+
+[TU_HyperReactivePupilsPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Hyper-Reactive Pupils"
+Description="Grants one PCS: Hyper-Reactive Pupils."
+
+[TU_CombatAwarenessPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Combat Awareness"
+Description="Grants one PCS: Combat Awareness."
+
+[TU_CombatRushPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Combat Rush"
+Description="Grants one PCS: Combat Rush."
+
+[TU_DamageControlPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Damage Control"
+Description="Grants one PCS: Damage Control."
+
+[TU_ImpactFieldsPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Impact Fields"
+Description="Grants one PCS: Impact Fields."
+
+[TU_BodyShieldPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Body Shield"
+Description="Grants one PCS: Body Shield."
+
+[TU_EmergencyLifeSupportPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Emergency Life Support"
+Description="Grants one PCS: Emergency Life Support."
+
+[TU_IronSkinPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Iron Skin"
+Description="Grants one PCS: Iron Skin."
+
+[TU_SmartMacrophagesPCS X2ResistanceTechUpgradeTemplate]
+DisplayName="PCS: Smart Macrophages"
+Description="Grants one PCS: Smart Macrophages."
+
 ; Strings
 
 [UITLE_LadderModeMenu_Override]

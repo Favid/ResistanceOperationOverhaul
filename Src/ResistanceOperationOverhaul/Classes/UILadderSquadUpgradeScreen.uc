@@ -150,6 +150,8 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
 	local name NewUpgrade;
 	local X2ResistanceTechUpgradeTemplate NewUpgradeTemplate;
+	local array<XComGameState_Item> UtilityItems;
+	local XComGameState_Item UtilityItem;
 
 	`LOG("==== InitScreen");
 
@@ -282,6 +284,16 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 		else
 		{
 			HasEarnedNewAbility.AddItem(true);
+		}
+
+		// Need to remove any utility items with a quantity of 0 for compatibility with Proficiency Class Pack
+		UtilityItems = Soldier.GetAllItemsInSlot(eInvSlot_Utility, NewGameState, false, true);
+		foreach UtilityItems (UtilityItem)
+		{
+			if (UtilityItem.Quantity <= 0)
+			{
+				Soldier.RemoveItemFromInventory(UtilityItem, NewGameState);
+			}
 		}
 	}
 	
@@ -462,7 +474,7 @@ simulated function OnSetSelectedIndex(UIList ContainerList, int ItemIndex)
 		SelectedAbilityIndex = ItemIndex;
 		UpdateAbilityInfo(ItemIndex);
 	}
-	else if (UIScreenState >= eUIScreenState_PrimaryWeapon && UIScreenState <= eUIScreenState_HeavyWeapon)
+	else if (UIScreenState >= eUIScreenState_PrimaryWeapon && UIScreenState <= eUIScreenState_CustomSlot)
 	{
 		UpdateSelectedEquipmentInfo(ItemIndex);
 	}
@@ -713,7 +725,7 @@ simulated function SetSoldierGear()
 	mc.QueueString("Utility Items");
 
 	// Utility 1
-	if(utilItems.Length > 0)
+	if(utilItems.Length > 0 && utilItems[0].Quantity > 0)
 	{
 		mc.QueueString(utilItems[0].GetMyTemplate().strImage);
 		mc.QueueString(utilItems[0].GetMyTemplate().GetItemFriendlyNameNoStats());
@@ -725,7 +737,7 @@ simulated function SetSoldierGear()
 	}
 
 	// Utility 2
-	if (utilItems.Length > 1)
+	if (utilItems.Length > 1 && utilItems[1].Quantity > 0)
 	{
 		mc.QueueString(utilItems[1].GetMyTemplate().strImage);
 		mc.QueueString(utilItems[1].GetMyTemplate().GetItemFriendlyNameNoStats());
@@ -821,18 +833,18 @@ simulated function XComGameState_Item FindThirdUtilityItemToDisplay(XComGameStat
 	local string LockedReason;
 
 	ItemState = Soldier.GetItemInSlot(eInvSlot_GrenadePocket, NewGameState, false);
-	if (ItemState != none)
+	if (ItemState != none && ItemState.Quantity > 0)
 	{
 		return ItemState;
 	}
 
 	ItemState = Soldier.GetItemInSlot(eInvSlot_AmmoPocket, NewGameState, false);
-	if (ItemState != none)
+	if (ItemState != none && ItemState.Quantity > 0)
 	{
 		return ItemState;
 	}
 
-	if (UtilityItems.Length > 2)
+	if (UtilityItems.Length > 2 && UtilityItems[2].Quantity > 0)
 	{
 		return UtilityItems[2];
 	}
@@ -843,7 +855,7 @@ simulated function XComGameState_Item FindThirdUtilityItemToDisplay(XComGameStat
 		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState))
 		{
 			ItemState = Soldier.GetItemInSlot(ModSlots[ModIndex].InvSlot, NewGameState, false);
-			if (ItemState != none)
+			if (ItemState != none && ItemState.Quantity > 0)
 			{
 				return ItemState;
 			}
@@ -1232,7 +1244,7 @@ simulated function UpdateDataSoldierOptions()
 	if (NumUtilitySlots > 0)
 	{
 		GetListItem(Index).EnableNavigation();
-		if (EquippedUtilityItems.Length > 0)
+		if (EquippedUtilityItems.Length > 0 && EquippedUtilityItems[0].Quantity > 0)
 		{
 			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(1), EquippedUtilityItems[0].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem1);
 		}
@@ -1247,7 +1259,7 @@ simulated function UpdateDataSoldierOptions()
 	if (NumUtilitySlots > 1)
 	{
 		GetListItem(Index).EnableNavigation();
-		if (EquippedUtilityItems.Length > 1)
+		if (EquippedUtilityItems.Length > 1 && EquippedUtilityItems[1].Quantity > 0)
 		{
 			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(2), EquippedUtilityItems[1].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem2);
 		}
@@ -1262,7 +1274,7 @@ simulated function UpdateDataSoldierOptions()
 	if (NumUtilitySlots > 2)
 	{
 		GetListItem(Index).EnableNavigation();
-		if (EquippedUtilityItems.Length > 2)
+		if (EquippedUtilityItems.Length > 2 && EquippedUtilityItems[2].Quantity > 0)
 		{
 			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(3), EquippedUtilityItems[2].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem3);
 		}
@@ -2167,17 +2179,20 @@ simulated function UpdateDataSoldierAbilities()
 			if (RankAbility.AbilityName != '')
 			{
 				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(RankAbility.AbilityName);
-				Earned = Soldier.HasSoldierAbility(RankAbility.AbilityName);
-
-				ListItem = GetListItem(Index);
-				ListItem.UpdateDataCheckbox(AbilityTemplate.LocFriendlyName, "", Earned, OnAbilityCheckboxChanged);
-				ListItem.metadataString = string(RankAbility.AbilityName);
-				Index++;
-
-				ListItem.SetDisabled(true);
-				if (!Soldier.HasPurchasedPerkAtRank(RankIter) && RankIter <= Soldier.GetRank() - 1 && Soldier.MeetsAbilityPrerequisites(RankAbility.AbilityName))
+				if (AbilityTemplate != none)
 				{
-					ListItem.SetDisabled(false);
+					Earned = Soldier.HasSoldierAbility(RankAbility.AbilityName);
+
+					ListItem = GetListItem(Index);
+					ListItem.UpdateDataCheckbox(AbilityTemplate.LocFriendlyName, "", Earned, OnAbilityCheckboxChanged);
+					ListItem.metadataString = string(RankAbility.AbilityName);
+					Index++;
+
+					ListItem.SetDisabled(true);
+					if (!Soldier.HasPurchasedPerkAtRank(RankIter) && RankIter <= Soldier.GetRank() - 1 && Soldier.MeetsAbilityPrerequisites(RankAbility.AbilityName))
+					{
+						ListItem.SetDisabled(false);
+					}
 				}
 			}
 		}
