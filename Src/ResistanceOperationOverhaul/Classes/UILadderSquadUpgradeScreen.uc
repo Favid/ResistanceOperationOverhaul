@@ -1316,7 +1316,7 @@ simulated function UpdateDataSoldierOptions()
 	ModSlots = class'CHItemSlot'.static.GetAllSlotTemplates();
 	for (ModIndex = 0; ModIndex < ModSlots.Length; ModIndex++)
 	{
-		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState))
+		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState) && ModSlots[ModIndex].IsUserEquipSlot)
 		{
 			EquippedItem = Soldier.GetItemInSlot(ModSlots[ModIndex].InvSlot, NewGameState, false);
 			GetListItem(Index).EnableNavigation();
