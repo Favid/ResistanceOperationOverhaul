@@ -917,10 +917,6 @@ Description="Grants access to Plasma Rockets for all soldiers who can use them."
 DisplayName="Elerium Rockets"
 Description="Grants access to Elerium Rockets for all soldiers who can use them."
 
-[TU_IRI_X2Rocket_Shredder X2ResistanceTechUpgradeTemplate]
-DisplayName="Shredder Rockets"
-Description="Grants access to Shredder Rockets for all soldiers who can use them."
-
 [TU_IRI_X2Rocket_Shredder_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Shredstorm Rockets"
 Description="Grants access to Shredstorm Rockets for all soldiers who can use them."
@@ -1144,6 +1140,22 @@ Description="Grants access to SF-35 Solar Flares for all soldiers who can use th
 [TU_IRI_ArtilleryCannon_MG X2ResistanceTechUpgradeTemplate]
 DisplayName="LAGO-508 Heavy Cannons"
 Description="Grants access to LAGO-508 Heavy Cannons for all soldiers who can use them."
+
+[TU_IRI5_ArtilleryCannon_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="L-22 Leafstar Heavy Cannons"
+Description="Grants access to L-22 Leafstar Heavy Cannons for all soldiers who can use them."
+
+[TU_IRI5_ArtilleryCannon_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="LAGO-508 Heavy Cannons"
+Description="Grants access to LAGO-508 Heavy Cannons for all soldiers who can use them."
+
+[TU_IRI5_ArtilleryCannon_CG X2ResistanceTechUpgradeTemplate]
+DisplayName="DON-82 Coilmaster Heavy Cannons"
+Description="Grants access to DON-82 Coilmaster Heavy Cannons for all soldiers who can use them."
+
+[TU_IRI5_ArtilleryCannon_LS X2ResistanceTechUpgradeTemplate]
+DisplayName="RS-9 Redace Superlasers"
+Description="Grants access to RS-9 Redace Superlasers for all soldiers who can use them."
 
 [TU_IRI_ArtilleryCannon_BM X2ResistanceTechUpgradeTemplate]
 DisplayName="L-22 Leafstar Heavy Cannons"
