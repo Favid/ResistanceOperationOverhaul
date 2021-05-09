@@ -1,4 +1,4 @@
-class UILadderSquadUpgradeScreen extends UIScreen dependson(X2DataSet_ResistanceTechUpgrades) config(SoldierUpgrades);
+class UILadderSquadUpgradeScreen extends UIScreen dependson(AStructs) config(SoldierUpgrades);
 
 enum EUIScreenState
 {

@@ -1,29 +1,5 @@
 class ResistanceOverhaulHelpers extends Object;
 
-struct SoldierOption
-{
-	var bool bRandomCharacter;
-	var bool bRandomlyGeneratedCharacter;
-	var string CharacterPoolName;
-	var bool bRandomClass;
-	var name ClassName;
-	var int StartingMission;
-};
-
-struct LadderSettings
-{
-	var bool UseCustomSettings;
-	var int LadderLength;
-	var bool AllowDuplicateClasses;
-	var array<name> AllowedClasses;
-	var array<name> SecondWaveOptions;
-	var int ForceLevelStart;
-	var int ForceLevelEnd;
-	var int AlertLevelStart;
-	var int AlertLevelEnd;
-	var array<SoldierOption> SoldierOptions;
-};
-
 static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters)
 {
 	local XComGameState_Unit Soldier;

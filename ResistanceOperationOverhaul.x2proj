@@ -31,6 +31,9 @@
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\ResistanceOperationOverhaul\Classes\AStructs.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\ResistanceOperationOverhaul\Classes\ResistanceHistorySavePairs.uc">
       <SubType>Content</SubType>
     </Content>

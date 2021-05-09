@@ -1,11 +1,4 @@
-class ResistanceHistorySavePairs extends Object dependson(ResistanceOverhaulHelpers) config(ROOSaves);
-
-struct ResistanceHistorySavePair
-{
-	var name Filename;
-	var string DisplayName;
-	var LadderSettings Settings;
-};
+class ResistanceHistorySavePairs extends Object config(ROOSaves);
 
 var config array<ResistanceHistorySavePair> ResistanceSaves;
 var config int HistorySaveIndex;

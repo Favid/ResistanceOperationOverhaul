@@ -1,4 +1,4 @@
-class UILadderChooseNextMission extends UIScreen dependson(XComGameState_LadderProgress_Override);
+class UILadderChooseNextMission extends UIScreen dependson(AStructs);
 
 var UIButton	 Mission0Button;
 var UIButton	 Mission1Button;

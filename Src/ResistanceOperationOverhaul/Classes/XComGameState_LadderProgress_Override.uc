@@ -1,24 +1,4 @@
-class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress dependson(X2DataSet_ResistanceTechUpgrades) config (LadderOptions);
-
-struct UnitEndState
-{
-	var XComGameState_Unit UnitState;
-	var array<XComGameState_Item> Inventory;
-};
-
-struct MissionTypeOption
-{
-	var string MissionType0;
-	var string MissionType1;
-};
-
-struct MissionOption
-{
-	var string MissionType;
-	var int Credits;
-	var int Science;
-	var array<name> FreeUpgrades;
-};
+class XComGameState_LadderProgress_Override extends XComGameState_LadderProgress config (LadderOptions);
 
 var config int CREDITS_BASE;
 var config int CREDITS_LADDER_BONUS;
