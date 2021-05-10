@@ -2164,6 +2164,7 @@ simulated function UpdateDataSoldierAbilities()
 	local bool Earned;
 	local X2AbilityTemplate AbilityTemplate;
 	local UIMechaListItem ListItem;
+	local string RankIcon;
 
 	Soldier = Squad[SelectedSoldierIndex];
 	MaxRank = Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank();
@@ -2173,6 +2174,7 @@ simulated function UpdateDataSoldierAbilities()
 	for (RankIter = 0; RankIter < MaxRank; RankIter++)
 	{
 		RankAbilities = Soldier.AbilityTree[RankIter].Abilities;
+		RankIcon = class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Image'.static.GetRankIcon(RankIter + 1, Soldier.GetSoldierClassTemplateName()), 20, 20, 0);
 
 		foreach RankAbilities(RankAbility)
 		{
@@ -2184,7 +2186,7 @@ simulated function UpdateDataSoldierAbilities()
 					Earned = Soldier.HasSoldierAbility(RankAbility.AbilityName);
 
 					ListItem = GetListItem(Index);
-					ListItem.UpdateDataCheckbox(AbilityTemplate.LocFriendlyName, "", Earned, OnAbilityCheckboxChanged);
+					ListItem.UpdateDataCheckbox(RankIcon @ AbilityTemplate.LocFriendlyName, "", Earned, OnAbilityCheckboxChanged);
 					ListItem.metadataString = string(RankAbility.AbilityName);
 					Index++;
 
