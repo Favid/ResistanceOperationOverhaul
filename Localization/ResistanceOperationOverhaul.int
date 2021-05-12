@@ -1244,7 +1244,7 @@ Description="Grants one Kiruka Autopulser."
 ; Strings
 
 [UITLE_LadderModeMenu_Override]
-m_EnableModText="Enable Custom Settings"
+m_EnableModText="Enable Resistance Operation Overhaul"
 m_SquadText="Configure Squad"
 m_LadderLengthText="Number of Missions"
 m_SelectAllowedClassesText="Set Allowed Classes"
@@ -1257,7 +1257,7 @@ m_AlertLevelEndText="Ending Alert Level"
 m_SaveText="Save Configuration"
 m_LoadText="Load Configuration"
 
-m_EnableModTooltip="Enable this to use custom settings for generating a Resistance Operation."
+m_EnableModTooltip="Enable this to play the Resistance Operation Overhaul."
 m_SquadTooltip="Choose what soldiers makeup the squad for the Resistance Operation."
 m_LadderLengthTooltip="Number of missions in the Resistance Operation."
 m_SelectAllowedClassesTooltip="Indicates what classes may be chosen for soldiers in the squad set to have their class chosen randomly."
