@@ -33,6 +33,12 @@ var int NEW_MENU_HEIGHT;
 var config array<name> SecondWaveOptionsToDisable;
 var config array<name> ClassesToHide;
 
+var config int DefaultLadderLength;
+var config int DefaultForceLevelStart;
+var config int DefaultForceLevelEnd;
+var config int DefaultAlertLevelStart;
+var config int DefaultAlertLevelEnd;
+
 var localized string m_EnableModText;
 var localized string m_SquadText;
 var localized string m_LadderLengthText;
@@ -105,11 +111,11 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	// Set default ladder settings
 	Settings.AllowDuplicateClasses = false;
-	Settings.LadderLength = class'XComGameState_LadderProgress'.default.DefaultSize;
-	Settings.ForceLevelStart = 3;
-	Settings.ForceLevelEnd = 20;
-	Settings.AlertLevelStart = 1;
-	Settings.AlertLevelEnd = 4;
+	Settings.LadderLength = default.DefaultLadderLength;
+	Settings.ForceLevelStart = default.DefaultForceLevelStart;
+	Settings.ForceLevelEnd = default.DefaultForceLevelEnd;
+	Settings.AlertLevelStart = default.DefaultAlertLevelStart;
+	Settings.AlertLevelEnd = default.DefaultAlertLevelEnd;
 	
 	// Get all classes except for special ones like Rookie or Shen
 	MasterClassList = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().GetAllSoldierClassTemplates();
