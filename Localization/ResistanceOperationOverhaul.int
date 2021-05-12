@@ -482,20 +482,24 @@ Description="Grants access to the SPARK BIT Mark III for all soldiers who can us
 ; Heavy Weapons
 
 [TU_FlamethrowerMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Hellfire Projectors"
-Description="Grants access to Hellfire Projectors for all soldiers who can use them."
+DisplayName="Hellfire Projector"
+Description="Grants one Hellfire Projector."
 
 [TU_BlasterLauncher X2ResistanceTechUpgradeTemplate]
-DisplayName="Blaster Launchers"
-Description="Grants access to Blaster Launchers for all soldiers who can use them."
+DisplayName="Blaster Launcher"
+Description="Grants one Blaster Launcher."
 
 [TU_PlasmaBlaster X2ResistanceTechUpgradeTemplate]
-DisplayName="Plasma Blasters"
-Description="Grants access to Plasma Blasters for all soldiers who can use them."
+DisplayName="Plasma Blaster"
+Description="Grants one Plasma Blaster."
+
+[TU_ShredderGun X2ResistanceTechUpgradeTemplate]
+DisplayName="Shredder Gun"
+Description="Grants one Shredder Gun."
 
 [TU_ShredstormCannon X2ResistanceTechUpgradeTemplate]
-DisplayName="Shredstorm Cannons"
-Description="Grants access to Shredstorm Cannons for all soldiers who can use them."
+DisplayName="Shredstorm Cannon"
+Description="Grants one Shredstorm Cannon."
 
 ; Medium Armor
 
@@ -514,12 +518,12 @@ Description="Grants one Icarus Armor."
 ; Light Armor
 
 [TU_SpiderSuits X2ResistanceTechUpgradeTemplate]
-DisplayName="Spider Suits"
-Description="Grants access to Spider Suits for all soldiers who can use them."
+DisplayName="Spider Suit"
+Description="Grants one Spider Suit."
 
 [TU_WraithSuits X2ResistanceTechUpgradeTemplate]
-DisplayName="Wraith Suits"
-Description="Grants access to Wraith Suits for all soldiers who can use them."
+DisplayName="Wraith Suit"
+Description="Grants one Wraith Suit."
 
 [TU_LightAlienArmor X2ResistanceTechUpgradeTemplate]
 DisplayName="Serpent Suit"
@@ -532,12 +536,12 @@ Description="Grants one Serpent Armor."
 ; Heavy Armor
 
 [TU_ExoSuits X2ResistanceTechUpgradeTemplate]
-DisplayName="E.X.O. Suits"
-Description="Grants access to E.X.O. Suits for all soldiers who can use them."
+DisplayName="E.X.O. Suit"
+Description="Grants one E.X.O. Suit."
 
 [TU_WarSuits X2ResistanceTechUpgradeTemplate]
-DisplayName="W.A.R. Suits"
-Description="Grants access to W.A.R. Suits for all soldiers who can use them."
+DisplayName="W.A.R. Suit"
+Description="Grants one W.A.R. Suit."
 
 [TU_HeavyAlienArmor X2ResistanceTechUpgradeTemplate]
 DisplayName="R.A.G.E. Suit"
@@ -550,158 +554,154 @@ Description="Grants one R.A.G.E. Armor."
 ; Grenades
 
 [TU_FlashbangGrenadeMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Flashbang Bombs"
-Description="Grants access to Flashbang Bombs for all soldiers who can use them."
+DisplayName="Flashbang Bomb"
+Description="Grants one Flashbang Bomb."
 
 [TU_FlashbangGrenadeMk3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Flashbang Warheads"
-Description="Grants access to Flashbang Warheads for all soldiers who can use them."
+DisplayName="Flashbang Warhead"
+Description="Grants one Flashbang Warhead."
 
 [TU_SmokeGrenadeMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Smoke Bombs"
-Description="Grants access to Smoke Bombs for all soldiers who can use them."
+DisplayName="Smoke Bomb"
+Description="Grants one Smoke Bomb."
 
 [TU_SmokeGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Smoke Warheads"
-Description="Grants access to Smoke Warheads for all soldiers who can use them."
+DisplayName="Smoke Warhead"
+Description="Grants one Smoke Warhead."
 
 [TU_AlienGrenade X2ResistanceTechUpgradeTemplate]
-DisplayName="Alien Grenades"
-Description="Grants access to Alien Grenades for all soldiers who can use them."
+DisplayName="Alien Grenade"
+Description="Grants one Alien Grenade."
 
 [TU_ProximityMine X2ResistanceTechUpgradeTemplate]
-DisplayName="Proximity Mines"
-Description="Grants access to Proximity Mines for all soldiers who can use them."
+DisplayName="Proximity Mine"
+Description="Grants one Proximity Mine."
 
 [TU_ProximityMineMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Proximity Bombs"
-Description="Grants access to Proximity Bombs for all soldiers who can use them."
+DisplayName="Proximity Bomb"
+Description="Grants one Proximity Bomb."
 
 [TU_ProximityMineMk3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Proximity Warheads"
-Description="Grants access to Proximity Warheads for all soldiers who can use them."
+DisplayName="Proximity Warhead"
+Description="Grants one Proximity Warhead."
 
 [TU_Firebomb X2ResistanceTechUpgradeTemplate]
-DisplayName="Incendiary Grenades"
-Description="Grants access to Incendiary Grenades for all soldiers who can use them."
+DisplayName="Incendiary Grenade"
+Description="Grants one Incendiary Grenade."
 
 [TU_FirebombMK2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Incendiary Bombs"
-Description="Grants access to Incendiary Bombs for all soldiers who can use them."
+DisplayName="Incendiary Bomb"
+Description="Grants one Incendiary Bomb."
 
 [TU_GasGrenade X2ResistanceTechUpgradeTemplate]
-DisplayName="Gas Grenades"
-Description="Grants access to Gas Grenades for all soldiers who can use them."
+DisplayName="Gas Grenade"
+Description="Grants one Gas Grenade."
 
 [TU_GasGrenadeMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Gas Bombs"
-Description="Grants access to Gas Bombs for all soldiers who can use them."
+DisplayName="Gas Bomb"
+Description="Grants one Gas Bomb."
 
 [TU_AcidGrenade X2ResistanceTechUpgradeTemplate]
-DisplayName="Acid Grenades"
-Description="Grants access to Acid Grenades for all soldiers who can use them."
+DisplayName="Acid Grenade"
+Description="Grants one Acid Grenade."
 
 [TU_AcidGrenadeMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Acid Bombs"
-Description="Grants access to Acid Bombs for all soldiers who can use them."
+DisplayName="Acid Bomb"
+Description="Grants one Acid Bomb."
 
 [TU_EMPGrenade X2ResistanceTechUpgradeTemplate]
-DisplayName="EMP Grenades"
-Description="Grants access to EMP Grenades for all soldiers who can use them."
+DisplayName="EMP Grenade"
+Description="Grants one EMP Grenade."
 
 [TU_EMPGrenadeMk2 X2ResistanceTechUpgradeTemplate]
-DisplayName="EMP Bombs"
-Description="Grants access to EMP Bombs for all soldiers who can use them."
+DisplayName="EMP Bomb"
+Description="Grants one EMP Bomb."
 
 [TU_Frostbomb X2ResistanceTechUpgradeTemplate]
 DisplayName="Frost Bomb"
 Description="Grants one Frost Bomb."
 
 [TU_FM_Frostbomb X2ResistanceTechUpgradeTemplate]
-DisplayName="Frost Grenades"
-Description="Grants access to Frost Grenades for all soldiers who can use them."
+DisplayName="Frost Grenade"
+Description="Grants one Frost Grenade."
 
 [TU_FM_FrostbombMk2 X2ResistanceTechUpgradeTemplate]
 DisplayName="Frost Bomb"
-Description="Grants access to Frost Bombs for all soldiers who can use them."
+Description="Grants one Frost Bomb."
 
 [TU_FM_FrostbombMk3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Frost Warheads"
-Description="Grants access to Frost Warheads for all soldiers who can use them."
+DisplayName="Frost Warhead"
+Description="Grants one Frost Warhead."
 
 ; Vests
 
-[TU_NanofiberVest X2ResistanceTechUpgradeTemplate]
-DisplayName="Nanoscale Vests"
-Description="Grants access to Nanoscale Vests for all soldiers who can use them."
-
 [TU_PlatedVest X2ResistanceTechUpgradeTemplate]
-DisplayName="Plated Vests"
-Description="Grants access to Plated Vests for all soldiers who can use them."
+DisplayName="Plated Vest"
+Description="Grants one Plated Vest."
 
 [TU_HazmatVest X2ResistanceTechUpgradeTemplate]
-DisplayName="Hazmat Vests"
-Description="Grants access to Hazmat Vests for all soldiers who can use them."
+DisplayName="Hazmat Vest"
+Description="Grants one Hazmat Vest."
 
 [TU_StasisVest X2ResistanceTechUpgradeTemplate]
-DisplayName="Stasis Vests"
-Description="Grants access to Stasis Vests for all soldiers who can use them."
+DisplayName="Stasis Vest"
+Description="Grants one Stasis Vest."
 
 [TU_Hellweave X2ResistanceTechUpgradeTemplate]
-DisplayName="Hellweaves"
-Description="Grants access to Hellweaves for all soldiers who can use them."
+DisplayName="Hellweave"
+Description="Grants one Hellweave."
 
 ; Ammo
 
 [TU_TracerRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Tracer Rounds"
-Description="Grants access to Tracer Rounds for all soldiers who can use them."
+Description="Grants one set of Tracer Rounds."
 
 [TU_TalonRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Talon Rounds"
-Description="Grants access to Talon Rounds for all soldiers who can use them."
+Description="Grants one set of Talon Rounds."
 
 [TU_APRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="A.P. Rounds"
-Description="Grants access to A.P. Rounds for all soldiers who can use them."
+Description="Grants one set of A.P. Rounds."
 
 [TU_VenomRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Venom Rounds"
-Description="Grants access to Venom Rounds for all soldiers who can use them."
+Description="Grants one set of Venom Rounds."
 
 [TU_IncendiaryRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Dragon Rounds"
-Description="Grants access to Dragon Rounds for all soldiers who can use them."
+Description="Grants one set of Dragon Rounds."
 
 [TU_BluescreenRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Bluescreen Rounds"
-Description="Grants access to Bluescreen Rounds for all soldiers who can use them."
+Description="Grants one set of Bluescreen Rounds."
 
 ; Misc. Utility Items
 
 [TU_BattleScanner X2ResistanceTechUpgradeTemplate]
-DisplayName="Battle Scanners"
-Description="Grants access to Battle Scanners for all soldiers who can use them."
+DisplayName="Battle Scanner"
+Description="Grants one Battle Scanner."
 
 [TU_MimicBeacon X2ResistanceTechUpgradeTemplate]
 DisplayName="Mimic Beacon"
 Description="Grants one Mimic Beacon."
 
 [TU_NanoMedikit X2ResistanceTechUpgradeTemplate]
-DisplayName="Nanomedikits"
-Description="Grants access to Nanomedikits for all soldiers who can use them."
+DisplayName="Nanomedikit"
+Description="Grants one Nanomedikit."
 
 [TU_MindShield X2ResistanceTechUpgradeTemplate]
-DisplayName="Mindshields"
-Description="Grants access to Mindshields for all soldiers who can use them."
+DisplayName="Mindshield"
+Description="Grants one Mindshield."
 
 [TU_SKULLJACK X2ResistanceTechUpgradeTemplate]
-DisplayName="Skulljacks"
-Description="Grants access to Skulljacks for all soldiers who can use them."
+DisplayName="Skulljack"
+Description="Grants one Skulljack."
 
 [TU_UltrasonicLure X2ResistanceTechUpgradeTemplate]
-DisplayName="Ultrasonic Lures"
-Description="Grants access to Ultrasonic Lures for all soldiers who can use them."
+DisplayName="Ultrasonic Lure"
+Description="Grants one Ultrasonic Lure."
 
 [TU_CombatStims X2ResistanceTechUpgradeTemplate]
 DisplayName="Overdrive Serum"
@@ -862,28 +862,28 @@ Description="Grants access to Blaster Launchers for all soldiers who can use the
 ; Tier 3 Grenades
 
 [TU_SmokeGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Smoke Warheads"
-Description="Grants access to Smoke Warheads for all soldiers who can use them."
+DisplayName="Smoke Warhead"
+Description="Grants one Smoke Warhead."
 
 [TU_AlienGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Plasma Warheads"
-Description="Grants access to Plasma Warheads for all soldiers who can use them."
+DisplayName="Plasma Warhead"
+Description="Grants one Plasma Warhead."
 
 [TU_FireGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Incendiary Warheads"
-Description="Grants access to Incendiary Warheads for all soldiers who can use them."
+DisplayName="Incendiary Warhead"
+Description="Grants one Incendiary Warhead."
 
 [TU_GasGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Gas Warheads"
-Description="Grants access to Gas Warheads for all soldiers who can use them."
+DisplayName="Gas Warhead"
+Description="Grants one Gas Warhead."
 
 [TU_AcidGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="Acid Warheads"
-Description="Grants access to Acid Warheads for all soldiers who can use them."
+DisplayName="Acid Warhead"
+Description="Grants one Acid Warhead."
 
 [TU_EMPGrenadeM3 X2ResistanceTechUpgradeTemplate]
-DisplayName="EMP Warheads"
-Description="Grants access to EMP Warheads for all soldiers who can use them."
+DisplayName="EMP Warhead"
+Description="Grants one EMP Warhead."
 
 ; Primary Secondaries
 
@@ -911,75 +911,75 @@ Description="Grants access to Elerium Rocket Launcher secondary weapons for all 
 
 [TU_IRI_X2Rocket_Plasma X2ResistanceTechUpgradeTemplate]
 DisplayName="Plasma Rockets"
-Description="Grants access to Plasma Rockets for all soldiers who can use them."
+Description="Grants one set of Plasma Rockets."
 
 [TU_IRI_X2Rocket_Elerium X2ResistanceTechUpgradeTemplate]
 DisplayName="Elerium Rockets"
-Description="Grants access to Elerium Rockets for all soldiers who can use them."
+Description="Grants one set of Elerium Rockets."
 
 [TU_IRI_X2Rocket_Shredder_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Shredstorm Rockets"
-Description="Grants access to Shredstorm Rockets for all soldiers who can use them."
+Description="Grants one set of Shredstorm Rockets."
 
 [TU_IRI_X2Rocket_Plasma_Ejector X2ResistanceTechUpgradeTemplate]
 DisplayName="Plasma Ejectors"
-Description="Grants access to Plasma Ejectors for all soldiers who can use them."
+Description="Grants one set of Plasma Ejectors."
 
 [TU_IRI_X2Rocket_Lockon X2ResistanceTechUpgradeTemplate]
 DisplayName="Lockon Rockets"
-Description="Grants access to Lockon Rockets for all soldiers who can use them."
+Description="Grants one set of Lockon Rockets."
 
 [TU_IRI_X2Rocket_Lockon_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Falcon Rockets"
-Description="Grants access to Falcon Rockets for all soldiers who can use them."
+Description="Grants one set of Falcon Rockets."
 
 [TU_IRI_X2Rocket_Napalm X2ResistanceTechUpgradeTemplate]
 DisplayName="Napalm Rockets"
-Description="Grants access to Napalm Rockets for all soldiers who can use them."
+Description="Grants one set of Napalm Rockets."
 
 [TU_IRI_X2Rocket_Napalm_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Hellfire Rockets"
-Description="Grants access to Hellfire Rockets for all soldiers who can use them."
+Description="Grants one set of Hellfire Rockets."
 
 [TU_IRI_X2Rocket_Sabot X2ResistanceTechUpgradeTemplate]
 DisplayName="Sabot Rockets"
-Description="Grants access to Sabot Rockets for all soldiers who can use them."
+Description="Grants one set of Sabot Rockets."
 
 [TU_IRI_X2Rocket_Sabot_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Sabot H.I. Rockets"
-Description="Grants access to Sabot H.I. Rockets for all soldiers who can use them."
+Description="Grants one set of Sabot H.I. Rockets."
 
 [TU_IRI_X2Rocket_Thermobaric X2ResistanceTechUpgradeTemplate]
 DisplayName="Thermobaric Rockets"
-Description="Grants access to Thermobaric Rockets for all soldiers who can use them."
+Description="Grants one set of Thermobaric Rockets."
 
 [TU_IRI_X2Rocket_Thermobaric_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Heatflash Rockets"
-Description="Grants access to Heatflash Rockets for all soldiers who can use them."
+Description="Grants one set of Heatflash Rockets."
 
 [TU_IRI_X2Rocket_WhitePh X2ResistanceTechUpgradeTemplate]
 DisplayName="Phosphorous Rockets"
-Description="Grants access to Phosphorous Rockets for all soldiers who can use them."
+Description="Grants one set of Phosphorous Rockets."
 
 [TU_IRI_X2Rocket_WhitePh_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Sarin Rockets"
-Description="Grants access to Sarin Rockets for all soldiers who can use them."
+Description="Grants one set of Sarin Rockets."
 
 [TU_IRI_X2Rocket_Acid X2ResistanceTechUpgradeTemplate]
 DisplayName="Acid Rockets"
-Description="Grants access to Acid Rockets for all soldiers who can use them."
+Description="Grants one set of Acid Rockets."
 
 [TU_IRI_X2Rocket_Flechette X2ResistanceTechUpgradeTemplate]
 DisplayName="Flechette Rockets"
-Description="Grants access to Flechette Rockets for all soldiers who can use them."
+Description="Grants one set of Flechette Rockets."
 
 [TU_IRI_X2Rocket_Flechette_T3 X2ResistanceTechUpgradeTemplate]
 DisplayName="Metalstorm Rockets"
-Description="Grants access to Metalstorm Rockets for all soldiers who can use them."
+Description="Grants one set of Metalstorm Rockets."
 
 [TU_IRI_X2Rocket_Nuke X2ResistanceTechUpgradeTemplate]
 DisplayName="Tactical Nukes"
-Description="Grants access to Tactical Nukes for all soldiers who can use them."
+Description="Grants one set of Tactical Nukes."
 
 ; Iridar's Underbarrel Attachments
 
@@ -1029,31 +1029,31 @@ Description="Grants access to High Quality Rounds for all soldiers who can use t
 
 [TU_CorrosiveRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Corrosive Rounds"
-Description="Grants access to Corrosive Rounds for all soldiers who can use them."
+Description="Grants one set of Corrosive Rounds."
 
 ; Arctic Rounds
 
 [TU_ArcticRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Arctic Rounds"
-Description="Grants access to Arctic Rounds for all soldiers who can use them."
+Description="Grants one set of Arctic Rounds."
 
 ; LW2 Utility Plating
 
 [TU_LW2WOTC_CeramicPlating X2ResistanceTechUpgradeTemplate]
 DisplayName="Ceramic Plating"
-Description="Grants access to Ceramic Plating for all soldiers who can use them."
+Description="Grants one Ceramic Plating."
 
 [TU_LW2WOTC_AlloyPlating X2ResistanceTechUpgradeTemplate]
 DisplayName="Alloy Plating"
-Description="Grants access to Alloy Plating for all soldiers who can use them."
+Description="Grants one Alloy Plating."
 
 [TU_LW2WOTC_ChitinPlating X2ResistanceTechUpgradeTemplate]
 DisplayName="Chitin Plating"
-Description="Grants access to Chitin Plating for all soldiers who can use them."
+Description="Grants one Chitin Plating."
 
 [TU_LW2WOTC_CarapacePlating X2ResistanceTechUpgradeTemplate]
 DisplayName="Carapace Plating"
-Description="Grants access to Carapace Plating for all soldiers who can use them."
+Description="Grants one Carapace Plating."
 
 ; LW2 Classes and Perks - PCS
 
@@ -1101,27 +1101,27 @@ Description="Grants one PCS: Smart Macrophages."
 
 [TU_RiotRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Riot Rounds"
-Description="Grants access to Riot Rounds for all soldiers who can use them."
+Description="Grants one set of Riot Rounds."
 
 [TU_FalconRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Falcon Rounds"
-Description="Grants access to Falcon Rounds for all soldiers who can use them."
+Description="Grants one set of Falcon Rounds."
 
 [TU_RedscreenRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Redscreen Rounds"
-Description="Grants access to Redscreen Rounds for all soldiers who can use them."
+Description="Grants one set of Redscreen Rounds."
 
 [TU_FlechetteRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Flechette Rounds"
-Description="Grants access to Flechette Rounds for all soldiers who can use them."
+Description="Grants one set of Flechette Rounds."
 
 [TU_NeedleRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Needle Rounds"
-Description="Grants access to Needle Rounds for all soldiers who can use them."
+Description="Grants one set of Needle Rounds."
 
 [TU_AcidRounds X2ResistanceTechUpgradeTemplate]
 DisplayName="Acid Rounds"
-Description="Grants access to Acid Rounds for all soldiers who can use them."
+Description="Grants one set of Acid Rounds."
 
 ; [WOTC] Iridar's SPARK Arsenal 3.0
 
@@ -1175,7 +1175,7 @@ Description="Grants access to Kinetic Strike Modules for all soldiers who can us
 
 [TU_IRI_Ammo_Sabot X2ResistanceTechUpgradeTemplate]
 DisplayName="Sabot Rounds"
-Description="Grants access to Sabot Rounds for all soldiers who can use them."
+Description="Grants one set of Sabot Rounds."
 
 [TU_IRI_Shell_HEAT X2ResistanceTechUpgradeTemplate]
 DisplayName="HEAT Shells"
@@ -1219,27 +1219,27 @@ Description="Grants one Speed Loader."
 
 [TU_IRI_RestorativeMist_CV X2ResistanceTechUpgradeTemplate]
 DisplayName="Restorative Mist"
-Description="Grants access to Restorative Mist for all soldiers who can use them."
+Description="Grants one Restorative Mist."
 
 [TU_IRI_ElectroPulse_CV X2ResistanceTechUpgradeTemplate]
 DisplayName="E.M. Pulse"
-Description="Grants access to E.M. Pulse for all soldiers who can use them."
+Description="Grants one E.M. Pulse."
 
 [TU_IRI_HeavyStrikeModule_T1 X2ResistanceTechUpgradeTemplate]
-DisplayName="Heavy Strike Modules"
-Description="Grants access to Heavy Strike Modules for all soldiers who can use them."
+DisplayName="Heavy Strike Module"
+Description="Grants one Heavy Strike Module."
 
 [TU_IRI_HeavyStrikeModule_T2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Powered Strike Modules"
-Description="Grants access to Powered Strike Modules for all soldiers who can use them."
+DisplayName="Powered Strike Module"
+Description="Grants one Powered Strike Module."
 
 [TU_IRI_Heavy_Autogun X2ResistanceTechUpgradeTemplate]
-DisplayName="Kiruka Autoguns"
-Description="Grants access to Kiruka Autoguns for all soldiers who can use them."
+DisplayName="Kiruka Autogun"
+Description="Grants one Kiruka Autogun."
 
 [TU_IRI_Heavy_Autogun_MK2 X2ResistanceTechUpgradeTemplate]
-DisplayName="Kiruka Autopulsers"
-Description="Grants access to Kiruka Autopulsers for all soldiers who can use them."
+DisplayName="Kiruka Autopulser"
+Description="Grants one Kiruka Autopulser."
 
 ; Strings
 
