@@ -39,10 +39,6 @@ var config int DefaultForceLevelEnd;
 var config int DefaultAlertLevelStart;
 var config int DefaultAlertLevelEnd;
 
-var config bool UseWeightedClassSelection;
-var config int DEFAULT_CLASS_WEIGHT;
-var config array<ClassWeight> ClassWeights;
-
 var localized string m_EnableModText;
 var localized string m_SquadText;
 var localized string m_LadderLengthText;

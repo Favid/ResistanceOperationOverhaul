@@ -1,4 +1,8 @@
-class ResistanceOverhaulHelpers extends Object;
+class ResistanceOverhaulHelpers extends Object config(LadderOptions);
+
+var config bool bUseWeightedClassSelection;
+var config int DEFAULT_CLASS_WEIGHT;
+var config array<ClassWeight> ClassWeights;
 
 static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters)
 {
@@ -68,15 +72,59 @@ public static function name RandomlyChooseClass(array<name> AllowedClasses, arra
 
 	if (RandomClassOptions.Length > 0)
 	{
-		ChosenClass = RandomClassOptions[`SYNC_RAND_STATIC(RandomClassOptions.Length)];
+		ChosenClass = default.bUseWeightedClassSelection ? GetWeightedRandomClass(RandomClassOptions)
+			: RandomClassOptions[`SYNC_RAND_STATIC(RandomClassOptions.Length)];
 	}
 	else
 	{
 		// There are no valid classes left, so just pick one from the disallowed classes
-		ChosenClass = DisallowedClasses[`SYNC_RAND_STATIC(DisallowedClasses.Length)];
+		ChosenClass = default.bUseWeightedClassSelection ? GetWeightedRandomClass(DisallowedClasses)
+			: DisallowedClasses[`SYNC_RAND_STATIC(DisallowedClasses.Length)];
 	}
 
 	return ChosenClass;
+}
+
+private static function name GetWeightedRandomClass(array<name> ClassOptions)
+{
+	local name ClassName;
+	local int index;
+	local int WeightSum;
+	local int RandRoll;
+
+	local array<ClassWeight> WeightedClassOptions;
+	local ClassWeight Entry;
+
+	// Build weighted class list
+	foreach ClassOptions(ClassName)
+	{
+		Entry.ClassName = ClassName;
+
+		// Check for manually specified weight
+		index = default.ClassWeights.Find('ClassName', ClassName);
+
+		Entry.Weight = index != INDEX_NONE ? default.ClassWeights[index].Weight
+			: default.DEFAULT_CLASS_WEIGHT;
+
+		WeightSum += Entry.Weight;
+		WeightedClassOptions.AddItem(Entry);
+
+		//`LOG("added" @ Entry.ClassName @ Entry.Weight);
+	}
+
+	RandRoll = `SYNC_RAND_STATIC(WeightSum);
+	//`LOG("rolled" @ RandRoll @ WeightSum);
+
+	// Loop over weighted list, rand(100) = [0, 99] -> 99 - 100 = -1
+	foreach WeightedClassOptions(Entry)
+	{
+		RandRoll -= Entry.Weight;
+		//`LOG("at" @ Entry.ClassName @ RandRoll);
+		if (RandRoll < 0)
+		{
+			return Entry.ClassName;
+		}
+	}
 }
 
 private static function string RandomlyChooseCharacter(name ClassName, array<string> DisallowedCharacters)
