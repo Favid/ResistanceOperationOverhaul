@@ -134,7 +134,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	}
 
 	// Start with the default squad - 4 random soldiers at the start, with others joining at missions 2 and 4
-	Soldier.bRandomlyGeneratedCharacter = true;
+	Soldier.bRandomCharacter = true;
 	Soldier.bRandomClass = true;
 	Soldier.StartingMission = 1;
 	Settings.SoldierOptions.AddItem(Soldier);
@@ -694,7 +694,7 @@ simulated function OnClickAddSoldier()
 {
 	local SoldierOption Option;
 
-	Option.bRandomlyGeneratedCharacter = true;
+	Option.bRandomCharacter = true;
 	Option.bRandomClass = true;
 	Option.StartingMission = 1;
 	Settings.SoldierOptions.AddItem(Option);
@@ -759,8 +759,8 @@ simulated function UpdateCustomListDataSoldier()
 	GetListItem(Index).MoveToHighestDepth();
 	Index++;
 	
-	CharacterOptions.AddItem(m_SoldierRandomlyGeneratedCharacter);
 	CharacterOptions.AddItem(m_SoldierRandomCharacter);
+	CharacterOptions.AddItem(m_SoldierRandomlyGeneratedCharacter);
 	if (Option.bRandomlyGeneratedCharacter)
 	{
 		SelectedCharacterIndex = 0;
