@@ -174,7 +174,7 @@ private static function bool CharacterIsValid(XComGameState_Unit Character, X2So
 	local bool bValid;
 
 	bValid = false;
-	if (Character != none)
+	if (Character != none && Character.bAllowedTypeSoldier)
 	{
 		if (Character.GetMyTemplate().DataName == 'Soldier' && 
 			(ClassTemplate.AcceptedCharacterTemplates.Length == 0 || ClassTemplate.AcceptedCharacterTemplates.Find(Character.GetMyTemplate().DataName) != INDEX_NONE))
