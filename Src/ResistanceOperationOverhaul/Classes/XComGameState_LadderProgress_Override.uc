@@ -4,6 +4,8 @@ var config int CREDITS_BASE;
 var config int CREDITS_LADDER_BONUS;
 var config int FREE_UPGRADE_MIN_COST_MODIFIER;
 var config array<int> SCIENCE_TABLE;
+var config int MAX_SALE_ITEMS;
+var config float SALE_CREDITS_MOD;
 
 var array<name> PurchasedTechUpgrades;
 var array<XComGameState_Unit> SoldierStatesBeforeUpgrades;
@@ -14,6 +16,7 @@ var int Credits;
 var int Science;
 var MissionOption ChosenMissionOption; // set this when the player chooses a map type from UILadderChooseNextMission
 var array<MissionTypeOption> LadderMissionTypeOptions;
+var array<name> SaleOptions;
 
 var UILadderRewards RewardsScreen;
 var UILadderSquadUpgradeScreen UpgradeScreen;
@@ -702,7 +705,15 @@ function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
 		//}
 	//}
 	
-	Credits -= Template.Cost;
+	if (IsUpgradeOnSale(DataName))
+	{
+		Credits -= (Template.Cost * default.SALE_CREDITS_MOD);
+	}
+	else
+	{
+		Credits -= Template.Cost;
+	}
+
 	PurchasedTechUpgrades.AddItem(DataName);
 }
 
@@ -1126,4 +1137,78 @@ function string GetNextMissionType()
 	}
 
 	return MissionType;
+}
+
+simulated function InitSaleOptions()
+{
+	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
+	local array<name> TemplateNames;
+	local name TemplateName;
+	local X2ResistanceTechUpgradeTemplate Template;
+	local array<name> EligableTemplateNames;
+	local int NumSaleItems;
+	local int Counter;
+	local int RandIndex;
+
+	SaleOptions.Length = 0;
+	
+	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	TemplateManager.GetTemplateNames(TemplateNames);
+	
+	foreach TemplateNames(TemplateName)
+	{
+		if (!HasPurchasedTechUpgrade(TemplateName))
+		{
+			Template = TemplateManager.FindTemplate(TemplateName);
+			if (HasEnoughScience(Template) && Credits >= Template.Cost * default.SALE_CREDITS_MOD && HasRequiredTechs(Template))
+			{
+				EligableTemplateNames.AddItem(TemplateName);
+			}
+		}
+	}
+
+	NumSaleItems = `SYNC_RAND_STATIC(default.MAX_SALE_ITEMS) + 1;
+
+	for (Counter = 0; Counter < NumSaleItems; Counter++)
+	{
+		if (EligableTemplateNames.Length > 0)
+		{
+			RandIndex = `SYNC_RAND_STATIC(EligableTemplateNames.Length);
+			SaleOptions.AddItem(EligableTemplateNames[RandIndex]);
+			EligableTemplateNames.Remove(RandIndex, 1);
+		}
+	}
+}
+
+simulated function bool IsUpgradeOnSale(name TemplateName)
+{
+	if (SaleOptions.Find(TemplateName) != INDEX_NONE)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+simulated function bool IsUpgradeOnSaleInCategory(EUpgradeCategory Category)
+{
+	local X2ResistanceTechUpgradeTemplateManager TemplateManager;
+	local name TemplateName;
+	local X2ResistanceTechUpgradeTemplate Template;
+	
+	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+
+	foreach SaleOptions(TemplateName)
+	{
+		if (!HasPurchasedTechUpgrade(TemplateName))
+		{
+			Template = TemplateManager.FindTemplate(TemplateName);
+			if (Template.Category == Category)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
