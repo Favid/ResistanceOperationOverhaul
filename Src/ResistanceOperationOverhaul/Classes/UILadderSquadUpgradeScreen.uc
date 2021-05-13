@@ -108,6 +108,7 @@ var localized string m_ConfirmResearchText;
 var localized string m_ConfirmContinueTitle;
 var localized string m_ConfirmContinueText;
 var localized string m_Requires;
+var localized string m_SaleTooltip;
 
 const CreditsIcon = "UIEvent_engineer";
 const ScienceIcon = "img:///UILibrary_Common.UIEvent_science";
@@ -178,6 +179,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	LadderData.SetSoldierStatesBeforeUpgrades();
 	LadderData.AddMissionCompletedRewards();
+	LadderData.InitSaleOptions();
 	
 	foreach XComHQ.Squad(UnitStateRef)
 	{
@@ -2347,61 +2349,71 @@ simulated function UpdateDataResearch()
 	GetListItem(Index).UpdateDataValue(Icon $ m_CompletedResearch, "", OnClickCompletedProjects);
 	GetListItem(Index).EnableNavigation();
 	Index++;
-	
-	GetListItem(Index).UpdateDataValue(m_PrimaryWeaponCat, "", , , OnClickResearchCategory);
+
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_PrimaryWeaponCat, eUpCat_Primary), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Primary;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_SecondaryWeaponCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_SecondaryWeaponCat, eUpCat_Secondary), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Secondary;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_HeavyWeaponCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_HeavyWeaponCat, eUpCat_Heavy), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Heavy;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_ArmorCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_ArmorCat, eUpCat_Armor), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Armor;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_GrenadeCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_GrenadeCat, eUpCat_Grenade), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Grenade;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_AmmoCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_AmmoCat, eUpCat_Ammo), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Ammo;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_VestCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_VestCat, eUpCat_Vest), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Vest;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_UtilityItemCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_UtilityItemCat, eUpCat_Utility), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Utility;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_WeaponAttachmentCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_WeaponAttachmentCat, eUpCat_Attachment), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Attachment;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_PCSCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_PCSCat, eUpCat_PCS), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_PCS;
 	GetListItem(Index).EnableNavigation();
 	Index++;
 	
-	GetListItem(Index).UpdateDataValue(m_MiscCat, "", , , OnClickResearchCategory);
+	GetListItem(Index).UpdateDataValue(GetResearchCategoryText(m_MiscCat, eUpCat_Misc), "", , , OnClickResearchCategory);
 	GetListItem(Index).metadataInt = eUpCat_Misc;
 	GetListItem(Index).EnableNavigation();
 	Index++;
+}
+
+simulated function string GetResearchCategoryText(string Text, EUpgradeCategory Category)
+{
+	if (LadderData.IsUpgradeOnSaleInCategory(Category))
+	{
+		return class'UIUtilities_Text'.static.GetColoredText(Text, eUIState_Good);
+	}
+
+	return Text;
 }
 
 simulated function OnClickResearchCategory(UIMechaListItem MechaItem)
@@ -2419,7 +2431,10 @@ simulated function UpdateDataResearchCategory()
 	local X2ResistanceTechUpgradeTemplate Template;
 	local array<name> TemplateNames;
 	local name TemplateName;
+	local int CreditsValue;
 	local string CostString;
+	local string NameString;
+	local string CreditsString;
 
 	Index = 0;
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
@@ -2443,17 +2458,30 @@ simulated function UpdateDataResearchCategory()
 					//`LOG("=== Template DisplayName: " $ Template.DisplayName);
 					//`LOG("=== Template Description: " $ Template.Description);
 
+					if (LadderData.IsUpgradeOnSale(Template.DataName))
+					{
+						CreditsValue = Template.Cost * class'XComGameState_LadderProgress_Override'.default.SALE_CREDITS_MOD;
+						CreditsString = class'UIUtilities_Text'.static.GetColoredText(string(CreditsValue), eUIState_Good);
+						NameString = class'UIUtilities_Text'.static.GetColoredText(Template.DisplayName, eUIState_Good);
+					}
+					else
+					{
+						CreditsValue = Template.Cost;
+						CreditsString = string(CreditsValue);
+						NameString = Template.DisplayName;
+					}
+
 					CostString = "";
 					if (Template.RequiredScience > 0)
 					{
 						CostString = CostString $ string(Template.RequiredScience) $ " " $ class'UIUtilities_Text'.static.InjectImage(ScienceIcon, 20, 20, 0) $ "  ";
 					}
 
-					CostString = CostString $ string(Template.Cost) $ " " $ class'UIUtilities_Text'.static.InjectImage(CreditsIcon, 20, 20, 0);
+					CostString = CostString $ CreditsString $ " " $ class'UIUtilities_Text'.static.InjectImage(CreditsIcon, 20, 20, 0);
 
-					GetListItem(Index).UpdateDataValue(Template.DisplayName, CostString, , , OnClickUpgradeTech);
+					GetListItem(Index).UpdateDataValue(NameString, CostString, , , OnClickUpgradeTech);
 					GetListItem(Index).metadataString = string(Template.DataName);
-					GetListItem(Index).metadataInt = Template.Cost;
+					GetListItem(Index).metadataInt = CreditsValue;
 					GetListItem(Index).EnableNavigation();
 
 					if (!LadderData.HasRequiredTechs(Template))
@@ -2463,6 +2491,10 @@ simulated function UpdateDataResearchCategory()
 					else if (!LadderData.CanAfford(Template))
 					{
 						GetListItem(Index).SetDisabled(true, m_ErrorNotEnoughCredits);
+					}
+					else if (LadderData.IsUpgradeOnSale(Template.DataName))
+					{
+						GetListItem(Index).BG.SetTooltipText(m_SaleTooltip, , , 10, , , , 0.0f);
 					}
 
 					Index++;
@@ -2509,7 +2541,13 @@ simulated function ConfirmUpgradeSelection()
 
 	LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
 	LocTag.StrValue0 = Template.DisplayName;
+	
 	LocTag.IntValue0 = Template.Cost;
+	if (LadderData.IsUpgradeOnSale(Template.DataName))
+	{
+		LocTag.IntValue0 = Template.Cost * class'XComGameState_LadderProgress_Override'.default.SALE_CREDITS_MOD; 
+	}
+
 	DialogData.strText = `XEXPAND.ExpandString(m_ConfirmResearchText);
 	Movie.Pres.UIRaiseDialog(DialogData);
 	UpdateNavHelp();

@@ -774,11 +774,15 @@ simulated function UpdateCustomListDataSoldier()
 	for (CharacterIndex = 0; CharacterIndex < CharacterPoolMgr.CharacterPool.Length; CharacterIndex++)
 	{
 		Character = CharacterPoolMgr.CharacterPool[CharacterIndex];
-		CharacterOptions.AddItem(Character.GetFullName());
 
-		if (!Option.bRandomlyGeneratedCharacter && !Option.bRandomCharacter && Character.GetFullName() == Option.CharacterPoolName)
+		if (Character.bAllowedTypeSoldier)
 		{
-			SelectedCharacterIndex = CharacterIndex + 2;
+			CharacterOptions.AddItem(Character.GetFullName());
+
+			if (!Option.bRandomlyGeneratedCharacter && !Option.bRandomCharacter && Character.GetFullName() == Option.CharacterPoolName)
+			{
+				SelectedCharacterIndex = CharacterIndex + 2;
+			}
 		}
 	}
 	
