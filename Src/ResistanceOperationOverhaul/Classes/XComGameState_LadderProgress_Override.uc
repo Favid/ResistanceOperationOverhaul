@@ -1160,7 +1160,10 @@ simulated function InitSaleOptions()
 		if (!HasPurchasedTechUpgrade(TemplateName))
 		{
 			Template = TemplateManager.FindTemplate(TemplateName);
-			if (HasEnoughScience(Template) && Credits >= Template.Cost * default.SALE_CREDITS_MOD && HasRequiredTechs(Template))
+			if (HasEnoughScience(Template) 
+				&& Credits >= Template.Cost * default.SALE_CREDITS_MOD 
+				&& HasRequiredTechs(Template)
+				&& DoesSomeoneBenefit(Template))
 			{
 				EligableTemplateNames.AddItem(TemplateName);
 			}
