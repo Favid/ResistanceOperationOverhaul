@@ -1409,7 +1409,7 @@ m_ConfirmResearchText="Are you sure you want to research <XGParam:StrValue0/!Dis
 m_ConfirmContinueTitle="CONFIRM CONTINUE"
 m_ConfirmContinueText="Not all soldiers have learned a new ability. Are you sure you want to continue?"
 m_Requires="Requires"
-m_SaleTooltip="This item is on sale!"
+m_SaleTooltip="Inspired! If researched before next mission, the project will cost less Credits."
 
 [UILadderChooseNextMission]
 m_ChooseMissionLabel="CHOOSE MISSION"
