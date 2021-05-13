@@ -1241,6 +1241,78 @@ Description="Grants one Kiruka Autogun."
 DisplayName="Kiruka Autopulser"
 Description="Grants one Kiruka Autopulser."
 
+; Immolator + Chemthrower Abilities
+
+[TU_MZImmolator_CV X2ResistanceTechUpgradeTemplate]
+DisplayName="Immolators"
+Description="Grants access to Immolators and Flame Canisters."
+
+[TU_MZImmolator_MG X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Immolators"
+Description="Grants access to Advanced Immolators for all soldiers that can use them."
+
+[TU_MZImmolator_BM X2ResistanceTechUpgradeTemplate]
+DisplayName="Superior Immolators"
+Description="Grants access to Superior Immolators for all soldiers that can use them."
+
+[TU_MZPoisonCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Toxic Gas Canisters"
+Description="Grants access to Toxic Gas Canisters for all soldiers that can use them."
+
+[TU_MZAcidCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Acid Canisters"
+Description="Grants access to Acid Canisters for all soldiers that can use them."
+
+[TU_MZBluescreenCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Bluescreen Canisters"
+Description="Grants access to Bluescreen Canisters for all soldiers that can use them."
+
+[TU_MZCurseCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Curse Canisters"
+Description="Grants access to Curse Canisters for all soldiers that can use them."
+
+[TU_MZSmokeCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Smoke Canisters"
+Description="Grants access to Smoke Canisters for all soldiers that can use them."
+
+[TU_MZMedicCanister X2ResistanceTechUpgradeTemplate]
+DisplayName="Medical Canisters"
+Description="Grants access to Medical Canisters for all soldiers that can use them."
+
+[TU_MZImmolator_BasicAttachments X2ResistanceTechUpgradeTemplate]
+DisplayName="Basic Immolator Attachments"
+Description="Grants one of each basic Immolator attachment."
+
+[TU_MZImmolator_AdvancedAttachments X2ResistanceTechUpgradeTemplate]
+DisplayName="Advanced Immolator Attachments"
+Description="Grants one of each advanced Immolator attachment."
+
+[TU_MZImmolator_SuperiorAttachments X2ResistanceTechUpgradeTemplate]
+DisplayName="Superior Immolator Attachments"
+Description="Grants one of each superior Immolator attachment."
+
+; [WOTC] Molotovs by Iridar
+
+[TU_IRI_Molotov X2ResistanceTechUpgradeTemplate]
+DisplayName="Molotovs"
+Description="Grants access to Molotovs."
+
+; Jump Jets
+
+[TU_JetBoosters_MK0 X2ResistanceTechUpgradeTemplate]
+DisplayName="Jump Jets"
+Description="Grants access to Jump Jets for all soldiers that can use them."
+
+; [WOTC] Jet Packs
+
+[TU_IRI_JetBoosters_MK1 X2ResistanceTechUpgradeTemplate]
+DisplayName="Booster Jets"
+Description="Grants access to Booster Jets for all soldiers that can use them."
+
+[TU_IRI_JetBoosters_MK2 X2ResistanceTechUpgradeTemplate]
+DisplayName="Elerium Jets"
+Description="Grants access to Elerium Jets for all soldiers that can use them."
+
 ; Strings
 
 [UITLE_LadderModeMenu_Override]
