@@ -757,7 +757,20 @@ function bool HasEnoughScience(X2ResistanceTechUpgradeTemplate Template)
 
 function bool CanAfford(X2ResistanceTechUpgradeTemplate Template)
 {
-	if (Credits < Template.Cost || Science < Template.RequiredScience)
+	local int Price;
+
+	if (Science < Template.RequiredScience)
+	{
+		return false;
+	}
+
+	Price = Template.Cost;
+	if (IsUpgradeOnSale(Template.DataName))
+	{
+		Price *= default.SALE_CREDITS_MOD;
+	}
+
+	if (Credits < Price)
 	{
 		return false;
 	}
