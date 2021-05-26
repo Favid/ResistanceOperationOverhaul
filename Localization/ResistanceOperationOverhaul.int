@@ -570,8 +570,8 @@ DisplayName="Smoke Warhead"
 Description="Grants one Smoke Warhead."
 
 [TU_AlienGrenade X2ResistanceTechUpgradeTemplate]
-DisplayName="Alien Grenade"
-Description="Grants one Alien Grenade."
+DisplayName="Plasma Grenade"
+Description="Grants one Plasma Grenade."
 
 [TU_ProximityMine X2ResistanceTechUpgradeTemplate]
 DisplayName="Proximity Mine"
