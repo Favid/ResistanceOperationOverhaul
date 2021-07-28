@@ -388,29 +388,16 @@ static function ProceedToNextRung( )
 // Same as XComGameState_LadderProgress.UpdateUnitCustomization(), but since it's private and we use it we need to reimplement it
 private static function UpdateUnitCustomization( XComGameState_Unit NextMissionUnit, XComGameState_Unit PrevMissionUnit )
 {
-	local XGCharacterGenerator CharacterGenerator;
 	local TSoldier Soldier;
 
 	`LOG("==== UpdateUnitCustomization");
+	
+	Soldier.kAppearance = PrevMissionUnit.kAppearance;
+	Soldier.nmCountry = PrevMissionUnit.GetCountry( );
 
-	if (PrevMissionUnit.IsAlive( ))
-	{
-		`LOG("==== Using PrevMissionUnit");
-		Soldier.kAppearance = PrevMissionUnit.kAppearance;
-		Soldier.nmCountry = PrevMissionUnit.GetCountry( );
-
-		Soldier.strFirstName = PrevMissionUnit.GetFirstName( );
-		Soldier.strLastName = PrevMissionUnit.GetLastName( );
-		Soldier.strNickName = PrevMissionUnit.GetNickName( );
-	}
-	else
-	{
-		`LOG("==== Using Random");
-		CharacterGenerator = `XCOMGRI.Spawn(NextMissionUnit.GetMyTemplate().CharacterGeneratorClass);
-
-		Soldier = CharacterGenerator.CreateTSoldier( NextMissionUnit.GetMyTemplateName() );
-		Soldier.strNickName = NextMissionUnit.GenerateNickname( );
-	}
+	Soldier.strFirstName = PrevMissionUnit.GetFirstName( );
+	Soldier.strLastName = PrevMissionUnit.GetLastName( );
+	Soldier.strNickName = PrevMissionUnit.GetNickName( );
 
 	NextMissionUnit.SetTAppearance(Soldier.kAppearance);
 	NextMissionUnit.SetCharacterName(Soldier.strFirstName, Soldier.strLastName, Soldier.strNickName);
@@ -1178,18 +1165,19 @@ simulated function InitSaleOptions()
 				&& HasRequiredTechs(Template)
 				&& DoesSomeoneBenefit(Template))
 			{
+				`LOG("=== Adding to sale options: " $ string(Template.DataName));
 				EligableTemplateNames.AddItem(TemplateName);
 			}
 		}
 	}
 
-	NumSaleItems = `SYNC_RAND_STATIC(default.MAX_SALE_ITEMS) + 1;
+	NumSaleItems = `SYNC_RAND(default.MAX_SALE_ITEMS) + 1;
 
 	for (Counter = 0; Counter < NumSaleItems; Counter++)
 	{
 		if (EligableTemplateNames.Length > 0)
 		{
-			RandIndex = `SYNC_RAND_STATIC(EligableTemplateNames.Length);
+			RandIndex = `SYNC_RAND(EligableTemplateNames.Length);
 			SaleOptions.AddItem(EligableTemplateNames[RandIndex]);
 			EligableTemplateNames.Remove(RandIndex, 1);
 		}

@@ -54,6 +54,9 @@ var XComGameState NewGameState;
 var XComGameStateHistory History;
 var XComGameState_LadderProgress_Override LadderData;
 
+var X2Photobooth_StrategyAutoGen m_kPhotoboothAutoGen;
+var X2Photobooth_TacticalLocationController m_kTacticalLocation;
+
 var localized string m_ScreenSubtitles_eUIScreenState_Squad;
 var localized string m_ScreenSubtitles_eUIScreenState_Research;
 var localized string m_ScreenSubtitles_eUIScreenState_ResearchCategory;
@@ -167,7 +170,10 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	
 	History = `XCOMHISTORY;
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Progression upgrades");
+	
+	LadderData.SetSoldierStatesBeforeUpgrades();
+	
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Post mission updates");
 	
 	foreach History.IterateByClassType(class'XComGameState_Player', PlayerState, eReturnType_Reference)
 	{
@@ -177,18 +183,12 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 		}
 	}
 
-	LadderData.SetSoldierStatesBeforeUpgrades();
-	LadderData.AddMissionCompletedRewards();
-	LadderData.InitSaleOptions();
-	
+	// Update appearance for dead soldiers
 	foreach XComHQ.Squad(UnitStateRef)
 	{
 		Soldier = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
 		if (!Soldier.bMissionProvided)
 		{
-			Squad.AddItem(Soldier);
-			IsNew.AddItem(false);
-
 			if (UsedClasses.Find(Soldier.GetSoldierClassTemplateName()) == INDEX_NONE)
 			{
 				UsedClasses.AddItem(Soldier.GetSoldierClassTemplateName());
@@ -198,24 +198,21 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 			{
 				UsedCharacters.AddItem(Soldier.GetFullName());
 			}
+			
+			if (!Soldier.IsAlive())
+			{
+				UpdateCustomizationForDeadSoldier(Soldier);
+			}
+			
+			IsNew.AddItem(false);
 		}
 	}
-
-	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
-	foreach LadderData.ChosenMissionOption.FreeUpgrades (NewUpgrade)
-	{
-		NewUpgradeTemplate = UpgradeTemplateManager.FindTemplate(NewUpgrade);
-		UpgradeSquadGear(NewUpgradeTemplate);
-	}
-
-	// Check if we're getting any new soldiers next rung
-	`LOG("=== LadderData.FutureSoldierOptions.Length: " $ string(LadderData.FutureSoldierOptions.Length));
-	`LOG("=== LadderData.LadderRung: " $ string(LadderData.LadderRung));
+	
+	// Add new soldiers
 	for (Index = LadderData.FutureSoldierOptions.Length - 1; Index >= 0; Index--)
 	{
 		if (LadderData.FutureSoldierOptions[Index].StartingMission == LadderData.LadderRung + 1)
 		{
-			`LOG("Getting a new soldier!");
 			NewSoldier = class'ResistanceOverhaulHelpers'.static.CreateSoldier(NewGameState, PlayerState, LadderData.FutureSoldierOptions[Index], LadderData.Settings.AllowedClasses, UsedClasses, UsedCharacters);
 			LadderData.FutureSoldierOptions.Remove(Index, 1);
 
@@ -236,18 +233,34 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 			}
 
 			UpgradeSoldierGear(NewSoldier);
-			Squad.AddItem(NewSoldier);
 			IsNew.AddItem(true);
 		}
 	}
+	
+	// Submit the gamestate
+	`XCOMGAME.GameRuleset.SubmitGameState(NewGameState);
 
-	// For any dead soldiers, give them a new appearance
-	foreach Squad(Soldier)
+	// And now create a new one that will be used for all the upgrades
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Progression upgrades");
+	History = `XCOMHISTORY;
+	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+	
+	// Add all the soldier states to our Squad list
+	foreach XComHQ.Squad(UnitStateRef)
 	{
-		if (!Soldier.IsAlive())
+		Soldier = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', UnitStateRef.ObjectID));
+		if (!Soldier.bMissionProvided)
 		{
-			UpdateCustomizationForDeadSoldier(Soldier);
+			Squad.AddItem(Soldier);
 		}
+	}
+
+	// Upgrade soldier gear if we got any free squadwide upgrades
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	foreach LadderData.ChosenMissionOption.FreeUpgrades (NewUpgrade)
+	{
+		NewUpgradeTemplate = UpgradeTemplateManager.FindTemplate(NewUpgrade);
+		UpgradeSquadGear(NewUpgradeTemplate);
 	}
 
 	// Rank up all soldiers
@@ -298,6 +311,13 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 			}
 		}
 	}
+
+	LadderData.AddMissionCompletedRewards();
+	LadderData.InitSaleOptions();
+	
+	// Prepare to take headshots
+	m_kTacticalLocation = new class'X2Photobooth_TacticalLocationController';
+	m_kTacticalLocation.Init(OnStudioLoaded);
 	
 	mc.FunctionString("SetScreenTitle", m_ScreenTitle);
 
@@ -521,6 +541,8 @@ simulated function UpdateDataSoldierData()
 	if (Soldier != none)
 	{
 		CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
+		
+		`LOG("=== GetHeadshotTexture for " $ Soldier.GetFullName());
 		SoldierPicture = `XENGINE.m_kPhotoManager.GetHeadshotTexture(CurrentCampaign.GameIndex, Soldier.ObjectID, 128, 128);
 
 		mc.FunctionVoid("HideAllScreens");
@@ -566,7 +588,7 @@ simulated function SetSoldierStats()
 	Will = string(int(Unit.GetCurrentStat(eStat_Will)) + Unit.GetUIStatFromAbilities(eStat_Will)) $ "/" $ string(int(Unit.GetMaxStat(eStat_Will)));
 	Will = class'UIUtilities_Text'.static.GetColoredText(Will, Unit.GetMentalStateUIState());
 	Aim = string(int(Unit.GetCurrentStat(eStat_Offense)) + Unit.GetUIStatFromAbilities(eStat_Offense));
-	Health = string(int(Unit.GetCurrentStat(eStat_HP)) + Unit.GetUIStatFromAbilities(eStat_HP));
+	Health = string(int(Unit.GetMaxStat(eStat_HP)) + Unit.GetUIStatFromAbilities(eStat_HP));
 	Mobility = string(int(Unit.GetCurrentStat(eStat_Mobility)) + Unit.GetUIStatFromAbilities(eStat_Mobility));
 	Tech = string(int(Unit.GetCurrentStat(eStat_Hacking)) + Unit.GetUIStatFromAbilities(eStat_Hacking));
 	Armor = string(int(Unit.GetCurrentStat(eStat_ArmorMitigation)) + Unit.GetUIStatFromAbilities(eStat_ArmorMitigation));
@@ -3031,6 +3053,48 @@ simulated function string ToPascalCase(string Str)
 	}
 
 	return Result;
+}
+
+function OnStudioLoaded()
+{
+	local XComGameState_Unit Soldier;
+
+	m_kPhotoboothAutoGen = Spawn(class'X2Photobooth_StrategyAutoGen', self);
+	m_kPhotoboothAutoGen.bLadderMode = true;
+	m_kPhotoboothAutoGen.Init();
+	m_kPhotoboothAutoGen.AutoGenSettings.FormationLocation = m_kTacticalLocation.GetFormationPlacementActor();
+	
+	foreach Squad(Soldier)
+	{
+		`LOG("=== AddHeadShotRequest for " $ Soldier.GetFullName());
+		m_kPhotoboothAutoGen.AddHeadShotRequest(Soldier.GetReference(), 512, 512, HeadshotReceived);
+	}
+
+	m_kPhotoboothAutoGen.RequestPhotos();
+}
+
+private simulated function HeadshotReceived(StateObjectReference UnitRef)
+{
+	local int i;
+	local XComGameState_Unit Soldier;
+
+	for (i = 0; i < Squad.Length; i++)
+	{
+		if (Squad[i] != none && Squad[i].GetReference().ObjectID == UnitRef.ObjectID)
+		{
+			Soldier = Squad[i];
+			break;
+		}
+	}
+	
+	if (Soldier != none)
+	{
+		`LOG("=== HeadshotReceived for " $ Soldier.GetFullName());
+	}
+	else
+	{
+		`LOG("=== HeadshotReceived for UNKNOWN");
+	}
 }
 
 defaultproperties
