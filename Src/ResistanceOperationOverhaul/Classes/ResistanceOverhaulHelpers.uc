@@ -36,7 +36,6 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 	{
 		ChosenCharacter = Option.CharacterPoolName;
 	}
-
 	if (ChosenCharacter != "" && UsedCharacters.Find(ChosenCharacter) == INDEX_NONE)
 	{
 		UsedCharacters.AddItem(ChosenCharacter);
@@ -145,11 +144,13 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 		`LOG("RandomlyChooseCharacter checking " $ Character.GetFullName());
 		if (DisallowedCharacters.Find(Character.GetFullName()) == INDEX_NONE)
 		{
-			`LOG("RandomlyChooseCharacter not disallowed");
 			if (CharacterIsValid(Character, ClassTemplate))
 			{
-				`LOG("RandomlyChooseCharacter adding to RandomCharacterOptions");
-				RandomCharacterOptions.AddItem(Character.GetFullName());
+				`LOG("Searching for Character with Class: " $ ClassName);
+				if(ClassName == Character.GetSoldierClassTemplateName()) {
+					`LOG(Character.GetFullName() $ "'s Class matches " $ ClassName $ " - Adding to RandomCharacterOptions");
+					RandomCharacterOptions.AddItem(Character.GetFullName());
+				}
 			}
 		}
 	}
