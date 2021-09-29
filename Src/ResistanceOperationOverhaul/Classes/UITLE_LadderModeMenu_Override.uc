@@ -10,7 +10,9 @@ enum EUILadderScreenState
 	eUILadderScreenState_Save,
 	eUILadderScreenState_Load,
 	eUILadderScreenState_Squad,
-	eUILadderScreenState_Soldier
+	eUILadderScreenState_Soldier,
+	eUILadderScreenState_Character,
+	eUILadderScreenState_Class
 };
 
 var config int SQUAD_SIZE_MIN;
@@ -200,9 +202,11 @@ simulated function UpdateCustomListData()
 		LastSelectedIndexes[eUILadderScreenState_Squad] = 0;
 		LastSelectedIndexes[eUILadderScreenState_Save] = 0;
 		LastSelectedIndexes[eUILadderScreenState_Load] = 0;
-		break;
 	case eUILadderScreenState_Squad:
 		LastSelectedIndexes[eUILadderScreenState_Soldier] = 0;
+	case eUILadderScreenState_Soldier:
+		LastSelectedIndexes[eUILadderScreenState_Character] = 0;
+		LastSelectedIndexes[eUILadderScreenState_Class] = 0;
 		break;
 	};
 	
@@ -231,6 +235,12 @@ simulated function UpdateCustomListData()
 		break;
 	case eUILadderScreenState_Soldier:
 		UpdateCustomListDataSoldier();
+		break;
+	case eUILadderScreenState_Character:
+		UpdateCustomListDataCharacter();
+		break;
+	case eUILadderScreenState_Class:
+		UpdateCustomListDataClass();
 		break;
 	case eUILadderScreenState_Save:
 		UpdateCustomListDataSave();
@@ -714,14 +724,11 @@ simulated function UpdateCustomListDataSoldier()
 {
 	local int Index;
 	local SoldierOption Option;
-	local X2SoldierClassTemplate ClassTemplate;
-	local array<string> ClassOptions;
 	local int ClassIndex;
-	local int SelectedClassIndex;
+	local string SelectedClassText;
+	local string SelectedCharacterText;
 	local CharacterPoolManager CharacterPoolMgr;
-	local array<string> CharacterOptions;
 	local int CharacterIndex;
-	local int SelectedCharacterIndex;
 	local XComGameState_Unit Character;
 	
 	Index = 0;
@@ -739,56 +746,47 @@ simulated function UpdateCustomListDataSoldier()
 	GetListItem(Index).SetWidgetType(EUILineItemType_Spinner);
 	GetListItem(Index).UpdateDataSpinner(m_SoldierStartingMission, string(Option.StartingMission), StartingMissionSpinnerSpinned);
 	Index++;
-
-	SelectedClassIndex = 0;
-	ClassOptions.AddItem(m_SoldierRandomClass);
-	for (ClassIndex = 0; ClassIndex < MasterClassList.Length; ClassIndex++)
+	
+	SelectedClassText = m_SoldierRandomClass;
+	if (!Option.bRandomClass)
 	{
-		ClassTemplate = MasterClassList[ClassIndex];
-		ClassOptions.AddItem(ClassTemplate.DisplayName);
-
-		if (!Option.bRandomClass && ClassTemplate.DataName == Option.ClassName)
+		for (ClassIndex = 0; ClassIndex < MasterClassList.Length; ClassIndex++)
 		{
-			SelectedClassIndex = ClassIndex + 1;
-		}
-	}
-	
-	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).SetWidgetType(EUILineItemType_Dropdown);
-	GetListItem(Index).UpdateDataDropdown(m_SoldierClass, ClassOptions, SelectedClassIndex, OnClassDropdownSelectionChanges);
-	GetListItem(Index).MoveToHighestDepth();
-	Index++;
-	
-	CharacterOptions.AddItem(m_SoldierRandomlyGeneratedCharacter);
-	CharacterOptions.AddItem(m_SoldierRandomCharacter);
-	if (Option.bRandomlyGeneratedCharacter)
-	{
-		SelectedCharacterIndex = 0;
-	}
-	else if (Option.bRandomCharacter)
-	{
-		SelectedCharacterIndex = 1;
-	}
-	
-	CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
-	for (CharacterIndex = 0; CharacterIndex < CharacterPoolMgr.CharacterPool.Length; CharacterIndex++)
-	{
-		Character = CharacterPoolMgr.CharacterPool[CharacterIndex];
-
-		if (Character.bAllowedTypeSoldier)
-		{
-			CharacterOptions.AddItem(Character.GetFullName());
-
-			if (!Option.bRandomlyGeneratedCharacter && !Option.bRandomCharacter && Character.GetFullName() == Option.CharacterPoolName)
+			if (MasterClassList[ClassIndex].DataName == Option.ClassName)
 			{
-				SelectedCharacterIndex = CharacterIndex + 2;
+				SelectedClassText = MasterClassList[ClassIndex].DisplayName;
 			}
 		}
 	}
 	
 	GetListItem(Index).EnableNavigation();
-	GetListItem(Index).SetWidgetType(EUILineItemType_Dropdown);
-	GetListItem(Index).UpdateDataDropdown(m_SoldierCharacterPool, CharacterOptions, SelectedCharacterIndex, OnCharacterDropdownSelectionChanges);
+	GetListItem(Index).UpdateDataValue(SelectedClassText, m_SoldierClass, OnClickSoldierClass);
+	Index++;
+
+	SelectedCharacterText = "";
+	if (Option.bRandomlyGeneratedCharacter)
+	{
+		SelectedCharacterText = m_SoldierRandomlyGeneratedCharacter;
+	}
+	else if (Option.bRandomCharacter)
+	{
+		SelectedCharacterText = m_SoldierRandomCharacter;
+	}
+	else
+	{
+		CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
+		for (CharacterIndex = 0; CharacterIndex < CharacterPoolMgr.CharacterPool.Length; CharacterIndex++)
+		{
+			Character = CharacterPoolMgr.CharacterPool[CharacterIndex];
+			if (Character.bAllowedTypeSoldier && Character.GetFullName() == Option.CharacterPoolName)
+			{
+				SelectedCharacterText = Character.GetFullName();
+			}
+		}
+	}
+	
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(SelectedCharacterText, m_SoldierCharacterPool, OnClickSoldierCharacter);
 	Index++;
 }
 
@@ -801,9 +799,42 @@ simulated function OnClickRemoveSoldier()
 	UpdateCustomListData();
 }
 
-simulated function OnClassDropdownSelectionChanges(UIDropdown DropdownControl)
+simulated function OnClickSoldierClass()
 {
-	if (DropdownControl.SelectedItem == 0)
+	UIScreenState = eUILadderScreenState_Class;
+	UpdateCustomListData();
+}
+
+simulated function UpdateCustomListDataClass()
+{
+	local int Index;
+	local X2SoldierClassTemplate ClassTemplate;
+
+	Index = 0;
+	LastSelectedIndexes[eUILadderScreenState_Class] = 0;
+	
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(m_SoldierRandomClass, "", , , OnClickClass);
+	Index++;
+
+	foreach MasterClassList (ClassTemplate)
+	{
+		GetListItem(Index).EnableNavigation();
+		GetListItem(Index).UpdateDataValue(ClassTemplate.DisplayName, "", , , OnClickClass);
+		GetListItem(Index).metadataString = string(ClassTemplate.DataName);
+
+		if (!Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass && Settings.SoldierOptions[SelectedSoldierIndex].ClassName == ClassTemplate.DataName)
+		{
+			LastSelectedIndexes[eUILadderScreenState_Class] = Index;
+		}
+
+		Index++;
+	}
+}
+
+simulated function OnClickClass(UIMechaListItem MechaItem)
+{
+	if (MechaItem.metadataString == "")
 	{
 		// Random is selected
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass = true;
@@ -813,22 +844,77 @@ simulated function OnClassDropdownSelectionChanges(UIDropdown DropdownControl)
 	{
 		// Actual class is selected
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass = false;
-		Settings.SoldierOptions[SelectedSoldierIndex].ClassName = MasterClassList[DropdownControl.SelectedItem - 1].DataName;
+		Settings.SoldierOptions[SelectedSoldierIndex].ClassName = name(MechaItem.metadataString);
+	}
+	
+	UIScreenState = eUILadderScreenState_Soldier;
+	UpdateCustomListData();
+}
+
+simulated function OnClickSoldierCharacter()
+{
+	UIScreenState = eUILadderScreenState_Character;
+	UpdateCustomListData();
+}
+
+simulated function UpdateCustomListDataCharacter()
+{
+	local int Index;
+	local CharacterPoolManager CharacterPoolMgr;
+	local int CharacterIndex;
+	local XComGameState_Unit Character;
+
+	Index = 0;
+	LastSelectedIndexes[eUILadderScreenState_Class] = 0;
+	
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(m_SoldierRandomlyGeneratedCharacter, "", , , OnClickCharacter);
+	GetListItem(Index).metadataInt = 1;
+	if (Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter)
+	{
+		LastSelectedIndexes[eUILadderScreenState_Character] = Index;
+	}
+	Index++;
+	
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(m_SoldierRandomCharacter, "", , , OnClickCharacter);
+	GetListItem(Index).metadataInt = 2;
+	if (Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter)
+	{
+		LastSelectedIndexes[eUILadderScreenState_Character] = Index;
+	}
+	Index++;
+	
+	CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
+	for (CharacterIndex = 0; CharacterIndex < CharacterPoolMgr.CharacterPool.Length; CharacterIndex++)
+	{
+		Character = CharacterPoolMgr.CharacterPool[CharacterIndex];
+		if (Character.bAllowedTypeSoldier)
+		{
+			GetListItem(Index).EnableNavigation();
+			GetListItem(Index).UpdateDataValue(Character.GetFullName(), "", , , OnClickCharacter);
+			GetListItem(Index).metadataString = Character.GetFullName();
+
+			if (Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName == Character.GetFullName())
+			{
+				LastSelectedIndexes[eUILadderScreenState_Character] = Index;
+			}
+
+			Index++;
+		}
 	}
 }
 
-simulated function OnCharacterDropdownSelectionChanges(UIDropdown DropdownControl)
+simulated function OnClickCharacter(UIMechaListItem MechaItem)
 {
-	local CharacterPoolManager CharacterPoolMgr;
-
-	if (DropdownControl.SelectedItem == 0)
+	if (MechaItem.metadataString == "" && MechaItem.metadataInt == 1)
 	{
 		// Randomly generated character is selected
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter = true;
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter = false;
 		Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName = "";
 	}
-	else if (DropdownControl.SelectedItem == 1)
+	else if (MechaItem.metadataString == "" && MechaItem.metadataInt == 2)
 	{
 		// Random character is selected
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter = false;
@@ -838,12 +924,13 @@ simulated function OnCharacterDropdownSelectionChanges(UIDropdown DropdownContro
 	else
 	{
 		// Actual character is selected
-		CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
-		
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter = false;
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter = false;
-		Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName = CharacterPoolMgr.CharacterPool[DropdownControl.SelectedItem - 2].GetFullName();
+		Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName = MechaItem.metadataString;
 	}
+	
+	UIScreenState = eUILadderScreenState_Soldier;
+	UpdateCustomListData();
 }
 
 simulated function StartingMissionSpinnerSpinned(UIListItemSpinner SpinnerPanel, int Direction)
@@ -1056,6 +1143,11 @@ simulated public function OnCancel()
 		break;
 	case eUILadderScreenState_Soldier:
 		UIScreenState = eUILadderScreenState_Squad;
+		UpdateCustomListData();
+		break;
+	case eUILadderScreenState_Character:
+	case eUILadderScreenState_Class:
+		UIScreenState = eUILadderScreenState_Soldier;
 		UpdateCustomListData();
 		break;
 	};
