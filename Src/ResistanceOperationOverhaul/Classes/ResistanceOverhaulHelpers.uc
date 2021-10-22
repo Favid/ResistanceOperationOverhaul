@@ -173,22 +173,36 @@ private static function bool CharacterIsValid(XComGameState_Unit Character, X2So
 {
 	local bool bValid;
 
+	`LOG("=== CharacterIsValid: ");
+	`LOG("=== Character: " $ Character.GetFullName());
+	`LOG("=== ClassTemplate: " $ string(ClassTemplate.DataName));
+
 	bValid = false;
 	if (Character != none && Character.bAllowedTypeSoldier)
 	{
 		if (Character.GetMyTemplate().DataName == 'Soldier' && 
-			(ClassTemplate.AcceptedCharacterTemplates.Length == 0 || ClassTemplate.AcceptedCharacterTemplates.Find(Character.GetMyTemplate().DataName) != INDEX_NONE))
+			(ClassTemplate.AcceptedCharacterTemplates.Length == 0 || ClassTemplate.AcceptedCharacterTemplates.Find('Soldier') != INDEX_NONE) &&
+			(ClassTemplate.RequiredCharacterClass == '' || ClassTemplate.RequiredCharacterClass == 'Soldier'))
 		{
 			// Character is a generic Soldier, and either the class is not restricted, or the class allows Soldiers
 			bValid = true;
+			`LOG("=== Valid because character is a generic Soldier, and either the class is not restricted, or the class allows Soldiers");
 		}
 		else if (Character.GetMyTemplate().DataName != 'Soldier' &&
-			ClassTemplate.AcceptedCharacterTemplates.Find(Character.GetMyTemplate().DataName) != INDEX_NONE)
+			ClassTemplate.AcceptedCharacterTemplates.Find(Character.GetMyTemplate().DataName) != INDEX_NONE || ClassTemplate.RequiredCharacterClass == Character.GetMyTemplate().DataName)
 		{
 			// Character is of a special type, and the class allows that type
 			bValid = true;
+			`LOG("=== Valid because character is of a special type, and the class allows that type");
 		}
 	}
+
+	if (!bValid)
+	{
+		`LOG("=== Invalid");
+	}
+	
+	`LOG("===");
 
 	return bValid;
 }
