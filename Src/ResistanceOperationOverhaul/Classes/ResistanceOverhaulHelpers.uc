@@ -127,6 +127,7 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 	local CharacterPoolManager CharacterPoolMgr;
 	local XComGameState_Unit Character;
 	local array<string> RandomCharacterOptions;
+	local array<string> RandomCharacterOptionsWithMatchingClass;
 	local X2SoldierClassTemplate ClassTemplate;
 	local string ChosenCharacter;
 	
@@ -137,19 +138,26 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 
 	foreach CharacterPoolMgr.CharacterPool (Character)
 	{
-		`LOG("RandomlyChooseCharacter checking " $ Character.GetFullName());
 		if (DisallowedCharacters.Find(Character.GetFullName()) == INDEX_NONE)
 		{
-			`LOG("RandomlyChooseCharacter not disallowed");
 			if (CharacterIsValid(Character, ClassTemplate))
 			{
-				`LOG("RandomlyChooseCharacter adding to RandomCharacterOptions");
 				RandomCharacterOptions.AddItem(Character.GetFullName());
+
+				if (Character.GetSoldierClassTemplateName() == ClassName)
+				{
+					RandomCharacterOptionsWithMatchingClass.AddItem(Character.GetFullName());
+				}
 			}
 		}
 	}
 
-	if (RandomCharacterOptions.Length > 0)
+	if (RandomCharacterOptionsWithMatchingClass.Length > 0)
+	{
+		ChosenCharacter = RandomCharacterOptionsWithMatchingClass[`SYNC_RAND_STATIC(RandomCharacterOptionsWithMatchingClass.Length)];
+		`LOG("RandomlyChooseCharacter with matched class using " $ ChosenCharacter);
+	}
+	else if (RandomCharacterOptions.Length > 0)
 	{
 		ChosenCharacter = RandomCharacterOptions[`SYNC_RAND_STATIC(RandomCharacterOptions.Length)];
 		`LOG("RandomlyChooseCharacter using " $ ChosenCharacter);
