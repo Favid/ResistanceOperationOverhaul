@@ -213,7 +213,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	{
 		if (LadderData.FutureSoldierOptions[Index].StartingMission == LadderData.LadderRung + 1)
 		{
-			NewSoldier = class'ResistanceOverhaulHelpers'.static.CreateSoldier(NewGameState, PlayerState, LadderData.FutureSoldierOptions[Index], LadderData.Settings.AllowedClasses, UsedClasses, UsedCharacters);
+			NewSoldier = class'ResistanceOverhaulHelpers'.static.CreateSoldier(NewGameState, PlayerState, LadderData.FutureSoldierOptions[Index], LadderData.Settings.AllowedClasses, UsedClasses, UsedCharacters, LadderData.Settings.AllowDuplicateClasses);
 			LadderData.FutureSoldierOptions.Remove(Index, 1);
 
 			if (UsedClasses.Find(NewSoldier.GetSoldierClassTemplateName()) == INDEX_NONE)

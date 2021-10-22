@@ -4,7 +4,7 @@ var config bool bUseWeightedClassSelection;
 var config int DEFAULT_CLASS_WEIGHT;
 var config array<ClassWeight> ClassWeights;
 
-static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters)
+static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters, bool AllowDuplicateClasses)
 {
 	local XComGameState_Unit Soldier;
 	local name ChosenClass;
@@ -12,16 +12,11 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 
 	if (Option.bRandomClass)
 	{
-		ChosenClass = RandomlyChooseClass(AllowedClasses, UsedClasses);
+		ChosenClass = RandomlyChooseClass(AllowedClasses, UsedClasses, AllowDuplicateClasses);
 	}
 	else
 	{
 		ChosenClass = Option.ClassName;
-	}
-
-	if (UsedClasses.Find(ChosenClass) == INDEX_NONE)
-	{
-		UsedClasses.AddItem(ChosenClass);
 	}
 
 	if (Option.bRandomlyGeneratedCharacter)
@@ -56,7 +51,7 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 }
 
 
-public static function name RandomlyChooseClass(array<name> AllowedClasses, array<name> DisallowedClasses)
+public static function name RandomlyChooseClass(array<name> AllowedClasses, array<name> DisallowedClasses, bool AllowDuplicateClasses)
 {
 	local name ChosenClass;
 	local name AllowedClass;
@@ -64,7 +59,7 @@ public static function name RandomlyChooseClass(array<name> AllowedClasses, arra
 	
 	foreach AllowedClasses (AllowedClass)
 	{
-		if (DisallowedClasses.Find(AllowedClass) == INDEX_NONE)
+		if (AllowDuplicateClasses || DisallowedClasses.Find(AllowedClass) == INDEX_NONE)
 		{
 			RandomClassOptions.AddItem(AllowedClass);
 		}
@@ -169,7 +164,7 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 	return ChosenCharacter;
 }
 
-private static function bool CharacterIsValid(XComGameState_Unit Character, X2SoldierClassTemplate ClassTemplate)
+public static function bool CharacterIsValid(XComGameState_Unit Character, X2SoldierClassTemplate ClassTemplate)
 {
 	local bool bValid;
 

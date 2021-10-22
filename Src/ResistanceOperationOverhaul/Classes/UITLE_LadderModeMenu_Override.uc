@@ -846,9 +846,34 @@ simulated function OnClickClass(UIMechaListItem MechaItem)
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass = false;
 		Settings.SoldierOptions[SelectedSoldierIndex].ClassName = name(MechaItem.metadataString);
 	}
+
+	ValidateCharacterBasedOnClassSelection();
 	
 	UIScreenState = eUILadderScreenState_Soldier;
 	UpdateCustomListData();
+}
+
+private function ValidateCharacterBasedOnClassSelection()
+{
+	local CharacterPoolManager CharacterPoolMgr;
+	local XComGameState_Unit Character;
+	local X2SoldierClassTemplate ClassTemplate;
+
+	if (!Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass && 
+		!Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter &&
+		!Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter)
+	{
+		CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
+		Character = CharacterPoolMgr.GetCharacter(Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName);
+		ClassTemplate = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().FindSoldierClassTemplate(Settings.SoldierOptions[SelectedSoldierIndex].ClassName);
+
+		if (!class'ResistanceOverhaulHelpers'.static.CharacterIsValid(Character, ClassTemplate))
+		{
+			Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter = true;
+			Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter = false;
+			Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName = "";
+		}
+	}
 }
 
 simulated function OnClickSoldierCharacter()
@@ -928,9 +953,33 @@ simulated function OnClickCharacter(UIMechaListItem MechaItem)
 		Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter = false;
 		Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName = MechaItem.metadataString;
 	}
+
+	ValidateClassBasedOnCharacterSelection();
 	
 	UIScreenState = eUILadderScreenState_Soldier;
 	UpdateCustomListData();
+}
+
+private function ValidateClassBasedOnCharacterSelection()
+{
+	local CharacterPoolManager CharacterPoolMgr;
+	local XComGameState_Unit Character;
+	local X2SoldierClassTemplate ClassTemplate;
+	
+	if (!Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass && 
+		!Settings.SoldierOptions[SelectedSoldierIndex].bRandomlyGeneratedCharacter &&
+		!Settings.SoldierOptions[SelectedSoldierIndex].bRandomCharacter)
+	{
+		CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
+		Character = CharacterPoolMgr.GetCharacter(Settings.SoldierOptions[SelectedSoldierIndex].CharacterPoolName);
+		ClassTemplate = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().FindSoldierClassTemplate(Settings.SoldierOptions[SelectedSoldierIndex].ClassName);
+
+		if (!class'ResistanceOverhaulHelpers'.static.CharacterIsValid(Character, ClassTemplate))
+		{
+			Settings.SoldierOptions[SelectedSoldierIndex].bRandomClass = true;
+			Settings.SoldierOptions[SelectedSoldierIndex].ClassName = '';
+		}
+	}
 }
 
 simulated function StartingMissionSpinnerSpinned(UIListItemSpinner SpinnerPanel, int Direction)
@@ -1463,7 +1512,7 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 		if (Option.StartingMission == 1)
 		{
 			// Create these soldiers now, they will be on the first mission
-			Soldier = class'ResistanceOverhaulHelpers'.static.CreateSoldier(TacticalStartState, XComPlayerState, Option, Settings.AllowedClasses, UsedClasses, UsedCharacters);
+			Soldier = class'ResistanceOverhaulHelpers'.static.CreateSoldier(TacticalStartState, XComPlayerState, Option, Settings.AllowedClasses, UsedClasses, UsedCharacters, Settings.AllowDuplicateClasses);
 			if (UsedClasses.Find(Soldier.GetSoldierClassTemplateName()) == INDEX_NONE)
 			{
 				UsedClasses.AddItem(Soldier.GetSoldierClassTemplateName());
@@ -1480,7 +1529,7 @@ private function InitSquad(XComGameState TacticalStartState, XComGameState_Playe
 			// However, to maintain a consistent ladder every playthough (gameplay wise) we need to choose their classes now
 			if (Option.bRandomClass)
 			{
-				Option.ClassName = class'ResistanceOverhaulHelpers'.static.RandomlyChooseClass(Settings.AllowedClasses, UsedClasses);
+				Option.ClassName = class'ResistanceOverhaulHelpers'.static.RandomlyChooseClass(Settings.AllowedClasses, UsedClasses, Settings.AllowDuplicateClasses);
 				Option.bRandomClass = false;
 			}
 
