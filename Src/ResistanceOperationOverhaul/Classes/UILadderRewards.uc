@@ -17,7 +17,7 @@ var localized string m_NoUpgrade;
 
 simulated function InitScreen(XcomPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
-	`LOG("=== InitScreen()");
+	`LOG("InitScreen()", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	BuildContainer();
@@ -25,7 +25,7 @@ simulated function InitScreen(XcomPlayerController InitController, UIMovie InitM
 
 simulated function OnInit()
 {
-	`LOG("=== OnInit()");
+	`LOG("OnInit()", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	super.OnInit();
 }
 
@@ -36,7 +36,7 @@ simulated function BuildContainer()
 	local UIText PanelTitle;
 	local UIButton PanelButtonAccept;
 
-	`LOG("=== BuildContainer()");
+	`LOG("BuildContainer()", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	//Background
 	Background = Spawn(class'UIBGBox', self);
@@ -85,7 +85,7 @@ simulated function BuildContainer()
 	PanelTitle.SetPosition(fInitPosX+EDGE_PADDING,fInitPosY-35);
 	PanelTitle.SetSize(DIALOG_WIDTH,40);
 	PanelTitle.SetText(m_Title);
-	`LOG("=== BuildContainer() end");
+	`LOG("BuildContainer() end", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 }
 
 simulated function Populate(XComGameState_LadderProgress_Override InLadderData)
@@ -101,7 +101,7 @@ simulated function Populate(XComGameState_LadderProgress_Override InLadderData)
 	local string ScienceLabel;
 	local string UpgradesLabel;
 
-	`LOG("=== Populate()");
+	`LOG("Populate()", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	LadderData = InLadderData;
 	SpaceY = 30;
@@ -173,7 +173,7 @@ simulated function Populate(XComGameState_LadderProgress_Override InLadderData)
 	UpgradeValText.SetSize(300,40);
 	UpgradeValText.SetText(UpgradeString);
 
-	`LOG("=== Populate() end");
+	`LOG("Populate() end", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 }
 
 public function OnPanelButtonAccept(UIButton Button)

@@ -24,26 +24,26 @@ static function name SaveHistory(string NewName, LadderSettings Settings)
 	local int i;
 	local ResistanceHistorySavePair HSP;
 
-	//`LOG("Saving name " $ NewName);
+	`LOG("Saving name " $ NewName, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	for (i = 0; i < default.ResistanceSaves.Length; i++)
 	{
 		if (default.ResistanceSaves[i].DisplayName == NewName)
 		{
-			//`LOG("Name found, attempting to save in position " $ string(i));
+			`LOG("Name found, attempting to save in position " $ string(i), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			HSP = default.ResistanceSaves[i];
 
 			default.ResistanceSaves[i].Settings = Settings;
 
 			StaticSaveConfig();
 
-			//`LOG("Save complete");
+			`LOG("Save complete", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 			return HSP.Filename;
 		}
 	}
 
-	//`LOG("Name not found, making new save");
+	`LOG("Name not found, making new save", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	HSP.Filename = name("ResistanceOp_" $ ++default.HistorySaveIndex);
 	HSP.DisplayName = NewName;
@@ -54,7 +54,7 @@ static function name SaveHistory(string NewName, LadderSettings Settings)
 
 	StaticSaveConfig();
 	
-	//`LOG("Save complete");
+	`LOG("Save complete", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	return HSP.Filename;
 }
@@ -64,13 +64,13 @@ static function LadderSettings GetFileSettings(name FileName)
 	local int i;
 	local LadderSettings LoadedSettings;
 
-	//`log("=== Looking up file name:" @ FileName);
+	`LOG("Looking up file name:" @ FileName, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	for (i = 0; i < default.ResistanceSaves.Length; i++)
 	{
 		if (default.ResistanceSaves[i].Filename == FileName)
 		{
-			//`log("=== found ladder length:" @ i @ default.ResistanceSaves[i].LadderLength);
+			`LOG("Settings found", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			LoadedSettings = default.ResistanceSaves[i].Settings;
 			break;
 		}

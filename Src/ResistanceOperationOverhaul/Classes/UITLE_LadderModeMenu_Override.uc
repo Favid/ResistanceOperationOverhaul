@@ -551,7 +551,7 @@ simulated function OnClickLoad()
 	
 	foreach m_LadderSaveData(SaveData)
 	{
-		`LOG("=== SaveData.Filename: " $ SaveData.Filename);
+		`LOG("SaveData.Filename: " $ SaveData.Filename, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 	UIScreenState = eUILadderScreenState_Load;
 	UpdateCustomListData();

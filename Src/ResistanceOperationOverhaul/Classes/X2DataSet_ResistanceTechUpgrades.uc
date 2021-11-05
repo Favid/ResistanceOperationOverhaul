@@ -43,15 +43,15 @@ static function array<X2DataTemplate> CreateTemplates()
 		if (ShouldCreate)
 		{
 			Templates.AddItem(CreateTemplate(Upgrade));
-			`LOG("=== Created X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName));
+			`LOG("Created X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 		else
 		{
-			`LOG("=== Ignoring X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName));
+			`LOG("Ignoring X2ResistanceTechUpgradeTemplate: " $ string(Upgrade.TemplateName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 	}
 
-	`LOG("=== Created this many templates: " $ string(Templates.Length));
+	`LOG("Created this many templates: " $ string(Templates.Length), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	return Templates;
 }
 

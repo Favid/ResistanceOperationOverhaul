@@ -36,7 +36,7 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 	{
 		UsedCharacters.AddItem(ChosenCharacter);
 	}
-			
+
 	Soldier = GenerateUnit(ChosenClass, ChosenCharacter, GameState, XComPlayerState);
 
 	if (Soldier.GetMyTemplate().DataName == 'Soldier')
@@ -104,17 +104,17 @@ private static function name GetWeightedRandomClass(array<name> ClassOptions)
 		WeightSum += Entry.Weight;
 		WeightedClassOptions.AddItem(Entry);
 
-		//`LOG("added" @ Entry.ClassName @ Entry.Weight);
+		`LOG("added" @ Entry.ClassName @ Entry.Weight, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 
 	RandRoll = `SYNC_RAND_STATIC(WeightSum);
-	//`LOG("rolled" @ RandRoll @ WeightSum);
+	`LOG("rolled" @ RandRoll @ WeightSum, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	// Loop over weighted list, rand(100) = [0, 99] -> 99 - 100 = -1
 	foreach WeightedClassOptions(Entry)
 	{
 		RandRoll -= Entry.Weight;
-		//`LOG("at" @ Entry.ClassName @ RandRoll);
+		`LOG("at" @ Entry.ClassName @ RandRoll, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		if (RandRoll < 0)
 		{
 			return Entry.ClassName;
@@ -131,7 +131,7 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 	local X2SoldierClassTemplate ClassTemplate;
 	local string ChosenCharacter;
 	
-	`LOG("RandomlyChooseCharacter");
+	`LOG("RandomlyChooseCharacter", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
 	ClassTemplate = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().FindSoldierClassTemplate(Classname);
@@ -155,16 +155,16 @@ private static function string RandomlyChooseCharacter(name ClassName, array<str
 	if (RandomCharacterOptionsWithMatchingClass.Length > 0)
 	{
 		ChosenCharacter = RandomCharacterOptionsWithMatchingClass[`SYNC_RAND_STATIC(RandomCharacterOptionsWithMatchingClass.Length)];
-		`LOG("RandomlyChooseCharacter with matched class using " $ ChosenCharacter);
+		`LOG("RandomlyChooseCharacter with matched class using " $ ChosenCharacter, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 	else if (RandomCharacterOptions.Length > 0)
 	{
 		ChosenCharacter = RandomCharacterOptions[`SYNC_RAND_STATIC(RandomCharacterOptions.Length)];
-		`LOG("RandomlyChooseCharacter using " $ ChosenCharacter);
+		`LOG("RandomlyChooseCharacter using " $ ChosenCharacter, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 	else
 	{
-		`LOG("RandomlyChooseCharacter using blank");
+		`LOG("RandomlyChooseCharacter could not find a match - randomly generating soldier instead", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		// There are no valid characters left, so return a blank string to have the soldier be randomly generated
 		ChosenCharacter = "";
 	}
@@ -176,9 +176,9 @@ public static function bool CharacterIsValid(XComGameState_Unit Character, X2Sol
 {
 	local bool bValid;
 
-	`LOG("=== CharacterIsValid: ");
-	`LOG("=== Character: " $ Character.GetFullName());
-	`LOG("=== ClassTemplate: " $ string(ClassTemplate.DataName));
+	`LOG("CharacterIsValid: ", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("Character: " $ Character.GetFullName(), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("ClassTemplate: " $ string(ClassTemplate.DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	bValid = false;
 	if (Character != none && Character.bAllowedTypeSoldier)
@@ -189,23 +189,21 @@ public static function bool CharacterIsValid(XComGameState_Unit Character, X2Sol
 		{
 			// Character is a generic Soldier, and either the class is not restricted, or the class allows Soldiers
 			bValid = true;
-			`LOG("=== Valid because character is a generic Soldier, and either the class is not restricted, or the class allows Soldiers");
+			`LOG("Valid because character is a generic Soldier, and either the class is not restricted, or the class allows Soldiers", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 		else if (Character.GetMyTemplate().DataName != 'Soldier' &&
 			ClassTemplate.AcceptedCharacterTemplates.Find(Character.GetMyTemplate().DataName) != INDEX_NONE || ClassTemplate.RequiredCharacterClass == Character.GetMyTemplate().DataName)
 		{
 			// Character is of a special type, and the class allows that type
 			bValid = true;
-			`LOG("=== Valid because character is of a special type, and the class allows that type");
+			`LOG("Valid because character is of a special type, and the class allows that type", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 	}
 
 	if (!bValid)
 	{
-		`LOG("=== Invalid");
+		`LOG("Invalid", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
-	
-	`LOG("===");
 
 	return bValid;
 }
@@ -223,9 +221,9 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	local XComGameState_Unit Character;
 	local name AcceptedCharacterTemplate;
 	
-	`LOG("GenerateUnit");
-	`LOG("GenerateUnit ClassName: " $ string(ClassName));
-	`LOG("GenerateUnit CharacterName: " $ CharacterName);
+	`LOG("GenerateUnit", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("GenerateUnit ClassName: " $ string(ClassName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("GenerateUnit CharacterName: " $ CharacterName, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
 	Character = CharacterPoolMgr.GetCharacter(CharacterName);
@@ -243,21 +241,21 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	BuildUnit.SetSoldierClassTemplate(ClassTemplate.DataName);
 	BuildUnit.SetControllingPlayer(XComPlayerState.GetReference());
 	
-	`LOG("GenerateUnit Character == none: " $ string(Character == none));
+	`LOG("GenerateUnit Character == none: " $ string(Character == none), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	if (Character != none)
 	{
-		`LOG("GenerateUnit Character.GetMyTemplate().DataName: " $ Character.GetMyTemplate().DataName);
+		`LOG("GenerateUnit Character.GetMyTemplate().DataName: " $ Character.GetMyTemplate().DataName, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 		foreach ClassTemplate.AcceptedCharacterTemplates (AcceptedCharacterTemplate)
 		{
-			`LOG("GenerateUnit AcceptedCharacterTemplate: " $ string(AcceptedCharacterTemplate));
+			`LOG("GenerateUnit AcceptedCharacterTemplate: " $ string(AcceptedCharacterTemplate), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 	}
 	
 	if (CharacterName == "" || !CharacterIsValid(Character, ClassTemplate))
 	{
 		// Randomly roll what the character looks like
-		`LOG("GenerateUnit randomly rolling");
+		`LOG("GenerateUnit randomly rolling", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		Soldier = CharacterGenerator.CreateTSoldier();
 		BuildUnit.SetTAppearance(Soldier.kAppearance);
 		BuildUnit.SetCharacterName(Soldier.strFirstName, Soldier.strLastName, Soldier.strNickName);
@@ -268,7 +266,7 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	else
 	{
 		// Use the character pool soldier for the appearance
-		`LOG("GenerateUnit using character");
+		`LOG("GenerateUnit using character", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		BuildUnit.SetTAppearance(Character.kAppearance);
 		BuildUnit.SetCharacterName(Character.GetFirstName(), Character.GetLastName(), Character.GetNickName(true));
 		BuildUnit.SetCountry(Character.GetCountry());

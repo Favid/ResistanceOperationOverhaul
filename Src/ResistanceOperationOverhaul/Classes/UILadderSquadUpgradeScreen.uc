@@ -125,7 +125,7 @@ simulated function OnInit()
 {
 	local XComGameState_LadderProgress_Override LocalLadderData;
 
-	`LOG("==== OnInit");
+	`LOG("OnInit", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	LocalLadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
 	if (!IsOverhaulLadder(LocalLadderData))
@@ -157,7 +157,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	local array<XComGameState_Item> UtilityItems;
 	local XComGameState_Item UtilityItem;
 
-	`LOG("==== InitScreen");
+	`LOG("InitScreen", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override'));
 	if (!IsOverhaulLadder(LadderData))
@@ -228,7 +228,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 			
 			for (RankIndex = 1; RankIndex < LadderData.LadderRung && RankIndex < NewSoldier.GetSoldierClassTemplate().GetMaxConfiguredRank(); RankIndex++)
 			{
-				`LOG("Ranking them up");
+				`LOG("Ranking them up", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				NewSoldier.RankUpSoldier(NewGameState);
 			}
 
@@ -353,9 +353,9 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	ScienceText.SetSize(200,40);
 	ScienceText.SetText(SciencePrefix $ string(LadderData.Science));
 
-	`LOG("=== SCORE: " $ string(LadderData.CumulativeScore));
-	`LOG("=== CREDITS: " $ string(LadderData.Credits));
-	`LOG("=== SCIENCE: " $ string(LadderData.Science));
+	`LOG("SCORE: " $ string(LadderData.CumulativeScore), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("CREDITS: " $ string(LadderData.Credits), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("SCIENCE: " $ string(LadderData.Science), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	// Left column
 	LeftColumn = Spawn(class'UIPanel', self);
@@ -542,7 +542,7 @@ simulated function UpdateDataSoldierData()
 	{
 		CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
 		
-		`LOG("=== GetHeadshotTexture for " $ Soldier.GetFullName());
+		`LOG("GetHeadshotTexture for " $ Soldier.GetFullName(), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		SoldierPicture = `XENGINE.m_kPhotoManager.GetHeadshotTexture(CurrentCampaign.GameIndex, Soldier.ObjectID, 128, 128);
 
 		mc.FunctionVoid("HideAllScreens");
@@ -2085,8 +2085,8 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 	local XComGameState_Item ExistingItem, NewItem;
 	local XComGameState_Unit Soldier;
 
-	`LOG("====== EquipItem");
-	`LOG("====== MultiItemSlotIndex: " @ string(MultiItemSlotIndex));
+	`LOG("EquipItem", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("MultiItemSlotIndex: " @ string(MultiItemSlotIndex), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
@@ -2095,7 +2095,7 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 
 	if (EquipmentTemplate != none)
 	{
-		`LOG("====== EquipmentTemplate.DataName: " @ string(EquipmentTemplate.DataName));
+		`LOG("EquipmentTemplate.DataName: " @ string(EquipmentTemplate.DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 
 	if (MultiItemSlotIndex == -1)
@@ -2107,18 +2107,18 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 	{
 		// Could be multiple, so get the right one to replace
 		ExistingItems = Soldier.GetAllItemsInSlot(Slot, , , true);
-		`LOG("====== ExistingItems.Length: " @ string(ExistingItems.Length));
+		`LOG("ExistingItems.Length: " @ string(ExistingItems.Length), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 		if (ExistingItems.Length > MultiItemSlotIndex)
 		{
 			ExistingItem = ExistingItems[MultiItemSlotIndex];
-			`LOG("====== ExistingItem.GetMyTemplate().DataName: " @ string(ExistingItem.GetMyTemplate().DataName));
+			`LOG("ExistingItem.GetMyTemplate().DataName: " @ string(ExistingItem.GetMyTemplate().DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 	}
 
 	if (ExistingItem != none)
 	{
-		`LOG("====== ExistingItem.GetMyTemplate().DataName: " @ string(ExistingItem.GetMyTemplate().DataName));
+		`LOG("ExistingItem.GetMyTemplate().DataName: " @ string(ExistingItem.GetMyTemplate().DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		if (ExistingItem.GetMyTemplate() == EquipmentTemplate)
 		{	
 			// Trying to swap with the same item, so don't bother doing anything
@@ -2128,12 +2128,12 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 		// There is an item equipped here, so need to remove it first
 		if (!Soldier.CanRemoveItemFromInventory( ExistingItem, NewGameState ))
 		{
-			`LOG("====== Cannot remove item from inventory");
+			`LOG("Cannot remove item from inventory", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 
 		if (!Soldier.RemoveItemFromInventory( ExistingItem, NewGameState ))
 		{
-			`LOG("====== Failed to remove item from inventory");
+			`LOG("Failed to remove item from inventory", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 	}
 
@@ -2143,12 +2143,12 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 		NewItem = EquipmentTemplate.CreateInstanceFromTemplate( NewGameState );
 		if (!Soldier.CanAddItemToInventory(EquipmentTemplate, Slot, NewGameState))
 		{
-			`LOG("====== Cannot add item to inventory");
+			`LOG("Cannot add item to inventory", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 
 		if (!Soldier.AddItemToInventory( NewItem, Slot, NewGameState ))
 		{
-			`LOG("====== Failed to add item to inventory");
+			`LOG("Failed to add item to inventory", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
 
 		if (Slot == eInvSlot_PrimaryWeapon)
@@ -2161,7 +2161,7 @@ simulated function EquipItem(name TemplateName, EInventorySlot Slot, int MultiIt
 
 	History.UpdateStateObjectCache(NewGameState);
 
-	`LOG("====== EquipItem should be swapped");
+	`LOG("EquipItem should be swapped", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 }
 
 simulated function int SortItemListByTier(X2ItemTemplate A, X2ItemTemplate B)
@@ -2462,23 +2462,23 @@ simulated function UpdateDataResearchCategory()
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
 	TemplateManager.GetTemplateNames(TemplateNames);
 
-	//`LOG("=== Found this many template names: " $ string(TemplateNames.Length));
+	`LOG("Found this many template names: " $ string(TemplateNames.Length), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	foreach TemplateNames(TemplateName)
 	{
-		//`LOG("=== Checking: " $ string(TemplateName));
+		`LOG("Checking: " $ string(TemplateName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		if (!LadderData.HasPurchasedTechUpgrade(TemplateName))
 		{
-			//`LOG("=== Not Purchased");
+			`LOG("Not Purchased", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			Template = TemplateManager.FindTemplate(TemplateName);
 			if (Template != none)
 			{
 				if (Template.Category == SelectedUpgradeCategory && Template.AtleastOneInventoryUpgradeExists())
 				{
-					//`LOG("=== Template Found");
-					//`LOG("=== Template DataName: " $ string(Template.DataName));
-					//`LOG("=== Template DisplayName: " $ Template.DisplayName);
-					//`LOG("=== Template Description: " $ Template.Description);
+					`LOG("Template Found", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+					`LOG("Template DataName: " $ string(Template.DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+					`LOG("Template DisplayName: " $ Template.DisplayName, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+					`LOG("Template Description: " $ Template.Description, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 					if (LadderData.IsUpgradeOnSale(Template.DataName))
 					{
@@ -2916,17 +2916,17 @@ simulated function ContinueToNextScreen()
 
 private function bool IsOverhaulLadder(XComGameState_LadderProgress_Override LocalLadderData)
 {
-	`LOG("==== IsOverhaulLadder");
-	`LOG("==== IsOverhaulLadder LocalLadderData == none: " $ string(LocalLadderData == none));
-	`LOG("==== IsOverhaulLadder LocalLadderData.bRandomLadder: " $ string(LocalLadderData.bRandomLadder));
-	`LOG("==== IsOverhaulLadder LocalLadderData.Settings.UseCustomSettings: " $ string(LocalLadderData.Settings.UseCustomSettings));
+	`LOG("IsOverhaulLadder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("IsOverhaulLadder LocalLadderData == none: " $ string(LocalLadderData == none), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("IsOverhaulLadder LocalLadderData.bRandomLadder: " $ string(LocalLadderData.bRandomLadder), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+	`LOG("IsOverhaulLadder LocalLadderData.Settings.UseCustomSettings: " $ string(LocalLadderData.Settings.UseCustomSettings), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	if (LocalLadderData == none || !LocalLadderData.bRandomLadder || !LocalLadderData.Settings.UseCustomSettings)
 	{
-		`LOG("==== IsOverhaulLadder Not an overhaul ladder");
+		`LOG("IsOverhaulLadder Not an overhaul ladder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		return false;
 	}
 	
-	`LOG("==== IsOverhaulLadder Yes an overhaul ladder");
+	`LOG("IsOverhaulLadder Yes an overhaul ladder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	return true;
 }
 
@@ -3066,7 +3066,7 @@ function OnStudioLoaded()
 	
 	foreach Squad(Soldier)
 	{
-		`LOG("=== AddHeadShotRequest for " $ Soldier.GetFullName());
+		`LOG("AddHeadShotRequest for " $ Soldier.GetFullName(), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		m_kPhotoboothAutoGen.AddHeadShotRequest(Soldier.GetReference(), 512, 512, HeadshotReceived);
 	}
 
@@ -3089,11 +3089,11 @@ private simulated function HeadshotReceived(StateObjectReference UnitRef)
 	
 	if (Soldier != none)
 	{
-		`LOG("=== HeadshotReceived for " $ Soldier.GetFullName());
+		`LOG("HeadshotReceived for " $ Soldier.GetFullName(), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 	else
 	{
-		`LOG("=== HeadshotReceived for UNKNOWN");
+		`LOG("HeadshotReceived for UNKNOWN", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	}
 }
 

@@ -6,6 +6,8 @@ var config int FREE_UPGRADE_MIN_COST_MODIFIER;
 var config array<int> SCIENCE_TABLE;
 var config int MAX_SALE_ITEMS;
 var config float SALE_CREDITS_MOD;
+var config bool ENABLE_LOG;
+var config name LOG_PREFIX;
 
 var array<name> PurchasedTechUpgrades;
 var array<XComGameState_Unit> SoldierStatesBeforeUpgrades;
@@ -73,7 +75,7 @@ static function ProceedToNextRung( )
 
 	local XComGameState_Analytics CurrentAnalytics, CampaignAnalytics;
 
-	`LOG("==== ProceedToNextRung");
+	`LOG("ProceedToNextRung", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	History = `XCOMHISTORY;
 	ParcelManager = `PARCELMGR;
@@ -84,12 +86,12 @@ static function ProceedToNextRung( )
 	LadderData = XComGameState_LadderProgress_Override(History.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress_Override', true));
 	if (LadderData == none || !LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
 	{
-		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		`LOG("LadderData not an overhaul ladder, performing normal routine", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		super.ProceedToNextRung();
 		return;
 	}
 	
-	`LOG("==== Overhaul ladder");
+	`LOG("Overhaul ladder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	CurrentCampaign = XComGameState_CampaignSettings(History.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
@@ -98,11 +100,11 @@ static function ProceedToNextRung( )
 	// The squad after upgrades
 	foreach XComHQ.Squad(UnitStateRef)
 	{
-		`LOG("=== Adding stuff to EndingStates");
+		`LOG("Adding stuff to EndingStates", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		UnitState = XComGameState_Unit(History.GetGameStateForObjectID( UnitStateRef.ObjectID));
 		if (!UnitState.bMissionProvided)
 		{
-			`LOG("=== Adding one to EndingStates");
+			`LOG("Adding one to EndingStates", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			EndingState.UnitState = UnitState;
 		
 			EndingState.Inventory.Length = 0;
@@ -118,7 +120,7 @@ static function ProceedToNextRung( )
 	// Case for completing a ladder
 	if (LadderData.LadderRung + 1 > LadderData.LadderSize)
 	{
-		`LOG("===== Ladder completed");
+		`LOG("Ladder completed", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		// Finished the ladder, delete the save so that next time the player will start from the beginning
 		CampaignSaveID = `AUTOSAVEMGR.GetSaveIDForCampaign( CurrentCampaign );
 		if (CampaignSaveID >= 0)
@@ -135,12 +137,12 @@ static function ProceedToNextRung( )
 	// Case for restarting an existing ladder (which was previously abandoned or completed)
 	if (LadderData.LadderRung == 0 && !LadderData.bNewLadder)
 	{
-		`LOG("===== Existing ladder");
+		`LOG("Existing ladder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		Visualizers = History.GetAllVisualizers( );
 
 		if (History.ReadHistoryFromFile( "Ladders/", "Mission_" $ LadderData.LadderIndex $ "_" $ (LadderData.LadderRung + 1) $ "_" $ CurrentCampaign.DifficultySetting ))
 		{
-			`LOG("===== Save file found");
+			`LOG("Save file found", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			foreach Visualizers( Visualizer ) // gotta get rid of all these since we'll be wiping out the history objects they may be referring to (but only if we loaded a history)
 			{
 				if (Visualizer.bNoDelete)
@@ -203,7 +205,7 @@ static function ProceedToNextRung( )
 		}
 	}
 	
-	`LOG("===== Procedural Ladder");
+	`LOG("Procedural Ladder", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	TacticalStartContext = XComGameStateContext_TacticalGameRule(class'XComGameStateContext_TacticalGameRule'.static.CreateXComGameStateContext());
 	TacticalStartContext.GameRuleType = eGameRule_TacticalGameStart;
@@ -390,7 +392,7 @@ private static function UpdateUnitCustomization( XComGameState_Unit NextMissionU
 {
 	local TSoldier Soldier;
 
-	`LOG("==== UpdateUnitCustomization");
+	`LOG("UpdateUnitCustomization", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	Soldier.kAppearance = PrevMissionUnit.kAppearance;
 	Soldier.nmCountry = PrevMissionUnit.GetCountry( );
@@ -412,7 +414,7 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 	local XComGameState_Item ItemState;
 	local XComGameState_Item NewItemState;
 
-	`LOG("==== RefreshUnit");
+	`LOG("RefreshUnit", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	StartState = History.GetStartState( );
 	`assert( StartState != none );
@@ -420,13 +422,13 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 	NewUnitState = XComGameState_Unit(StartState.ModifyStateObject(class'XComGameState_Unit', NewUnitStateRef.ObjectID));
 
 	// remove all their items
-	`LOG("==== RefreshUnit: NewUnitState.InventoryItems.Length: " $ string(NewUnitState.InventoryItems.Length));
+	`LOG("RefreshUnit: NewUnitState.InventoryItems.Length: " $ string(NewUnitState.InventoryItems.Length), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	for (Index = NewUnitState.InventoryItems.Length - 1; Index >= 0; --Index)
 	{
 		ItemState = XComGameState_Item( StartState.ModifyStateObject(class'XComGameState_Item', NewUnitState.InventoryItems[Index].ObjectID) );
 		if (ItemState != none && NewUnitState.CanRemoveItemFromInventory( ItemState, StartState ))
 		{
-			`LOG("==== RefreshUnit: Can remove: " $ string(ItemState.GetMyTemplateName()));
+			`LOG("RefreshUnit: Can remove: " $ string(ItemState.GetMyTemplateName()), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			NewUnitState.RemoveItemFromInventory( ItemState, StartState );
 			History.PurgeObjectIDFromStartState( ItemState.ObjectID, false ); // don't refresh the cache every time, we'll do that once after removing all items from all units
 
@@ -438,7 +440,7 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 	}
 
 	// add all items from the old state
-	`LOG("==== RefreshUnit: EndingState.Inventory.Length: " $ string(EndingState.Inventory.Length));
+	`LOG("RefreshUnit: EndingState.Inventory.Length: " $ string(EndingState.Inventory.Length), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	NewUnitState.bIgnoreItemEquipRestrictions = true;
 	for (Index = 0; Index < EndingState.Inventory.Length; Index++)
 	{
@@ -448,10 +450,10 @@ private static function RefreshUnit( XComGameStateHistory History, XComGameState
 			NewItemState = ItemState.GetMyTemplate().CreateInstanceFromTemplate(StartState);
 			if (ItemState.GetMyTemplate().iItemSize > 0 && NewUnitState.CanAddItemToInventory(NewItemState.GetMyTemplate(), ItemState.InventorySlot, StartState, ItemState.Quantity, NewItemState))
 			{
-				`LOG("==== RefreshUnit: Can add: " $ string(NewItemState.GetMyTemplateName()));
+				`LOG("RefreshUnit: Can add: " $ string(NewItemState.GetMyTemplateName()), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				if (NewUnitState.AddItemToInventory(NewItemState, ItemState.InventorySlot, StartState))
 				{
-					`LOG("==== RefreshUnit: added item to inventory: " $ string(NewItemState.GetMyTemplateName()));
+					`LOG("RefreshUnit: added item to inventory: " $ string(NewItemState.GetMyTemplateName()), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				}
 			}
 		}
@@ -480,7 +482,7 @@ private static function TransferUnitToNewMission(XComGameState_Unit UnitState,
 	local StateObjectReference StateRef, EmptyReference;
 	local int SquadIdx;
 
-	`LOG("==== TransferUnitToNewMission");
+	`LOG("TransferUnitToNewMission", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	History = `XCOMHISTORY;
 
@@ -548,11 +550,11 @@ function OnComplete( Name ActionName )
 {
 	local XComPresentationLayer Pres;
 
-	`LOG("==== OnComplete");
+	`LOG("OnComplete", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	if (!bRandomLadder || !Settings.UseCustomSettings)
 	{
-		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		`LOG("LadderData not an overhaul ladder, performing normal routine", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		super.OnComplete(ActionName);
 		return;
 	}
@@ -580,7 +582,7 @@ function OnChooseMission(MissionOption Option)
 {
 	local XComPresentationLayer Pres;
 
-	`LOG("==== OnChooseMission");
+	`LOG("OnChooseMission", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	ChosenMissionOption = Option;
 
@@ -597,13 +599,13 @@ static function bool MaybeDoLadderProgressionChoice( )
 	local XComPresentationLayer Pres;
 	local XComGameState_LadderProgress_Override LadderData;
 
-	`LOG("==== MaybeDoLadderProgressionChoice");
+	`LOG("MaybeDoLadderProgressionChoice", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	LadderData = XComGameState_LadderProgress_Override(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_LadderProgress', true));
 	
 	if (LadderData == none || !LadderData.bRandomLadder || !LadderData.Settings.UseCustomSettings)
 	{
-		`LOG("==== LadderData not an overhaul ladder, performing normal routine");
+		`LOG("LadderData not an overhaul ladder, performing normal routine", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		return super.MaybeDoLadderProgressionChoice();
 	}
 
@@ -644,12 +646,12 @@ function PurchaseTechUpgrade(name DataName, XComGameState NewGameState)
 	//local XComGameState_Tech TechState, RequiredTechState;
 	//local XComGameState_HeadquartersXCom XComHQ;
 
-	`LOG("=== PurchaseTechUpgrade");
+	`LOG("PurchaseTechUpgrade", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	TemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
 	Template = TemplateManager.FindTemplate(DataName);
 
-	`LOG("=== PurchaseTechUpgrade DataName: " $ string(DataName));
+	`LOG("PurchaseTechUpgrade DataName: " $ string(DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	//if (Template.AssociatedTech != '')
 	//{
@@ -1062,7 +1064,7 @@ private function string GetRandomMissionType()
 	local MissionDefinition MissionDef;
 	local int RandIndex;
 
-	`LOG("=== GetRandomMissionType");
+	`LOG("GetRandomMissionType", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 	
 	MissionManager = `TACTICALMISSIONMGR;
 
@@ -1101,14 +1103,14 @@ private function string GetRandomMissionType()
 	RandIndex = `SYNC_RAND_STATIC(PossibleMissionTypes.Length);
 	MissionType = PossibleMissionTypes[RandIndex];
 
-	`LOG("=== GetRandomMissionType MissionType: " $ MissionType);
+	`LOG("GetRandomMissionType MissionType: " $ MissionType, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	// Add the one we're choosing to the list of played families
 	if (MissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
 	{
 		if (PlayedMissionFamilies.Find(MissionDef.MissionFamily) == INDEX_NONE)
 		{
-			`LOG("=== GetRandomMissionType Adding to PlayedMissionFamilies: " $ MissionDef.MissionFamily);
+			`LOG("GetRandomMissionType Adding to PlayedMissionFamilies: " $ MissionDef.MissionFamily, class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 			PlayedMissionFamilies.AddItem(MissionDef.MissionFamily);
 		}
 	}
@@ -1165,7 +1167,7 @@ simulated function InitSaleOptions()
 				&& HasRequiredTechs(Template)
 				&& DoesSomeoneBenefit(Template))
 			{
-				`LOG("=== Adding to sale options: " $ string(Template.DataName));
+				`LOG("Adding to sale options: " $ string(Template.DataName), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				EligableTemplateNames.AddItem(TemplateName);
 			}
 		}

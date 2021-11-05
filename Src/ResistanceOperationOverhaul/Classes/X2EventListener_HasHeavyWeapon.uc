@@ -23,7 +23,7 @@ static function CHEventListenerTemplate CreateOverrideHasHeavyWeaponListenerTemp
 	Template.RegisterInTactical = true;
 
 	Template.AddCHEvent('OverrideHasHeavyWeapon', OnGauntletOverrideHasHeavyWeaponTactical, ELD_Immediate, 75);
-	`LOG("X2EventListener_HasHeavyWeapon: Register Event OverrideHasHeavyWeapon: Resistance Operation Overhaul");
+	`LOG("X2EventListener_HasHeavyWeapon: Register Event OverrideHasHeavyWeapon: Resistance Operation Overhaul", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	return Template;
 }
@@ -43,7 +43,7 @@ static function EventListenerReturn OnGauntletOverrideHasHeavyWeaponTactical(Obj
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local XGWeapon							HeavyWeapon;
 	
-	`LOG("=== X2EventListener_HasHeavyWeapon: OnGauntletOverrideHasHeavyWeapon");
+	`LOG("X2EventListener_HasHeavyWeapon: OnGauntletOverrideHasHeavyWeapon", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 
 	OverrideTuple = XComLWTuple(EventData);
 	if(OverrideTuple == none)
