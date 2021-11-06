@@ -105,3 +105,12 @@ Class overrides - This mod will not be compatible with other mods that override 
 
 [b] Known issues [/b]
 - Abandoned ladders still show the details of where the ladder would be if it was not abandoned. Starting the abandoned ladder will still start you from the beginning as normal though. This is only a visual bug.
+
+[h1] Credits [/h1]
+Design and implementation: Favid, with assistance from h4ilst0rm and NightNinja54
+Testing and feedback: Hero of Wind, TheNiTrex, lago508, Grobobobo
+Special thanks: -bg- for making Skirmish Mode+, which I referenced heavily for building the UI, and the rest of the XCOM Modding Discord for helping me with various issues.
+
+[h1] GitHub [/h1]
+This mod is also available on GitHub: https://github.com/Favid/ResistanceOperationOverhaul
+I'm pretty bad at consistently following up on Steam Workshop comments. I'm more likely to see bugs that are reported on GitHub. Code contributions are also welcome.
