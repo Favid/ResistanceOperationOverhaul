@@ -9,6 +9,10 @@ var int SelectedColumn;
 
 var localized string m_ChooseMissionLabel;
 var localized string m_ChooseMissionSubtitle;
+var localized string m_RewardsText;
+var localized string m_CreditsText;
+var localized string m_ScienceText;
+var localized string m_FreeResearchText;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -86,13 +90,13 @@ simulated function PopulateMissionPanel(int Index, MissionOption Option)
 	
 	InfoIndex = 0;
 
-	MC.QueueString("Rewards:");
+	MC.QueueString(m_RewardsText);
 	InfoIndex++;
 
-	MC.QueueString("Credits: " $ string(Option.Credits));
+	MC.QueueString(m_CreditsText $ string(Option.Credits));
 	InfoIndex++;
 
-	MC.QueueString("Science: " $ string(Option.Science));
+	MC.QueueString(m_ScienceText $ string(Option.Science));
 	InfoIndex++;
 	
 	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
@@ -102,7 +106,7 @@ simulated function PopulateMissionPanel(int Index, MissionOption Option)
 		if (Option.FreeUpgrades.Length > ResearchIndex)
 		{
 			Template = UpgradeTemplateManager.FindTemplate(Option.FreeUpgrades[ResearchIndex]);
-			MC.QueueString("Free Research: " $ Template.DisplayName);
+			MC.QueueString(m_FreeResearchText $ Template.DisplayName);
 		}
 		else
 		{

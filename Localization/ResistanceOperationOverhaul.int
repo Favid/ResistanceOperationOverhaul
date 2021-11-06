@@ -1414,11 +1414,15 @@ m_SaleTooltip="Inspired! If researched before next mission, the project will cos
 [UILadderChooseNextMission]
 m_ChooseMissionLabel="CHOOSE MISSION"
 m_ChooseMissionSubtitle="CHOOSE NEXT MISSION"
+m_RewardsText="Rewards: "
+m_CreditsText="Credits: "
+m_ScienceText="Research: "
+m_FreeResearchText="Free Project(s): "
 
 [UILadderRewards]
 m_Title="Mission Reward Summary"
 m_Continue="Continue"
 m_Credits="Credits"
 m_Science="Research"
-m_Upgrades="Upgrades"
+m_Upgrades="Projects"
 m_NoUpgrade="None"
