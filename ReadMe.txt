@@ -109,7 +109,7 @@ Class overrides - This mod will not be compatible with other mods that override 
 [h1] Credits [/h1]
 Design and implementation: Favid, with assistance from h4ilst0rm and NightNinja54
 Testing and feedback: Hero of Wind, TheNiTrex, lago508, Grobobobo
-Special thanks: -bg- for making Skirmish Mode+, which I referenced heavily for building the UI, and the rest of the XCOM Modding Discord for helping me with various issues.
+Special thanks: -bg- for making Skirmish Mode+, which I referenced heavily for building the UI, and the rest of the XCOM 2 Modding Discord for helping me with various issues.
 
 [h1] GitHub [/h1]
 This mod is also available on GitHub: https://github.com/Favid/ResistanceOperationOverhaul
