@@ -1302,6 +1302,12 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 	AddPlayerState = class'XComGameState_Player'.static.CreatePlayer(TacticalStartState, eTeam_Resistance);
 	BattleDataState.PlayerTurnOrder.AddItem(AddPlayerState.GetReference());
 
+	AddPlayerState = class'XComGameState_Player'.static.CreatePlayer(TacticalStartState, eTeam_One);
+	BattleDataState.PlayerTurnOrder.AddItem(AddPlayerState.GetReference());
+
+	AddPlayerState = class'XComGameState_Player'.static.CreatePlayer(TacticalStartState, eTeam_Two);
+	BattleDataState.PlayerTurnOrder.AddItem(AddPlayerState.GetReference());
+
 	TacticalStartState.CreateNewStateObject(class'XComGameState_Cheats');
 
 	++Profile.Data.m_Ladders;
@@ -1335,7 +1341,7 @@ simulated function CreateNewLadder(int LadderDifficulty, bool NarrativesOn)
 	LadderData.PopulateStartingUpgradeTemplates();
 	LadderData.PopulateUpgradeProgression( );
 
-	MissionType = class'XComGameState_LadderProgress_Override'.default.AllowedMissionTypes[ `SYNC_RAND_STATIC( class'XComGameState_LadderProgress_Override'.default.AllowedMissionTypes.Length ) ];
+	MissionType = class'XComGameState_LadderProgress_Override'.default.StartingMissionTypes[ `SYNC_RAND_STATIC( class'XComGameState_LadderProgress_Override'.default.StartingMissionTypes.Length ) ];
 	BattleDataState.m_iMissionType = TacticalMissionManager.arrMissions.Find( 'sType', MissionType );
 
 	if(!TacticalMissionManager.GetMissionDefinitionForType(MissionType, MissionDef))
