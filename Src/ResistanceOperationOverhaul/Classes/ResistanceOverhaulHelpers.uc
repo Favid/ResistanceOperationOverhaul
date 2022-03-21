@@ -3,6 +3,8 @@ class ResistanceOverhaulHelpers extends Object config(LadderOptions);
 var config bool bUseWeightedClassSelection;
 var config int DEFAULT_CLASS_WEIGHT;
 var config array<ClassWeight> ClassWeights;
+var config bool bAllowAllPerksPerRank;
+var config array<name> AlwaysValidCharacterTemplates;
 
 static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGameState_Player XComPlayerState, SoldierOption Option, array<name> AllowedClasses, array<name> UsedClasses, array<string> UsedCharacters, bool AllowDuplicateClasses)
 {
@@ -198,6 +200,13 @@ public static function bool CharacterIsValid(XComGameState_Unit Character, X2Sol
 			bValid = true;
 			`LOG("Valid because character is of a special type, and the class allows that type", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 		}
+		else if (Character.GetMyTemplate().DataName != 'Soldier' &&
+			default.AlwaysValidCharacterTemplates.Find(Character.GetMyTemplateName()) != INDEX_NONE)
+		{
+			// Character is of a special type, and is configured to be always valid
+			bValid = true;
+			`LOG("Valid because character is of a special type, and is configured to be always valid", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+		}
 	}
 
 	if (!bValid)
@@ -217,6 +226,7 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	local TSoldier Soldier;
 	local XComGameState_HeadquartersXCom HeadquartersStateObject;
 	local name RequiredLoadout;
+	local name CharacterTemplate;
 	local CharacterPoolManager CharacterPoolMgr;
 	local XComGameState_Unit Character;
 	local name AcceptedCharacterTemplate;
@@ -227,11 +237,17 @@ private static function XComGameState_Unit GenerateUnit(name ClassName, string C
 	
 	CharacterPoolMgr = CharacterPoolManager(`XENGINE.GetCharacterPoolManager());
 	Character = CharacterPoolMgr.GetCharacter(CharacterName);
+	CharacterTemplate = Character.GetMyTemplateName();
+
+	if (Character.GetMyTemplateName() == '')
+	{
+		CharacterTemplate = 'Soldier';
+	}
 
 	ClassTemplate = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().FindSoldierClassTemplate(Classname);
 	`assert(ClassTemplate != none);
 
-	CharTemplate = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager().FindCharacterTemplate((ClassTemplate.RequiredCharacterClass != '') ? ClassTemplate.RequiredCharacterClass : 'Soldier');
+	CharTemplate = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager().FindCharacterTemplate((ClassTemplate.RequiredCharacterClass != '') ? ClassTemplate.RequiredCharacterClass : CharacterTemplate);
 	`assert(CharTemplate != none);
 	CharacterGenerator = `XCOMGRI.Spawn(CharTemplate.CharacterGeneratorClass);
 	`assert(CharacterGenerator != None);
