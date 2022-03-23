@@ -238,7 +238,13 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 				UsedCharacters.AddItem(NewSoldier.GetFullName());
 			}
 			
-			for (RankIndex = 1; RankIndex < 2; RankIndex++)
+			for (RankIndex = NewSoldier.GetSoldierRank(); ((RankIndex == 1 && LadderData.LadderRung > default.FirstPromotionLevel || 
+				RankIndex == 2 && LadderData.LadderRung > default.SecondPromotionLevel || 
+				RankIndex == 3 && LadderData.LadderRung > default.ThirdPromotionLevel || 
+				RankIndex == 4 && LadderData.LadderRung > default.ForthPromotionLevel || 
+				RankIndex == 5 && LadderData.LadderRung > default.FifthPromotionLevel || 
+				RankIndex == 6 && LadderData.LadderRung > default.SixthPromotionLevel || 
+				RankIndex == 7 && LadderData.LadderRung > default.SeventhPromotionLevel) && RankIndex != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank()); RankIndex++)
 			{
 				`LOG("Ranking them up", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				NewSoldier.RankUpSoldier(NewGameState);
@@ -284,7 +290,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 			Soldier.GetSoldierRank() == 4 && LadderData.LadderRung > default.ForthPromotionLevel || 
 			Soldier.GetSoldierRank() == 5 && LadderData.LadderRung > default.FifthPromotionLevel || 
 			Soldier.GetSoldierRank() == 6 && LadderData.LadderRung > default.SixthPromotionLevel || 
-			Soldier.GetSoldierRank() == 7 && LadderData.LadderRung > default.SeventhPromotionLevel && Soldier.GetSoldierRank() != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank()))
+			Soldier.GetSoldierRank() == 7 && LadderData.LadderRung > default.SeventhPromotionLevel) && Soldier.GetSoldierRank() != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank())
 		{
 			// Remove all effects before ranking up, to avoid stat errors
 			
