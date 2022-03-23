@@ -41,7 +41,7 @@ static function XComGameState_Unit CreateSoldier(XComGameState GameState, XComGa
 
 	Soldier = GenerateUnit(ChosenClass, ChosenCharacter, GameState, XComPlayerState);
 
-	if (Soldier.GetMyTemplate().DataName == 'Soldier')
+	if (Soldier.GetMyTemplate().DataName == 'Soldier' || default.AlwaysValidCharacterTemplates.Find(Soldier.GetMyTemplateName()) != INDEX_NONE)
 	{
 		Soldier.RankUpSoldier(GameState, ChosenClass);
 	}
