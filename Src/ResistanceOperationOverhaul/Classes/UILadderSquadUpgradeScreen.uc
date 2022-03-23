@@ -10,11 +10,16 @@ enum EUIScreenState
 	eUIScreenState_PrimaryWeapon,
 	eUIScreenState_WeaponAttachment,
 	eUIScreenState_SecondaryWeapon,
+	eUIScreenState_SecondaryWeaponAttachment,
+	eUIScreenState_Sidearm,
+	eUIScreenState_SidearmAttachment,
 	eUIScreenState_Armor,
 	eUIScreenState_PCS,
 	eUIScreenState_UtilItem1,
 	eUIScreenState_UtilItem2,
 	eUIScreenState_UtilItem3,
+	eUIScreenState_UtilItem4,
+	eUIScreenState_UtilItem5,
 	eUIScreenState_GrenadePocket,
 	eUIScreenState_AmmoPocket,
 	eUIScreenState_HeavyWeapon,
@@ -64,12 +69,17 @@ var localized string m_ScreenSubtitles_eUIScreenState_CompletedProjects;
 var localized string m_ScreenSubtitles_eUIScreenState_Soldier;
 var localized string m_ScreenSubtitles_eUIScreenState_PrimaryWeapon;
 var localized string m_ScreenSubtitles_eUIScreenState_WeaponAttachment;
+var localized string m_ScreenSubtitles_eUIScreenState_SecondaryWeaponAttachment;
 var localized string m_ScreenSubtitles_eUIScreenState_SecondaryWeapon;
+var localized string m_ScreenSubtitles_eUIScreenState_SidearmAttachment;
+var localized string m_ScreenSubtitles_eUIScreenState_Sidearm;
 var localized string m_ScreenSubtitles_eUIScreenState_Armor;
 var localized string m_ScreenSubtitles_eUIScreenState_PCS;
 var localized string m_ScreenSubtitles_eUIScreenState_UtilItem1;
 var localized string m_ScreenSubtitles_eUIScreenState_UtilItem2;
 var localized string m_ScreenSubtitles_eUIScreenState_UtilItem3;
+var localized string m_ScreenSubtitles_eUIScreenState_UtilItem4;
+var localized string m_ScreenSubtitles_eUIScreenState_UtilItem5;
 var localized string m_ScreenSubtitles_eUIScreenState_GrenadePocket;
 var localized string m_ScreenSubtitles_eUIScreenState_AmmoPocket;
 var localized string m_ScreenSubtitles_eUIScreenState_HeavyWeapon;
@@ -84,6 +94,7 @@ var localized string m_Research;
 var localized string m_CompletedResearch;
 var localized string m_PrimaryWeapon;
 var localized string m_SecondaryWeapon;
+var localized string m_Sidearm;
 var localized string m_WeaponAttachment;
 var localized string m_Armor;
 var localized string m_PCS;
@@ -118,6 +129,7 @@ const ScienceIcon = "img:///UILibrary_Common.UIEvent_science";
 
 var string CreditsPrefix;
 var string SciencePrefix;
+var config(LadderOptions) int FirstPromotionLevel, SecondPromotionLevel, ThirdPromotionLevel, ForthPromotionLevel, FifthPromotionLevel, SixthPromotionLevel, SeventhPromotionLevel;
 
 delegate OnSelectorClickDelegate(UIMechaListItem MechaItem);
 
@@ -226,7 +238,13 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 				UsedCharacters.AddItem(NewSoldier.GetFullName());
 			}
 			
-			for (RankIndex = 1; RankIndex < LadderData.LadderRung && RankIndex < NewSoldier.GetSoldierClassTemplate().GetMaxConfiguredRank(); RankIndex++)
+			for (RankIndex = NewSoldier.GetSoldierRank(); ((RankIndex == 1 && LadderData.LadderRung > default.FirstPromotionLevel || 
+				RankIndex == 2 && LadderData.LadderRung > default.SecondPromotionLevel || 
+				RankIndex == 3 && LadderData.LadderRung > default.ThirdPromotionLevel || 
+				RankIndex == 4 && LadderData.LadderRung > default.ForthPromotionLevel || 
+				RankIndex == 5 && LadderData.LadderRung > default.FifthPromotionLevel || 
+				RankIndex == 6 && LadderData.LadderRung > default.SixthPromotionLevel || 
+				RankIndex == 7 && LadderData.LadderRung > default.SeventhPromotionLevel) && RankIndex != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank()); RankIndex++)
 			{
 				`LOG("Ranking them up", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				NewSoldier.RankUpSoldier(NewGameState);
@@ -266,7 +284,13 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	// Rank up all soldiers
 	foreach Squad(Soldier)
 	{
-		if (Soldier.GetSoldierRank() < Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank())
+		if ((Soldier.GetSoldierRank() == 1 && LadderData.LadderRung > default.FirstPromotionLevel || 
+			Soldier.GetSoldierRank() == 2 && LadderData.LadderRung > default.SecondPromotionLevel || 
+			Soldier.GetSoldierRank() == 3 && LadderData.LadderRung > default.ThirdPromotionLevel || 
+			Soldier.GetSoldierRank() == 4 && LadderData.LadderRung > default.ForthPromotionLevel || 
+			Soldier.GetSoldierRank() == 5 && LadderData.LadderRung > default.FifthPromotionLevel || 
+			Soldier.GetSoldierRank() == 6 && LadderData.LadderRung > default.SixthPromotionLevel || 
+			Soldier.GetSoldierRank() == 7 && LadderData.LadderRung > default.SeventhPromotionLevel) && Soldier.GetSoldierRank() != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank())
 		{
 			// Remove all effects before ranking up, to avoid stat errors
 			
@@ -703,9 +727,6 @@ simulated function SetSoldierGear()
 	local XComGameState_Unit Soldier;
 	local XComGameState_Item equippedItem;
 	local array<XComGameState_Item> utilItems;
-	local X2EquipmentTemplate EquipmentTemplate;
-	local X2ItemTemplateManager ItemTemplateManager;
-	local X2SoldierClassTemplate SoldierClassTemplate;
 
 	Soldier = Squad[SelectedSoldierIndex];
 
@@ -728,21 +749,9 @@ simulated function SetSoldierGear()
 
 	mc.QueueString("Secondary Weapon");//secondary
 	
-	//we need to handle the reaper claymore
-	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	SoldierClassTemplate = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager().FindSoldierClassTemplate(Soldier.GetSoldierClassTemplateName());
-	if (SoldierClassTemplate.DataName == 'Reaper')
-	{
-		EquipmentTemplate = X2EquipmentTemplate(ItemTemplateManager.FindItemTemplate('Reaper_Claymore'));
-		mc.QueueString(EquipmentTemplate.strImage);
-		mc.QueueString(EquipmentTemplate.GetItemFriendlyName());
-	}
-	else
-	{
-		equippedItem = Soldier.GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
-		mc.QueueString(equippedItem.GetMyTemplate().strImage);
-		mc.QueueString(equippedItem.GetMyTemplate().GetItemFriendlyNameNoStats());
-	}
+	equippedItem = Soldier.GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
+	mc.QueueString(equippedItem.GetMyTemplate().strImage);
+	mc.QueueString(equippedItem.GetMyTemplate().GetItemFriendlyNameNoStats());
 	
 
 	utilItems = Soldier.GetAllItemsInSlot(eInvSlot_Utility, NewGameState, false, true);
@@ -886,6 +895,12 @@ simulated function XComGameState_Item FindThirdUtilityItemToDisplay(XComGameStat
 		}
 	}
 
+	ItemState = Soldier.GetItemInSlot(eInvSlot_Pistol, NewGameState, false);
+	if (ItemState != none && ItemState.Quantity > 0)
+	{
+		return ItemState;
+	}
+
 	return none;
 }
 
@@ -1003,15 +1018,20 @@ simulated function UpdateData()
 		LastSelectedIndexes[eUIScreenState_Abilities] = 0;
 		LastSelectedIndexes[eUIScreenState_PrimaryWeapon] = 0;
 		LastSelectedIndexes[eUIScreenState_SecondaryWeapon] = 0;
+		LastSelectedIndexes[eUIScreenState_Sidearm] = 0;
 		LastSelectedIndexes[eUIScreenState_Armor] = 0;
 		LastSelectedIndexes[eUIScreenState_PCS] = 0;
 		LastSelectedIndexes[eUIScreenState_UtilItem1] = 0;
 		LastSelectedIndexes[eUIScreenState_UtilItem2] = 0;
 		LastSelectedIndexes[eUIScreenState_UtilItem3] = 0;
+		LastSelectedIndexes[eUIScreenState_UtilItem4] = 0;
+		LastSelectedIndexes[eUIScreenState_UtilItem5] = 0;
 		LastSelectedIndexes[eUIScreenState_GrenadePocket] = 0;
 		LastSelectedIndexes[eUIScreenState_AmmoPocket] = 0;
 		LastSelectedIndexes[eUIScreenState_HeavyWeapon] = 0;
 		LastSelectedIndexes[eUIScreenState_WeaponAttachment] = 0;
+		LastSelectedIndexes[eUIScreenState_SecondaryWeaponAttachment] = 0;
+		LastSelectedIndexes[eUIScreenState_SidearmAttachment] = 0;
 		LastSelectedIndexes[eUIScreenState_CustomSlot] = 0;
 		break;
 	};
@@ -1071,6 +1091,14 @@ simulated function UpdateData()
 		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem3;
 		UpdateDataUtilItem3();
 		break;
+	case eUIScreenState_UtilItem4:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem4;
+		UpdateDataUtilItem4();
+		break;
+	case eUIScreenState_UtilItem5:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_UtilItem5;
+		UpdateDataUtilItem5();
+		break;
 	case eUIScreenState_GrenadePocket:
 		Subtitle = m_ScreenSubtitles_eUIScreenState_GrenadePocket;
 		UpdateDataGrenadePocket();
@@ -1086,6 +1114,18 @@ simulated function UpdateData()
 	case eUIScreenState_WeaponAttachment:
 		Subtitle = m_ScreenSubtitles_eUIScreenState_WeaponAttachment;
 		UpdateDataWeaponAttachment();
+		break;
+	case eUIScreenState_SecondaryWeaponAttachment:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_SecondaryWeaponAttachment;
+		UpdateDataSecondaryWeaponAttachment();
+		break;
+	case eUIScreenState_Sidearm:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_Sidearm;
+		UpdateDataSidearm();
+		break;
+	case eUIScreenState_SidearmAttachment:
+		Subtitle = m_ScreenSubtitles_eUIScreenState_SidearmAttachment;
+		UpdateDataSidearmAttachment();
 		break;
 	case eUIScreenState_CustomSlot:
 		Subtitle = m_ScreenSubtitles_eUIScreenState_CustomSlot;
@@ -1174,7 +1214,7 @@ simulated function UpdateDataSoldierOptions()
 	local XComGameState_Item EquippedItem;
 	local int NumUtilitySlots;
 	local string PromoteIcon;
-	local int NumAttachmentSlots;
+	local int NumAttachmentSlots, NumSecondaryAttachmentSlots, NumSidearmAttachmentSlots;
 	local int AttachmentIndex;
 	local array<name> Attachments;
 	local X2WeaponUpgradeTemplate AttachmentTemplate;
@@ -1239,6 +1279,90 @@ simulated function UpdateDataSoldierOptions()
 	GetListItem(Index).EnableNavigation();
 	GetListItem(Index).UpdateDataValue(m_SecondaryWeapon, GetInventoryDisplayText(EquippedItem), OnClickSecondaryWeapon);
 	Index++;
+
+	NumSecondaryAttachmentSlots = 0;
+	if (X2WeaponTemplate(EquippedItem.GetMyTemplate()) != none)
+	{
+		NumSecondaryAttachmentSlots = X2WeaponTemplate(EquippedItem.GetMyTemplate()).NumUpgradeSlots;
+	}
+	
+	Attachments = EquippedItem.GetMyWeaponUpgradeTemplateNames();
+		
+	for (AttachmentIndex = 0; AttachmentIndex < NumSecondaryAttachmentSlots || AttachmentIndex < Attachments.Length; AttachmentIndex++)
+	{
+		if (AttachmentIndex < NumSecondaryAttachmentSlots && Attachments.Length > AttachmentIndex)
+		{
+			AttachmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(Attachments[AttachmentIndex]));
+			if (AttachmentTemplate != none)
+			{
+				GetListItem(Index).EnableNavigation();
+				if (AttachmentIndex >= NumSecondaryAttachmentSlots)
+				{
+					GetListItem(Index).SetDisabled(true, "Cannot change attachment");
+				}
+				GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), AttachmentTemplate.GetItemFriendlyNameNoStats(), OnClickSecondaryWeaponAttachment);
+				GetListItem(Index).metadataInt = AttachmentIndex;
+				GetListItem(Index).metadataString = "Attachment";
+				Index++;
+				continue;
+			}
+		}
+
+		GetListItem(Index).EnableNavigation();
+		if (AttachmentIndex >= NumSecondaryAttachmentSlots)
+		{
+			GetListItem(Index).SetDisabled(true, "Cannot change attachment");
+		}
+		GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), "None", OnClickSecondaryWeaponAttachment);
+		GetListItem(Index).metadataInt = AttachmentIndex;
+		GetListItem(Index).metadataString = "Attachment";
+		Index++;
+	}
+
+	// Pistol Slot
+	EquippedItem = Soldier.GetItemInSlot(eInvSlot_Pistol, NewGameState, false);
+	GetListItem(Index).EnableNavigation();
+	GetListItem(Index).UpdateDataValue(m_Sidearm, GetInventoryDisplayText(EquippedItem), OnClickSidearm);
+	Index++;
+
+	NumSidearmAttachmentSlots = 0;
+	if (X2WeaponTemplate(EquippedItem.GetMyTemplate()) != none)
+	{
+		NumSidearmAttachmentSlots = X2WeaponTemplate(EquippedItem.GetMyTemplate()).NumUpgradeSlots;
+	}
+	
+	Attachments = EquippedItem.GetMyWeaponUpgradeTemplateNames();
+		
+	for (AttachmentIndex = 0; AttachmentIndex < NumSidearmAttachmentSlots || AttachmentIndex < Attachments.Length; AttachmentIndex++)
+	{
+		if (AttachmentIndex < NumSidearmAttachmentSlots && Attachments.Length > AttachmentIndex)
+		{
+			AttachmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(Attachments[AttachmentIndex]));
+			if (AttachmentTemplate != none)
+			{
+				GetListItem(Index).EnableNavigation();
+				if (AttachmentIndex >= NumSidearmAttachmentSlots)
+				{
+					GetListItem(Index).SetDisabled(true, "Cannot change attachment");
+				}
+				GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), AttachmentTemplate.GetItemFriendlyNameNoStats(), OnClickSidearmAttachment);
+				GetListItem(Index).metadataInt = AttachmentIndex;
+				GetListItem(Index).metadataString = "Attachment";
+				Index++;
+				continue;
+			}
+		}
+
+		GetListItem(Index).EnableNavigation();
+		if (AttachmentIndex >= NumSidearmAttachmentSlots)
+		{
+			GetListItem(Index).SetDisabled(true, "Cannot change attachment");
+		}
+		GetListItem(Index).UpdateDataValue(m_WeaponAttachment @ string(AttachmentIndex + 1), "None", OnClickSidearmAttachment);
+		GetListItem(Index).metadataInt = AttachmentIndex;
+		GetListItem(Index).metadataString = "Attachment";
+		Index++;
+	}
 
 	// Armor
 	EquippedItem = Soldier.GetItemInSlot(eInvSlot_Armor, NewGameState, false);
@@ -1309,6 +1433,36 @@ simulated function UpdateDataSoldierOptions()
 		Index++;
 	}
 
+	// Utility Slot 4
+	if (NumUtilitySlots > 3)
+	{
+		GetListItem(Index).EnableNavigation();
+		if (EquippedUtilityItems.Length > 3 && EquippedUtilityItems[3].Quantity > 0)
+		{
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(4), EquippedUtilityItems[3].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem3);
+		}
+		else
+		{
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(4), "None", OnClickUtilItem3);
+		}
+		Index++;
+	}
+
+	// Utility Slot 5
+	if (NumUtilitySlots > 4)
+	{
+		GetListItem(Index).EnableNavigation();
+		if (EquippedUtilityItems.Length > 4 && EquippedUtilityItems[4].Quantity > 0)
+		{
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(5), EquippedUtilityItems[4].GetMyTemplate().GetItemFriendlyNameNoStats(), OnClickUtilItem3);
+		}
+		else
+		{
+			GetListItem(Index).UpdateDataValue(m_UtilityItem @ string(5), "None", OnClickUtilItem3);
+		}
+		Index++;
+	}
+
 	// Grenade pocket
 	if (Soldier.HasGrenadePocket())
 	{
@@ -1340,7 +1494,7 @@ simulated function UpdateDataSoldierOptions()
 	ModSlots = class'CHItemSlot'.static.GetAllSlotTemplates();
 	for (ModIndex = 0; ModIndex < ModSlots.Length; ModIndex++)
 	{
-		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState) && ModSlots[ModIndex].IsUserEquipSlot)
+		if (ModSlots[ModIndex].UnitHasSlot(Soldier, LockedReason, NewGameState) && ModSlots[ModIndex].IsUserEquipSlot && ModSlots[ModIndex].InvSlot != eInvSlot_Pistol)
 		{
 			EquippedItem = Soldier.GetItemInSlot(ModSlots[ModIndex].InvSlot, NewGameState, false);
 			GetListItem(Index).EnableNavigation();
@@ -1398,6 +1552,12 @@ simulated function OnClickSecondaryWeapon()
 	UpdateData();
 }
 
+simulated function OnClickSecondaryWeaponAttachment()
+{
+	UIScreenState = eUIScreenState_SecondaryWeaponAttachment;
+	UpdateData();
+}
+
 simulated function OnClickArmor()
 {
 	UIScreenState = eUIScreenState_Armor;
@@ -1428,6 +1588,18 @@ simulated function OnClickUtilItem3()
 	UpdateData();
 }
 
+simulated function OnClickUtilItem4()
+{
+	UIScreenState = eUIScreenState_UtilItem4;
+	UpdateData();
+}
+
+simulated function OnClickUtilItem5()
+{
+	UIScreenState = eUIScreenState_UtilItem5;
+	UpdateData();
+}
+
 simulated function OnClickGrenadePocket()
 {
 	UIScreenState = eUIScreenState_GrenadePocket;
@@ -1443,6 +1615,18 @@ simulated function OnClickAmmoPocket()
 simulated function OnClickHeavyWeapon()
 {
 	UIScreenState = eUIScreenState_HeavyWeapon;
+	UpdateData();
+}
+
+simulated function OnClickSidearm()
+{
+	UIScreenState = eUIScreenState_Sidearm;
+	UpdateData();
+}
+
+simulated function OnClickSidearmAttachment()
+{
+	UIScreenState = eUIScreenState_SidearmAttachment;
 	UpdateData();
 }
 
@@ -1520,18 +1704,26 @@ simulated function bool ItemAlreadyInUse(name TemplateName, int ExcludeSoldierIn
 simulated function bool AttachmentAlreadyInUse(name TemplateName, int ExcludeSoldierIndex)
 {
 	local int Index;
-	local XComGameState_Item ItemState;
-	local array<name> AttachmentNames;
+	local XComGameState_Item PrimaryItemState, SecondaryItemState, SidearmItemState;
+	local array<name> PrimaryAttachmentNames, SecondaryAttachmentNames, SidearmAttachmentNames;
 
 	for (Index = 0; Index < Squad.Length; Index++)
 	{
 		if (Index != ExcludeSoldierIndex)
 		{
-			ItemState = Squad[Index].GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
-			if (ItemState != none && X2WeaponTemplate(ItemState.GetMyTemplate()).NumUpgradeSlots > 0)
+			PrimaryItemState = Squad[Index].GetItemInSlot(eInvSlot_PrimaryWeapon, NewGameState, false);
+			SecondaryItemState = Squad[Index].GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
+			SidearmItemState = Squad[Index].GetItemInSlot(eInvSlot_Pistol, NewGameState, false);
+
+			if ((PrimaryItemState != none && X2WeaponTemplate(PrimaryItemState.GetMyTemplate()).NumUpgradeSlots > 0) ||
+			(SecondaryItemState != none && X2WeaponTemplate(PrimaryItemState.GetMyTemplate()).NumUpgradeSlots > 0) ||
+			(SidearmItemState != none && X2WeaponTemplate(SidearmItemState.GetMyTemplate()).NumUpgradeSlots > 0))
 			{
-				AttachmentNames = ItemState.GetMyWeaponUpgradeTemplateNames();
-				if (AttachmentNames.Find(TemplateName) != INDEX_NONE)
+				PrimaryAttachmentNames = PrimaryItemState.GetMyWeaponUpgradeTemplateNames();
+				SecondaryAttachmentNames = SecondaryItemState.GetMyWeaponUpgradeTemplateNames();
+				SidearmAttachmentNames = SidearmItemState.GetMyWeaponUpgradeTemplateNames();
+
+				if (PrimaryAttachmentNames.Find(TemplateName) != INDEX_NONE || SecondaryAttachmentNames.Find(TemplateName) != INDEX_NONE || SidearmAttachmentNames.Find(TemplateName) != INDEX_NONE)
 				{
 					return true;
 				}
@@ -1704,6 +1896,181 @@ simulated function OnClickUpgradeSecondaryWeapon(UIMechaListItem MechaItem)
 	UpdateData();
 }
 
+simulated function UpdateDataSecondaryWeaponAttachment()
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2WeaponUpgradeTemplate AttachmentTemplate;
+	local array<X2WeaponUpgradeTemplate> AttachmentTemplates;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local array<name> PurchasedTemplateNames;
+	local name PurchasedTemplateName;
+	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
+	local InventoryUpgrade ItemUpgrade;
+	local XComGameState_Unit Soldier;
+	local XComGameState_Item EquippedWeapon;
+	
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	Soldier = Squad[SelectedSoldierIndex];
+	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
+	EquippedWeapon = Soldier.GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
+
+	foreach PurchasedTemplateNames(PurchasedTemplateName)
+	{
+		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
+		if (UpgradeTemplate != none)
+		{
+			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
+			{
+				AttachmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+
+				if (AttachmentTemplate != none 
+					&& AttachmentTemplate.CanApplyUpgradeToWeapon(EquippedWeapon, SelectedAttachmentIndex))
+				{
+					AttachmentTemplates.AddItem(AttachmentTemplate);
+				}
+			}
+		}
+	}
+
+	UpdateDataItems(AttachmentTemplates, OnClickUpgradeSecondaryWeaponAttachment, true);
+}
+
+simulated function OnClickUpgradeSecondaryWeaponAttachment(UIMechaListItem MechaItem)
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2WeaponUpgradeTemplate EquipmentTemplate;
+	local XComGameState_Item EquippedItem;
+
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	EquippedItem = Squad[SelectedSoldierIndex].GetItemInSlot(eInvSlot_SecondaryWeapon, NewGameState, false);
+	EquippedItem.DeleteWeaponUpgradeTemplate(SelectedAttachmentIndex);
+
+	if (MechaItem.metadataString != "")
+	{
+		EquipmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate( name(MechaItem.metadataString) ));
+		if (EquipmentTemplate != none)
+		{
+			EquippedItem.ApplyWeaponUpgradeTemplate(EquipmentTemplate, SelectedAttachmentIndex);
+		}
+	}
+	
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
+simulated function UpdateDataSidearm()
+{
+	local CHItemSlot PistolSlot;
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2WeaponTemplate WeaponTemplate;
+	local array<X2WeaponTemplate> WeaponTemplates;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local array<name> PurchasedTemplateNames;
+	local name PurchasedTemplateName;
+	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
+	local InventoryUpgrade ItemUpgrade;
+	local XComGameState_Unit Soldier;
+	
+	PistolSlot = class'CHItemSlotStore'.static.GetStore().GetSlot(eInvSlot_Pistol);
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	Soldier = Squad[SelectedSoldierIndex];
+	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
+
+	foreach PurchasedTemplateNames(PurchasedTemplateName)
+	{
+		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
+		if (UpgradeTemplate != none)
+		{
+			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
+			{
+				WeaponTemplate = X2WeaponTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+				if (WeaponTemplate != none 
+					&& PistolSlot.ShowItemInLockerList(Soldier, none, WeaponTemplate, NewGameState)
+					&& !(ItemUpgrade.bSingle && ItemAlreadyInUse(WeaponTemplate.DataName, SelectedSoldierIndex)))
+				{
+					WeaponTemplates.AddItem(WeaponTemplate);
+				}
+			}
+		}
+	}
+
+	UpdateDataItems(WeaponTemplates, OnClickUpgradeSidearm);
+}
+
+simulated function OnClickUpgradeSidearm(UIMechaListItem MechaItem)
+{
+	EquipItem(name(MechaItem.metadataString), eInvSlot_Pistol, -1);
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
+simulated function UpdateDataSidearmAttachment()
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2WeaponUpgradeTemplate AttachmentTemplate;
+	local array<X2WeaponUpgradeTemplate> AttachmentTemplates;
+	local X2ResistanceTechUpgradeTemplateManager UpgradeTemplateManager;
+	local array<name> PurchasedTemplateNames;
+	local name PurchasedTemplateName;
+	local X2ResistanceTechUpgradeTemplate UpgradeTemplate;
+	local InventoryUpgrade ItemUpgrade;
+	local XComGameState_Unit Soldier;
+	local XComGameState_Item EquippedWeapon;
+	
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	UpgradeTemplateManager = class'X2ResistanceTechUpgradeTemplateManager'.static.GetTemplateManager();
+	Soldier = Squad[SelectedSoldierIndex];
+	PurchasedTemplateNames = LadderData.GetAvailableTechUpgradeNames();
+	EquippedWeapon = Soldier.GetItemInSlot(eInvSlot_Pistol, NewGameState, false);
+
+	foreach PurchasedTemplateNames(PurchasedTemplateName)
+	{
+		UpgradeTemplate = UpgradeTemplateManager.FindTemplate(PurchasedTemplateName);
+		if (UpgradeTemplate != none)
+		{
+			foreach UpgradeTemplate.InventoryUpgrades (ItemUpgrade)
+			{
+				AttachmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(ItemUpgrade.TemplateName));
+
+				if (AttachmentTemplate != none 
+					&& AttachmentTemplate.CanApplyUpgradeToWeapon(EquippedWeapon, SelectedAttachmentIndex))
+				{
+					AttachmentTemplates.AddItem(AttachmentTemplate);
+				}
+			}
+		}
+	}
+
+	UpdateDataItems(AttachmentTemplates, OnClickUpgradeSidearmAttachment, true);
+}
+
+simulated function OnClickUpgradeSidearmAttachment(UIMechaListItem MechaItem)
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2WeaponUpgradeTemplate EquipmentTemplate;
+	local XComGameState_Item EquippedItem;
+
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	EquippedItem = Squad[SelectedSoldierIndex].GetItemInSlot(eInvSlot_Pistol, NewGameState, false);
+	EquippedItem.DeleteWeaponUpgradeTemplate(SelectedAttachmentIndex);
+
+	if (MechaItem.metadataString != "")
+	{
+		EquipmentTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate( name(MechaItem.metadataString) ));
+		if (EquipmentTemplate != none)
+		{
+			EquippedItem.ApplyWeaponUpgradeTemplate(EquipmentTemplate, SelectedAttachmentIndex);
+		}
+	}
+	
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
 simulated function UpdateDataArmor()
 {
 	local X2ItemTemplateManager ItemTemplateManager;
@@ -1824,6 +2191,30 @@ simulated function UpdateDataUtilItem3()
 simulated function OnClickUpgradeUtil3(UIMechaListItem MechaItem)
 {
 	EquipItem(name(MechaItem.metadataString), eInvSlot_Utility, 2);
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
+simulated function UpdateDataUtilItem4()
+{
+	UpdateDataUtilItem(3, OnClickUpgradeUtil4);
+}
+
+simulated function OnClickUpgradeUtil4(UIMechaListItem MechaItem)
+{
+	EquipItem(name(MechaItem.metadataString), eInvSlot_Utility, 3);
+	UIScreenState = eUIScreenState_Soldier;
+	UpdateData();
+}
+
+simulated function UpdateDataUtilItem5()
+{
+	UpdateDataUtilItem(4, OnClickUpgradeUtil5);
+}
+
+simulated function OnClickUpgradeUtil5(UIMechaListItem MechaItem)
+{
+	EquipItem(name(MechaItem.metadataString), eInvSlot_Utility, 4);
 	UIScreenState = eUIScreenState_Soldier;
 	UpdateData();
 }
@@ -2215,7 +2606,7 @@ simulated function UpdateDataSoldierAbilities()
 					Index++;
 
 					ListItem.SetDisabled(true);
-					if (!Soldier.HasPurchasedPerkAtRank(RankIter) && RankIter <= Soldier.GetRank() - 1 && Soldier.MeetsAbilityPrerequisites(RankAbility.AbilityName))
+					if ((!Soldier.HasPurchasedPerkAtRank(RankIter) || class'ResistanceOverhaulHelpers'.default.bAllowAllPerksPerRank && !Soldier.HasSoldierAbility(RankAbility.AbilityName)) && RankIter <= Soldier.GetRank() - 1 && Soldier.MeetsAbilityPrerequisites(RankAbility.AbilityName))
 					{
 						ListItem.SetDisabled(false);
 					}
@@ -2795,11 +3186,16 @@ simulated function OnCancel()
 	case eUIScreenState_PrimaryWeapon:
 	case eUIScreenState_WeaponAttachment:
 	case eUIScreenState_SecondaryWeapon:
+	case eUIScreenState_SecondaryWeaponAttachment:
+	case eUIScreenState_Sidearm:
+	case eUIScreenState_SidearmAttachment:
 	case eUIScreenState_Armor:
 	case eUIScreenState_PCS:
 	case eUIScreenState_UtilItem1:
 	case eUIScreenState_UtilItem2:
 	case eUIScreenState_UtilItem3:
+	case eUIScreenState_UtilItem4:
+	case eUIScreenState_UtilItem5:
 	case eUIScreenState_GrenadePocket:
 	case eUIScreenState_AmmoPocket:
 	case eUIScreenState_HeavyWeapon:

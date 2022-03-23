@@ -8,6 +8,7 @@ var config int MAX_SALE_ITEMS;
 var config float SALE_CREDITS_MOD;
 var config bool ENABLE_LOG;
 var config name LOG_PREFIX;
+var config array<string> StartingMissionTypes;
 
 var array<name> PurchasedTechUpgrades;
 var array<XComGameState_Unit> SoldierStatesBeforeUpgrades;
@@ -1215,6 +1216,5 @@ simulated function bool IsUpgradeOnSaleInCategory(EUpgradeCategory Category)
 			}
 		}
 	}
-
 	return false;
 }
