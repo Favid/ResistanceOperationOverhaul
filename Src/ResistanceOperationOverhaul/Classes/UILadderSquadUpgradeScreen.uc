@@ -238,13 +238,17 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 				UsedCharacters.AddItem(NewSoldier.GetFullName());
 			}
 			
-			for (RankIndex = NewSoldier.GetSoldierRank(); ((RankIndex == 1 && LadderData.LadderRung > default.FirstPromotionLevel || 
-				RankIndex == 2 && LadderData.LadderRung > default.SecondPromotionLevel || 
-				RankIndex == 3 && LadderData.LadderRung > default.ThirdPromotionLevel || 
-				RankIndex == 4 && LadderData.LadderRung > default.ForthPromotionLevel || 
-				RankIndex == 5 && LadderData.LadderRung > default.FifthPromotionLevel || 
-				RankIndex == 6 && LadderData.LadderRung > default.SixthPromotionLevel || 
-				RankIndex == 7 && LadderData.LadderRung > default.SeventhPromotionLevel) && RankIndex != Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank()); RankIndex++)
+			// New soldiers will initially have a rank of 1.
+			`LOG("Preparing to rank up new soldier with GetSoldierRank of " $ string(NewSoldier.GetSoldierRank()), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+			`LOG("LadderRung is " $ string(LadderData.LadderRung), class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
+
+			for (RankIndex = NewSoldier.GetSoldierRank(); ((RankIndex == 1 && LadderData.LadderRung - 1 > default.FirstPromotionLevel || 
+				RankIndex == 2 && LadderData.LadderRung - 1 > default.SecondPromotionLevel || 
+				RankIndex == 3 && LadderData.LadderRung - 1 > default.ThirdPromotionLevel || 
+				RankIndex == 4 && LadderData.LadderRung - 1 > default.ForthPromotionLevel || 
+				RankIndex == 5 && LadderData.LadderRung - 1 > default.FifthPromotionLevel || 
+				RankIndex == 6 && LadderData.LadderRung - 1 > default.SixthPromotionLevel || 
+				RankIndex == 7 && LadderData.LadderRung - 1 > default.SeventhPromotionLevel) && RankIndex < Soldier.GetSoldierClassTemplate().GetMaxConfiguredRank()); RankIndex++)
 			{
 				`LOG("Ranking them up", class'XComGameState_LadderProgress_Override'.default.ENABLE_LOG, class'XComGameState_LadderProgress_Override'.default.LOG_PREFIX);
 				NewSoldier.RankUpSoldier(NewGameState);
